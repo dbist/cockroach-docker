@@ -1,4 +1,3 @@
-Django
-psycopg2-binary
-django-cockroachdb==3.0a1
-
+Django>=3.0,<4.0
+psycopg2>2.7,<3.0
+django-cockroachdb>=3.0a1
