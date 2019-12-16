@@ -1,0 +1,4 @@
+Django
+psycopg2-binary
+django-cockroachdb==3.0a1
+
