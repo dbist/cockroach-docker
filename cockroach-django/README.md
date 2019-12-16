@@ -16,7 +16,7 @@ Prerequisites:
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`. 
 
 1) `docker-compose run web django-admin startproject composeexample .`
-	a) populate composeexample/settings.py with database-specific properties
+	- populate composeexample/settings.py with database-specific properties
 2) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 3) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
 4) visit the HAProxy UI @ http://localhost:8081
