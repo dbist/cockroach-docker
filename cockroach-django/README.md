@@ -17,6 +17,23 @@ Prerequisites:
 
 1) `docker-compose run web django-admin startproject composeexample .`
 	- populate composeexample/settings.py with database-specific properties
+	- e.g.
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_cockroachdb',
+        'NAME': 'myproject',
+        'USER': 'myprojectuser',
+        'PASSWORD': 'password',
+        'HOST': 'roach-0',
+        'PORT': '26257',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
+    }
+}
+```
+
 2) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 3) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
 4) visit the HAProxy UI @ http://localhost:8081
