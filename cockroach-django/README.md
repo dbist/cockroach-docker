@@ -1,7 +1,6 @@
 # Basic CockroachDB Cluster with HAProxy and Django.
-Django tutorial is based on the [tutorial](https://docs.docker.com/compose/django/) from Docker.
-Simple 3 node CockroachDB cluster with HAProxy acting as load balancer
-Based on Tim Veil's awesome `docker-compose` [recipes](https://github.com/timveil-cockroach/docker-examples/tree/master) for CockroachDB.
+Django tutorial is inspired by the [tutorial](https://docs.docker.com/compose/django/) from Docker.
+Simple 3 node CockroachDB cluster with HAProxy acting as load balancer based on Tim Veil's awesome `docker-compose` [recipes](https://github.com/timveil-cockroach/docker-examples/tree/master) for CockroachDB.
 
 ## Services
 * `web`    - Django node
@@ -26,7 +25,7 @@ docker-compose exec crdb-0 /cockroach/cockroach sql --insecure --execute="CREATE
 
 ### Open Interactive Shells
 ```bash
-docker exec -ti crdb-0 ./cockroach sql 
+docker exec -ti crdb-0 ./cockroach sql
 docker exec -ti crdb-1 ./cockroach sql
 docker exec -ti crdb-2 ./cockroach sql
 docker exec -ti lb /bin/sh
