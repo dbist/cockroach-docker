@@ -20,7 +20,8 @@ Prerequisites:
 2) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 3) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
 4) visit the HAProxy UI @ http://localhost:8081
-5) have fun!
+5) visit the Django webpage @ http://localhost:8000
+6) have fun!
 
 ### Open Interactive Shells
 ```bash
