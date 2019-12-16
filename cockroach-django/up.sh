@@ -16,7 +16,7 @@ docker-compose exec roach-0 \
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="CREATE USER myprojectuser WITH PASSWORD 'password';"
+ --execute="CREATE USER myprojectuser WITH PASSWORD 'Q7gc8rEdS';"
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
