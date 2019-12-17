@@ -24,13 +24,15 @@ DATABASES = {
         'ENGINE': 'django_cockroachdb',
         'NAME': 'myproject',
         'USER': 'myprojectuser',
-        'PASSWORD': 'password',
         'HOST': 'roach-0',
         'PORT': '26257',
         'OPTIONS': {
-            'sslmode': 'require',
+            'sslmode': 'verify-full',
+            'sslrootcert': '/certs/ca.crt',
+            'sslcert': '/certs/client.myprojectuser.crt',
+            'sslkey': '/certs/client.myprojectuser.key',
         },
-    }
+    },
 }
 ```
 
