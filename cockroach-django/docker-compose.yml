@@ -4,6 +4,7 @@ volumes:
   certs-roach-0:
   certs-roach-1:
   certs-roach-2:
+  certs-web:
 
 services:
 
@@ -15,6 +16,7 @@ services:
       - certs-roach-0:/certs/roach-0
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
+      - certs-web:/certs/web
 
   roach-0:
     container_name: roach-0
@@ -66,7 +68,9 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
+      - certs-web:/certs
     ports:
       - "8000:8000"
     depends_on:
+      - roach-cert
       - roach-0
