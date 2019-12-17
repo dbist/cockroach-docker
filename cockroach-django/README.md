@@ -16,9 +16,16 @@ Prerequisites:
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`. 
 
 1) `docker-compose run web django-admin startproject composeexample .`
-	- populate composeexample/settings.py with database-specific properties
-	- e.g.
+
+```bash
+14:32 $ docker-compose run web django-admin startproject composeexample .
+Starting roach-cert ... done
+Starting roach-0    ... done
 ```
+
+2) populate composeexample/settings.py with database-specific properties
+
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django_cockroachdb',
@@ -36,12 +43,14 @@ DATABASES = {
 }
 ```
 
-2) because operation order is important, execute `./up.sh` instead of `docker-compose up`
+3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 	- monitor the status of services via `docker-compose logs`
-3) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
-4) visit the HAProxy UI @ http://localhost:8081
-5) visit the Django webpage @ http://localhost:8000
-6) have fun!
+        - in case you need to adjust something in composexample/settings.py, you can
+          use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
+          to debug and proceed.
+4) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
+5) visit the HAProxy UI @ http://localhost:8081
+6) visit the Django webpage @ http://localhost:8000
 
 ### Open Interactive Shells
 ```bash
