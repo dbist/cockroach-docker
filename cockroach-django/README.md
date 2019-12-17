@@ -2,7 +2,6 @@
 Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
 Prerequisites:
-1. requires [107](https://github.com/cockroachdb/django-cockroachdb/issues/107)
 
 ## Services
 * `roach-0` - CockroachDB node
