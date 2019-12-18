@@ -9,7 +9,7 @@ services:
      - "8080:8080"
    command: start-single-node --insecure
    volumes:
-     - ${PWD}/cockroach-data:/cockroach-data
+     - "${PWD}/cockroach-data/crdb:/cockroach/cockroach-data"
 
  minio:
    image: minio/minio

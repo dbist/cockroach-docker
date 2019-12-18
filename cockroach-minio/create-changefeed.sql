@@ -16,4 +16,4 @@ INSERT INTO office_dogs VALUES
 
 UPDATE office_dogs SET name = 'Petee H' WHERE id = 1;
 
-CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/test?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=https://minio:9000' with updated, resolved='10s';
+CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated, resolved='10s';
