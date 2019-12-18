@@ -1,9 +1,5 @@
 version: '3.5'
 
-volumes:
-  crdbvol:
-  miniovol:
-
 services:
 
  cockroachdb:
@@ -12,7 +8,7 @@ services:
      - 26257:26257
    command: start-single-node --insecure
    volumes:
-     - crdbvol
+     - ${PWD}/cockroach-data:/cockroach-data
 
  minio:
    image: minio/minio
@@ -23,4 +19,4 @@ services:
      - 9000:9000
    command: server /data
    volumes:
-     - miniovol:/data
+     - ${PWD}/data:/data
