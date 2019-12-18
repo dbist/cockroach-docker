@@ -7,18 +7,25 @@ https://docs.min.io/docs/aws-cli-with-minio
 https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-compatible services
 
 ```sql
-CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/test?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=https://minio:9000' with updated, resolved='10s';
+CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogsdir?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated, resolved='10s';
 ```
 
 ```bash
-root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/test?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=https://minio:9000' with updated, resolved='10s';
+root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogsdir?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated, resolved='10s';
         job_id
 +--------------------+
-  513233256858746881
+  513248960812449793
 (1 row)
 
-Time: 26.0877ms
+Time: 16.1918ms
 ```
 
+now browse to the minio bucket directory and look for dogsdir, navigate to the /miniobucket/dogsdir/2019-12-18/ and
+you will find a bunch of *.RESOLVED and a JSON file. JSON file will contain all of the updates.
 
+```
+{"after": {"id": 1, "name": "Pete!"}, "key": [1], "updated": "1576701552590477800.0000000000"}
+{"after": {"id": 2, "name": "Carl"}, "key": [2], "updated": "1576701552590477800.0000000000"}
+201912182039125904778000000000000-a811836c424bb311-1-324-00000000-office_dogs-1.ndjson (END)
+```
 
