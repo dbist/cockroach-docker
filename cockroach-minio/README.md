@@ -3,9 +3,22 @@
  - [CockroachDB](https://www.cockroachlabs.com/docs/stable/enterprise-licensing.html)
  - [Minio](https://hub.docker.com/r/minio/minio/)
 
+https://docs.min.io/docs/aws-cli-with-minio
+https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-compatible services
 
 ```sql
-CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket:/test?MINIO_ACCESS_KEY=miniominio&MINIO_SECRET_KEY=miniominio13' with updated, resolved='10s';
+CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/test?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=https://minio:9000' with updated, resolved='10s';
 ```
 
-CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://example-bucket-name/test?AWS_ACCESS_KEY_ID=enter_key-here&AWS_SECRET_ACCESS_KEY=enter_key_here' with updated, resolved='10s';
+```bash
+root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/test?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=https://minio:9000' with updated, resolved='10s';
+        job_id
++--------------------+
+  513233256858746881
+(1 row)
+
+Time: 26.0877ms
+```
+
+
+
