@@ -1,0 +1,26 @@
+version: '3.5'
+
+volumes:
+  crdbvol:
+  miniovol:
+
+services:
+
+ cockroachdb:
+   image: cockroachdb/cockroach:v19.2.2
+   ports:
+     - 26257:26257
+   command: start-single-node --insecure
+   volumes:
+     - crdbvol
+
+ minio:
+   image: minio/minio
+   environment:
+     - MINIO_ACCESS_KEY=miniominio
+     - MINIO_SECRET_KEY=miniominio13
+   ports:
+     - 9000:9000
+   command: server /data
+   volumes:
+     - miniovol:/data
