@@ -1,0 +1,15 @@
+foo:
+  build: .
+  environment:
+    NODE_ENV: development
+    COCKROACHDB_HOST: cockroachdb
+    AUTO_MIGRATE: 1
+  links:
+    - cockroachdb
+  ports:
+    - 3001:3001
+cockroachdb:
+  image: cockroachdb/cockroach:v19.2.1
+  ports:
+    - 26257:26257
+  command: start-single-node --insecure
