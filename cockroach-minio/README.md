@@ -6,14 +6,20 @@
 https://docs.min.io/docs/aws-cli-with-minio
 https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-compatible services
 
-# Create Minio bucket, in my case `miniobucket`
+Containers:
+1. CockroachDB: `cockroach-minio_crdb_1`
+2. Minio:	`cockroach-minio_minio_1`
+3. NiFi:	`cockroach-minio_nifi_1`
+
+
+### Create Minio bucket, in my case `miniobucket`
 
 ```sql
-CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated, resolved='10s';
+CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated;
 ```
 
 ```bash
-root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated, resolved='10s';
+root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated;
         job_id
 +--------------------+
   513248960812449793
@@ -22,7 +28,7 @@ root@:26257/cdc_demo> CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental
 Time: 16.1918ms
 ```
 
-now browse to the minio bucket directory and look for dogs directory, navigate to the /miniobucket/dogsdir/2019-12-18/ and you will find a bunch of *.RESOLVED and a JSON file. JSON file will contain all of the updates.
+now browse to the minio bucket directory and look for dogs directory, navigate to the /miniobucket/dogsdir/2019-12-18/ and you will find a bunch `*.ndjson` files.
 
 ```
 {"after": {"id": 1, "name": "Pete!"}, "key": [1], "updated": "1576701552590477800.0000000000"}
@@ -38,13 +44,8 @@ UPDATE office_dogs SET name = 'Baethoven' WHERE id = 1;
 
 ```bash
 201912182130162087013000000000000-e74c329c6545f502-1-2-00000000-office_dogs-1.ndjson
-201912182130162087013000000000000.RESOLVED
 201912182130162087013000000000001-e74c329c6545f502-1-2-00000001-office_dogs-1.ndjson
-201912182130297139841000000000000.RESOLVED
-201912182130416808740000000000000.RESOLVED
-201912182130536816253000000000000.RESOLVED
 201912182130536816253000000000001-e74c329c6545f502-1-2-00000002-office_dogs-1.ndjson
-201912182131056829854000000000000.RESOLVED
 ```
 
 ### View the `.ndjson` files for all the changes
@@ -61,4 +62,9 @@ head  *.ndjson
 ==> 201912182130536816253000000000001-e74c329c6545f502-1-2-00000002-office_dogs-1.ndjson <==
 {"after": {"id": 1, "name": "Baethoven"}, "key": [1], "updated": "1576704694317030100.0000000000"}
 ```
+TODO:
+1. document NiFi and Minio
+
+```bash
 docker cp postgresql-42.2.9.jar cockroach-minio_nifi_1:/opt/nifi/nifi-current/extensions/
+```
