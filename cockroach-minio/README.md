@@ -61,3 +61,4 @@ head  *.ndjson
 ==> 201912182130536816253000000000001-e74c329c6545f502-1-2-00000002-office_dogs-1.ndjson <==
 {"after": {"id": 1, "name": "Baethoven"}, "key": [1], "updated": "1576704694317030100.0000000000"}
 ```
+docker cp postgresql-42.2.9.jar cockroach-minio_nifi_1:/opt/nifi/nifi-current/extensions/

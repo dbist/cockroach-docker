@@ -16,8 +16,16 @@ services:
    environment:
      - MINIO_ACCESS_KEY=miniominio
      - MINIO_SECRET_KEY=miniominio13
+     - MINIO_REGION_NAME=us-east-1
    ports:
-     - 9000:9000
+     - "9000:9000"
    command: server /data
    volumes:
      - ${PWD}/data:/data
+
+ nifi:
+  image: apache/nifi:1.10.0
+  ports:
+    - "9090:9090"
+  environment:
+    - NIFI_WEB_HTTP_PORT=9090
