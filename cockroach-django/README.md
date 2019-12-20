@@ -33,7 +33,7 @@ DATABASES = {
         'HOST': 'roach-0',
         'PORT': '26257',
         'OPTIONS': {
-            'sslmode': 'verify-full',
+            'sslmode': 'require',
             'sslrootcert': '/certs/ca.crt',
             'sslcert': '/certs/client.myprojectuser.crt',
             'sslkey': '/certs/client.myprojectuser.key',
