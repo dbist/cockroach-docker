@@ -1,9 +1,0 @@
-version: '3.5'
-
-services:
-
- cockroachdb:
-   image: cockroachdb/cockroach:v19.2.1
-   ports:
-     - 26257:26257
-   command: start-single-node --insecure
