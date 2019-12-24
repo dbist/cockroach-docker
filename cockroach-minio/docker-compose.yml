@@ -4,6 +4,7 @@ services:
 
  crdb:
    image: cockroachdb/cockroach:v19.2.2
+   container_name: crdb-1
    ports:
      - "26257:26257"
      - "8080:8080"
@@ -13,6 +14,7 @@ services:
 
  minio:
    image: minio/minio
+   container_name: minio
    environment:
      - MINIO_ACCESS_KEY=miniominio
      - MINIO_SECRET_KEY=miniominio13
@@ -25,7 +27,13 @@ services:
 
  nifi:
   image: apache/nifi:1.10.0
+  container_name: nifi
   ports:
     - "9090:9090"
   environment:
     - NIFI_WEB_HTTP_PORT=9090
+  volumes:
+    - ${PWD}/nifi/extensions:/opt/nifi/nifi-current/extensions/
+    - ${PWD}/nifi/templates:/opt/nifi/nifi-current/conf/templates/
+
+
