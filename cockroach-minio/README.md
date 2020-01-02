@@ -7,10 +7,9 @@ https://docs.min.io/docs/aws-cli-with-minio
 https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-compatible services
 
 Containers:
-1. CockroachDB: `cockroach-minio_crdb_1`
-2. Minio:	`cockroach-minio_minio_1`
-3. NiFi:	`cockroach-minio_nifi_1`
-
+1. CockroachDB: `crdb-1`
+2. Minio:	`minio`
+3. NiFi:	`nifi`
 
 ### Create Minio bucket, in my case `miniobucket`
 
