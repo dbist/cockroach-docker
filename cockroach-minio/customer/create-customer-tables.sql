@@ -231,22 +231,33 @@ UPDATE chrg_cd SET del_ind = true WHERE chrg_id = '813c40bc-46e1-4f26-87ce-18ddb
 
 ---- multiple table changefeed
 
-CREATE CHANGEFEED FOR TABLE chrg_cd_copy, fac_chrg, ems_ent_xlate, chrg_cd_nte, spl, fac_cst_cntr INTO 'experimental-s3://miniobucket/customer/materialized?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000&AWS_REGION=us-east-1' with updated;
+CREATE CHANGEFEED FOR TABLE fac_chrg, ems_ent_xlate, chrg_cd_nte, spl, fac_cst_cntr INTO 'experimental-s3://miniobucket/customer/materialized?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000&AWS_REGION=us-east-1' with updated;
 
 
-CREATE TABLE  materialized (
+CREATE TABLE  materialized_table (
 	chrg_id UUID NOT NULL,
 	cst_cntr_cd STRING NULL,
 	chrg_cd_descr STRING NULL,
 	automap_spl_cd STRING NULL,
 	aprv_spl_cd STRING NULL,
-	del_ind BOOL NOT NULL DEFAULT false,
-	nte_id UUID NOT NULL DEFAULT gen_random_uuid(),
-	spl_cd STRING NOT NULL DEFAULT 'TBA',
-	fac_id INT8 NOT NULL DEFAULT '0',
-	eff_dt DATE NOT NULL DEFAULT '0001-01-01',
-	chrg_cd STRING NOT NULL DEFAULT 'TBA'
+	del_ind BOOL NOT NULL,
+	spl_cd STRING NOT NULL,
+	fac_id INT8 NOT NULL,
+	eff_dt DATE NOT NULL,
+	chrg_cd STRING NOT NULL
 );
 
+UPSERT INTO materialized_table 
+SELECT chrg.chrg_id, chrg.cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_cd, del_ind, sp1.spl_cd, f.fac_id, eff_dt, chrg_cd FROM chrg_cd AS chrg JOIN fac_chrg AS f ON f.chrg_id = chrg.chrg_id 
+  LEFT JOIN ems_ent_xlate AS ems ON f.fac_id = ems.fac_id 
+    LEFT JOIN (SELECT chrg_id, count(*) AS chrg_cd_nte_cnt FROM chrg_cd_nte GROUP BY chrg_id) AS nte ON chrg.chrg_id = nte.chrg_id 
+	  LEFT JOIN spl AS sp1 ON chrg.automap_spl_cd = sp1.spl_cd 
+	    LEFT JOIN spl AS sp2 ON chrg.aprv_spl_cd = sp2.spl_cd 
+		  LEFT LOOKUP JOIN fac_cst_cntr AS fcc ON (fcc.cst_cntr_cd = chrg.cst_cntr_cd) AND (fcc.fac_id = f.fac_id) WHERE NOT chrg.del_ind;
 
-UPSERT INTO chrg_cd VALUES('7401f06b-ae0c-49bc-8903-726e824ec4ee', 'Anastrozole', 'Accord Healthcare Inc.', 'Anastrozole',  'radical', true);
+
+
+
+1. CREATE CHANGEFEED
+2. LOAD TABLE
+3. START NiFI
