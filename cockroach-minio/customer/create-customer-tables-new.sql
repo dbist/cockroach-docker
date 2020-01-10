@@ -15,26 +15,6 @@ IMPORT TABLE chrg_cd
 ) CSV DATA ('nodelocal:///chrg_cd.csv', 'nodelocal:///chrg_cd2.csv', 'nodelocal:///chrg_cd3.csv')
 WITH skip = '1';
 
-CREATE TABLE  chrg_cd_cdc (
-	chrg_id UUID NOT NULL,
-	cst_cntr_cd STRING NULL,
-	chrg_cd_descr STRING NULL,
-	automap_spl_cd STRING NULL,
-	aprv_spl_cd STRING NULL,
-	del_ind BOOL NOT NULL,
-	CONSTRAINT "primary" PRIMARY KEY (chrg_id ASC),
-	INDEX descr (chrg_cd_descr ASC),
-	FAMILY "primary" (chrg_id, cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_cd, del_ind)
-);
-
--- track update
-UPDATE chrg_cd SET del_ind = false WHERE chrg_id = '001f9c3b-f68c-4010-ac4f-cb3ad2dc979a';
-
--- deletes are not tracked as of now, need to add logic to NiFI flow.
-DELETE FROM chrg_cd WHERE chrg_id = '00ac5e30-083c-442e-b89c-356831516cef';
-
--- run parser.py
-
 -- fac_chrg
 IMPORT TABLE fac_chrg
 (
@@ -81,17 +61,18 @@ CREATE TABLE spl (
 UPSERT INTO spl (spl_cd) SELECT DISTINCT automap_spl_cd FROM chrg_cd LIMIT 100000;
 UPSERT INTO spl (spl_cd) SELECT DISTINCT aprv_spl_cd FROM chrg_cd LIMIT 100000;
 
-
-
-
 -- Enable Enterprise License
-
 SET CLUSTER SETTING kv.rangefeed.enabled = true;
 
 SET DATABASE = customer;
 
 CREATE CHANGEFEED FOR TABLE chrg_cd, fac_chrg, spl INTO 'experimental-s3://miniobucket/customer/materialized?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000&AWS_REGION=us-east-1' with updated;
 
+-- track update
+UPDATE chrg_cd SET del_ind = false WHERE chrg_id = '001f9c3b-f68c-4010-ac4f-cb3ad2dc979a';
+
+-- DELETES Quinn said we do not need to be concerned with deletes
+--DELETE FROM chrg_cd WHERE chrg_id = '00ac5e30-083c-442e-b89c-356831516cef';
 
 CREATE TABLE  materialized_table (
 	chrg_id UUID,
@@ -107,9 +88,7 @@ CREATE TABLE  materialized_table (
     spl_cd STRING
 );
 
-
-
---------------
+-------------- OLD --------------
 CREATE TABLE  materialized_table (
 	chrg_id UUID,
 	cst_cntr_cd STRING NULL,
@@ -142,24 +121,59 @@ chrg_cd c
             LEFT JOIN spl AS sp1 ON c.automap_spl_cd = sp1.spl_cd 
 	    LEFT JOIN spl AS sp2 ON c.aprv_spl_cd = sp2.spl_cd;
 
-
 ----------------
 
 
 -- copy files to docker container
-docker cp chrg_cd.sql crdb-1:/
-docker cp fac_chrg.sql crdb-1:/
-docker cp spl.sql crdb-1:/
+--docker cp chrg_cd.sql crdb-1:/
+--docker cp fac_chrg.sql crdb-1:/
+--docker cp spl.sql crdb-1:/
 
 --login to container
-docker exec -it crdb-1 bash
+--docker exec -it crdb-1 bash
 --upsert
-cat /spl.sql | ./cockroach sql --insecure --database=customer
-cat /fac_chrg.sql | ./cockroach sql --insecure --database=customer
-cat /chrg_cd.sql | ./cockroach sql --insecure --database=customer
+--cat /spl.sql | ./cockroach sql --insecure --database=customer
+--cat /fac_chrg.sql | ./cockroach sql --insecure --database=customer
+--cat /chrg_cd.sql | ./cockroach sql --insecure --database=customer
 
 
+root@localhost:26257/customer> SELECT COUNT(*) FROM chrg_cd;
+  count
++-------+
+   3941
+(1 row)
 
-CREATE USER IF NOT EXISTS maxroach;
-GRANT ALL ON DATABASE customer TO maxroach;
+Time: 3.47ms
+
+root@localhost:26257/customer> select count(*) from fac_chrg;
+  count
++-------+
+   1000
+(1 row)
+
+Time: 4.509ms
+
+root@localhost:26257/customer> select count(*) from spl;
+  count
++-------+
+   2406
+(1 row)
+
+Time: 4.978ms
+
+root@localhost:26257/customer> SELECT count(*) FROM
+chrg_cd c
+        JOIN fac_chrg f
+             ON f.chrg_id = c.chrg_id
+            LEFT JOIN spl AS sp1 ON c.automap_spl_cd = sp1.spl_cd
+            LEFT JOIN spl AS sp2 ON c.aprv_spl_cd = sp2.spl_cd;
+  count
++-------+
+     23
+(1 row)
+
+Time: 13.116ms
+
+-- run parser.py
+
 
