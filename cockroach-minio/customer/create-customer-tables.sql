@@ -9,7 +9,7 @@ CREATE TABLE  chrg_cd (
 	chrg_cd_descr STRING NULL,
 	automap_spl_cd STRING NULL,
 	aprv_spl_cd STRING NULL,
-	del_ind BOOL NOT NULL DEFAULT false,
+	del_ind BOOL NOT NULL, --DEFAULT false,
 	CONSTRAINT "primary" PRIMARY KEY (chrg_id ASC),
 	INDEX descr (chrg_cd_descr ASC),
 	FAMILY "primary" (chrg_id, cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_cd, del_ind)
@@ -200,12 +200,13 @@ DELETE FROM chrg_cd WHERE chrg_id = '00ac5e30-083c-442e-b89c-356831516cef';
 --chrg_id = NULL means deleted
 
 --insert
-UPSERT INTO chrg_cd VALUES('62b3dba1-82ce-4a69-913c-232a345752ee', 'Xodol',	'Rebel Distributors Corp',	'hydrocodone bitartrate and acetaminophen', 'Re-engineered', false);
-UPSERT INTO chrg_cd VALUES('892a09c2-92d4-4f99-ae15-40f456341dbb',	'Aspirin',	'KEM Pharma LLC', 'Aspirin', 'secured line', true);
-UPSERT INTO chrg_cd VALUES('edbd40da-8a42-4350-a827-5908cb3921cc',	'Treatment Set TS350533', 'Antigen Laboratories, Inc.', 'Treatment Set TS350533',	'complexity', true);
-UPSERT INTO chrg_cd VALUES('dd8bcc36-6f5c-4ce1-824b-b71c48483a33',	'PAXILCR', 'Physicians Total Care, Inc.', 'paroxetine hydrochloride', 'model', false);
-UPSERT INTO chrg_cd VALUES('813c40bc-46e1-4f26-87ce-18ddb58d5e44',	'Laxative Pills', 'Freds Inc', 'Sennosides', 'content-based', true);
-UPDATE chrg_cd SET del_ind = true WHERE chrg_id = '62b3dba1-82ce-4a69-913c-232a3457523e';
+UPSERT INTO chrg_cd VALUES('62b3dba1-82ce-4a69-913c-232a345752ee', 'Xodol',	'Rebel Distributors Corp', 'hydrocodone bitartrate and acetaminophen', 'Re-engineered', false);
+UPSERT INTO chrg_cd VALUES('892a09c2-92d4-4f99-ae15-40f456341dbb', 'Aspirin', 'KEM Pharma LLC', 'Aspirin', 'secured line', true);
+UPSERT INTO chrg_cd VALUES('edbd40da-8a42-4350-a827-5908cb3921cc', 'Treatment Set TS350533', 'Antigen Laboratories, Inc.', 'Treatment Set TS350533', 'complexity', true);
+UPSERT INTO chrg_cd VALUES('dd8bcc36-6f5c-4ce1-824b-b71c48483a33', 'PAXILCR', 'Physicians Total Care, Inc.	', 'paroxetine hydrochloride', 'model', false);
+UPSERT INTO chrg_cd VALUES('813c40bc-46e1-4f26-87ce-18ddb58d5e44', 'Laxative Pills', 'Freds Inc', 'Sennosides', 'content-based', true);
+
+UPDATE chrg_cd SET del_ind = true WHERE chrg_id = '62b3dba1-82ce-4a69-913c-232a345752ee';
 UPSERT INTO chrg_cd VALUES('ea979a49-d764-46f8-8b07-534b223832ff',	'Coppertone Kids Sunscreen', 'MSD Consumer Care, Inc.',	'Avobenzone, Homosalate, Octisalate, Octocrylene, and Oxybenzone', 'Automated',	true);
 UPSERT INTO chrg_cd VALUES('c2eaf728-8aa7-4660-83a7-032e35285ebd',	'natural extensions', 'Antibacterial Foaming Hand Wash', 'Benco Dental Company', 'Triclosan', false);
 UPSERT INTO chrg_cd VALUES('bbafb23b-853e-4563-ab9f-f15fb89bf14b', 'Smart Sense Ranitidine', 'Kmart Corporation', 'Ranitidine', 'asynchronous', true);
@@ -226,8 +227,6 @@ UPDATE chrg_cd SET del_ind = true WHERE chrg_id = '892a09c2-92d4-4f99-ae15-40f45
 UPDATE chrg_cd SET del_ind = true WHERE chrg_id = 'edbd40da-8a42-4350-a827-5908cb3921cc';
 UPDATE chrg_cd SET del_ind = false WHERE chrg_id = 'dd8bcc36-6f5c-4ce1-824b-b71c48483a33';
 UPDATE chrg_cd SET del_ind = true WHERE chrg_id = '813c40bc-46e1-4f26-87ce-18ddb58d5e44';
-
-
 
 ---- multiple table changefeed
 
@@ -257,7 +256,21 @@ SELECT chrg.chrg_id, chrg.cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_c
 
 
 
-
-1. CREATE CHANGEFEED
-2. LOAD TABLE
+0. truncate table chrg_cd;
+1. CREATE CHANGEFEED chrg_cd
+2. UPSERT SOME DATA
 3. START NiFI
+
+
+
+-- chrg_cd_copy
+SELECT chrg.chrg_id, chrg.cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_cd, del_ind, sp1.spl_cd, f.fac_id, eff_dt, chrg_cd FROM chrg_cd_copy AS chrg JOIN fac_chrg AS f ON f.chrg_id = chrg.chrg_id 
+  LEFT JOIN ems_ent_xlate AS ems ON f.fac_id = ems.fac_id 
+    LEFT JOIN (SELECT chrg_id, count(*) AS chrg_cd_nte_cnt FROM chrg_cd_nte GROUP BY chrg_id) AS nte ON chrg.chrg_id = nte.chrg_id 
+	  LEFT JOIN spl AS sp1 ON chrg.automap_spl_cd = sp1.spl_cd 
+	    LEFT JOIN spl AS sp2 ON chrg.aprv_spl_cd = sp2.spl_cd 
+		  LEFT LOOKUP JOIN fac_cst_cntr AS fcc ON (fcc.cst_cntr_cd = chrg.cst_cntr_cd) AND (fcc.fac_id = f.fac_id) WHERE NOT chrg.del_ind;
+
+
+SELECT COUNT(*) FROM chrg_cd_copy AS chrg JOIN fac_chrg AS f ON f.chrg_id = chrg.chrg_id 
+	LEFT JOIN ems_ent_xlate AS ems ON f.fac_id = ems.fac_id;

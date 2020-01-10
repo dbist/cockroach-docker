@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+
+import ndjson, glob, sys
+import psycopg2
+import psycopg2.errorcodes
+import time
+import logging
+import random
+
+# chrg_cd
+chrg_cd_output = open('chrg_cd.sql', 'w')
+chrg_cd = glob.glob('./data/miniobucket/customer/materialized/**/**.ndjson')
+count = 0
+for i in chrg_cd:
+   with open(i, 'r') as f:
+      for line in f:
+         data = ndjson.loads(line)
+
+         # handle INSERT/UPDATE
+         if data[0]["after"] != None:
+            chrg_id = data[0]["after"]["chrg_id"]
+            aprv_spl_cd = data[0]["after"]["aprv_spl_cd"]
+            automap_spl_cd = data[0]["after"]["automap_spl_cd"]
+            chrg_cd_descr = data[0]["after"]["chrg_cd_descr"]
+            cst_cntr_cd = data[0]["after"]["cst_cntr_cd"]
+            del_ind = data[0]["after"]["del_ind"]
+            record = ('UPSERT INTO chrg_cd_cdc VALUES(\'{}\', \'{}\', \'{}\', \'{}\', \'{}\', \'{}\');\n').format(chrg_id, cst_cntr_cd, chrg_cd_descr, automap_spl_cd, aprv_spl_cd, del_ind)
+            chrg_cd_output.write(record)
+            count+=1
+         else:
+            # handle DELETE
+            record = ('DELETE FROM chrg_cd_cdc WHERE chrg_id = \'{}\';\n').format(data[0]["key"][0])
+            chrg_cd_output.write(record)
+            count+=1
+            
+            
+print("Record count chrg_cd: {}".format(count))
+chrg_cd_output.close()
+
+# fac_chrg
+
+
+
+
+
