@@ -25,3 +25,9 @@ docker exec -ti roach-cert /bin/sh
 ```bash
 docker exec -it roach-0 ./cockroach sql --url 'postgresql://maxroach@roach-0:26257?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt' --database movr
 ```
+
+or 
+
+```bash
+docker exec -it roach-0 ./cockroach sql --certs-dir=/certs --host=roach-0:26257
+```
