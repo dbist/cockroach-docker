@@ -8,7 +8,12 @@ Prerequisites:
 * `roach-cert` - Holds certificates as volume mounts
 
 ## Getting started
->If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`. 
+>If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
+
+The same can also be achieved with command line, [OS-specific](http://www.chromium.org/developers/how-tos/run-chromium-with-flags).
+1. Quit any running Chrome instance
+2. In terminal, run command like so: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --allow-insecure-localhost`
+	
 
 1) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 	- monitor the status of services via `docker-compose logs`
