@@ -13,7 +13,6 @@ Prerequisites:
 The same can also be achieved with command line, [OS-specific](http://www.chromium.org/developers/how-tos/run-chromium-with-flags).
 1. Quit any running Chrome instance
 2. In terminal, run command like so: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --allow-insecure-localhost`
-	
 
 1) because operation order is important, execute `./up.sh` instead of `docker-compose up`
 	- monitor the status of services via `docker-compose logs`
