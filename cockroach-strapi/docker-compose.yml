@@ -1,0 +1,86 @@
+version: '3.5'
+
+volumes:
+  certs-roach-0:
+  certs-roach-1:
+  certs-roach-2:
+  certs-web:
+
+services:
+
+  roach-cert:
+    container_name: roach-cert
+    hostname: roach-cert
+    build: roach-cert
+    volumes:
+      - certs-roach-0:/certs/roach-0
+      - certs-roach-1:/certs/roach-1
+      - certs-roach-2:/certs/roach-2
+      - certs-web:/certs/web
+
+  roach-0:
+    container_name: roach-0
+    hostname: roach-0
+    image: cockroachdb/cockroach:v19.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-0:/certs
+    depends_on:
+      - roach-cert
+
+  roach-1:
+    container_name: roach-1
+    hostname: roach-1
+    image: cockroachdb/cockroach:v19.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-1:/certs
+    depends_on:
+      - roach-cert
+      - roach-0
+
+  roach-2:
+    container_name: roach-2
+    hostname: roach-2
+    image: cockroachdb/cockroach:v19.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-2:/certs
+    depends_on:
+      - roach-cert
+      - roach-0
+
+  lb:
+    container_name: lb
+    hostname: lb
+    build: haproxy
+    ports:
+      - "5432:5432"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - roach-0
+      - roach-1
+      - roach-2
+
+  web:
+    container_name: web
+#    image: strapi/strapi
+    build: strapi/.
+#   command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=roach-0
+      - DATABASE_PORT=26257
+      - DATABASE_NAME=strapi
+      - DATABASE_USERNAME=strapi
+      - DATABASE_PASSWORD=strapi
+      - DATABASE_SSL=true
+    ports:
+      - 1337:1337
+    volumes:
+      - ./app:/srv/app
+      - certs-web:/certs
+    depends_on:
+      - roach-cert
+      - roach-0

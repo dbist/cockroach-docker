@@ -1,0 +1,18 @@
+{
+  "defaultConnection": "default",
+  "connections": {
+    "default": {
+      "connector": "bookshelf",
+      "settings": {
+        "client": "postgres",
+        "host": "roach-0",
+        "port": "26257",
+        "database": "strapi",
+        "username": "strapi",
+        "password": "strapi",
+        "ssl": false
+      },
+      "options": {}
+    }
+  }
+}
