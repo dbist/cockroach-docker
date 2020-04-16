@@ -51,3 +51,5 @@ or with postgresql url, note, this will prompt for password
 ```bash
 docker exec -it roach-0 ./cockroach sql --url 'postgresql://maxroach@roach-0:26257?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt' --database movr
 ```
+
+### NOTE: Currently requires an older version of Jupyterlab as the most current 2.0.1 reports `jupyterlab-sql` is outdated. See [issue](https://github.com/pbugnion/jupyterlab-sql/issues/131)
