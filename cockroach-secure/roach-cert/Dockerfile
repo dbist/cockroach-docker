@@ -41,7 +41,7 @@ RUN cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-2
 
 RUN cockroach cert create-client root --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-client myprojectuser --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-client max --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key
 
 RUN cp -v /tmp/certs/client/client.* /tmp/certs/roach-0 \
     && cp -v /tmp/certs/client/client.* /tmp/certs/roach-1 \
