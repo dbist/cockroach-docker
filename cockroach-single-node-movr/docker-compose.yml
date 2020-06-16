@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 volumes:
   certs-roach-0:
@@ -15,7 +15,7 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:v19.2.4
+    image: cockroachdb/cockroach:v20.1.1
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-0:/certs
