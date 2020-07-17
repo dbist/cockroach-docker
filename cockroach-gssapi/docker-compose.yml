@@ -1,0 +1,63 @@
+version: '3'
+services:
+
+  roach-cert:
+    container_name: roach-cert
+    hostname: roach-cert
+    build: roach-cert
+    volumes:
+      - certs-cockroach:/certs/cockroach
+      - certs-client:/certs/client
+
+  kdc:
+    container_name: kdc
+    hostname: kdc
+    build: ./kdc
+    volumes:
+      - ./kdc/start.sh:/start.sh
+      - keytab:/keytab
+    depends_on:
+      - roach-cert
+
+  cockroach:
+    container_name: cockroach
+    hostname: cockroach
+    image: cockroachdb/cockroach:v20.1.3
+    depends_on:
+      - kdc
+      - roach-cert
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    command: start-single-node --certs-dir=/certs --listen-addr cockroach
+    environment:
+      - KRB5_KTNAME=/keytab/crdb.keytab
+    volumes:
+      - certs-cockroach:/certs
+      - keytab:/keytab
+
+  psql:
+    container_name: psql
+    hostname: psql
+    build: ./psql
+    depends_on:
+      - cockroach
+      - kdc
+      - roach-cert
+    environment:
+      - PGHOST=cockroach
+      - PGPORT=26257
+      - PGSSLMODE=require
+      - PGSSLCERT=/certs/node.crt
+      - PGSSLKEY=/certs/node.key
+    volumes:
+      - ./kdc/krb5.conf:/etc/krb5.conf
+      - ./psql/gss_test.go:/test/gss_test.go
+      - ./psql/start.sh:/start.sh
+      - certs-client:/certs
+      - keytab:/keytab
+
+volumes:
+  keytab:
+  certs-cockroach:
+  certs-client:
