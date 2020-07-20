@@ -1,19 +1,17 @@
-### This is a tutorial based on a single node CockroachDB cluster and Minio cloud storage sink for [changefeed](https://www.cockroachlabs.com/docs/stable/change-data-capture.html#create-a-changefeed-connected-to-a-cloud-storage-sink)
+# This is a tutorial based on a single node CockroachDB cluster and Minio cloud storage sink for [changefeed](https://www.cockroachlabs.com/docs/stable/change-data-capture.html#create-a-changefeed-connected-to-a-cloud-storage-sink)
 
 Requirementes:
-Changefeeds require an enterprise license of CockroachDB as of version 19.2.2.
+As of version 19.2.2, Changefeeds require an enterprise license of CockroachDB.
 
- - [CockroachDB](https://www.cockroachlabs.com/docs/stable/enterprise-licensing.html)
- - [Minio](https://hub.docker.com/r/minio/minio/)
-
-https://docs.min.io/docs/aws-cli-with-minio
-https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-compatible services
+- [CockroachDB](https://www.cockroachlabs.com/docs/stable/enterprise-licensing.html)
+- [Minio](https://hub.docker.com/r/minio/minio/)
+- [Minio AWS CLI](https://docs.min.io/docs/aws-cli-with-minio)
+- [CockroachDB Backup](https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls) under S3-compatible services
 
 Containers:
 1. CockroachDB: `cockroach-minio_crdb_1`
 2. Minio:	`cockroach-minio_minio_1`
-3. NiFi:	`cockroach-minio_nifi_1`
-
+3. NiFi: `cockroach-minio_nifi_1`
 
 ### Create Minio bucket, in my case `miniobucket`
 
@@ -33,7 +31,7 @@ Time: 16.1918ms
 
 now browse to the minio bucket directory and look for dogs directory, navigate to the /miniobucket/dogsdir/2019-12-18/ and you will find a bunch `*.ndjson` files.
 
-```
+```json
 {"after": {"id": 1, "name": "Pete!"}, "key": [1], "updated": "1576701552590477800.0000000000"}
 {"after": {"id": 2, "name": "Carl"}, "key": [2], "updated": "1576701552590477800.0000000000"}
 201912182039125904778000000000000-a811836c424bb311-1-324-00000000-office_dogs-1.ndjson (END)
