@@ -1,17 +1,9 @@
 TODO:
 1. address dockerlint issues
 
-# Connect to psql
-
-```bash
-docker exec -it psql bash
-```
-
-# Connect to cockroach
-
-```sql
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require" -U tester
-```
+1. Run `./up.sh`
+2. Connect to the `psql` container using `docker exec -it psql bash`.
+3. Connect to cockroach via psql with `psql "postgresql://cockroach:26257/defaultdb?sslmode=require" -U tester`
 
 ```sql
 psql (9.5.22, server 9.5.0)
