@@ -23,4 +23,7 @@ docker-compose exec cockroach \
  --certs-dir=/certs --host=cockroach \
  --execute="SET CLUSTER SETTING cluster.organization = 'Cockroach Labs - Production Testing';" -e "SET CLUSTER SETTING enterprise.license ='${COCKROACH_DEV_LICENSE}';"
 
-docker-compose exec cockroach /cockroach/cockroach sql --certs-dir=/certs --host=cockroach --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"
+docker-compose exec cockroach \
+ /cockroach/cockroach sql \
+ --certs-dir=/certs --host=cockroach \
+ --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"

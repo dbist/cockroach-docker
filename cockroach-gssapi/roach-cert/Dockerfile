@@ -1,6 +1,6 @@
 # Stage 1 - generate certs
 
-FROM cockroachdb/cockroach:latest as generator
+FROM cockroachdb/cockroach:v20.1.3 as generator
 
 RUN mkdir -pv /tmp/certs/ca /tmp/certs/cockroach /tmp/certs/client /tmp/safe
 
@@ -16,7 +16,7 @@ RUN ./cockroach cert create-node cockroach localhost --certs-dir=/tmp/certs/cock
 
 # Stage 2 - share certs
 
-FROM alpine:latest
+FROM alpine:3.12.0
 
 RUN mkdir -pv /certs/cockroach /certs/client
 
