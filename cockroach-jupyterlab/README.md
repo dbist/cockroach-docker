@@ -1,4 +1,4 @@
-# Secure CockroachDB Cluster with a load balancer and JupyterLab.
+# Secure CockroachDB Cluster with a load balancer and JupyterLab
 A 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
 Prerequisites:
@@ -12,7 +12,7 @@ Prerequisites:
 * `jupyterlab` - JupyterLab node
 
 ## Getting started
->If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`. 
+>If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
 1) Operation order is important, execute `./up.sh` instead of `docker-compose up`
 	- monitor the status of services via `docker-compose logs`
