@@ -3,7 +3,6 @@ FROM alpine:3.12
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
 LABEL description="kerberos kdc container"
-
 ENV REFRESHED_AT 2020_07_20
 
 RUN apk add --no-cache \
