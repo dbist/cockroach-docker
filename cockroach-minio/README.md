@@ -13,7 +13,7 @@ Containers:
 2. Minio: `cockroach-minio_minio_1`
 3. NiFi: `cockroach-minio_nifi_1`
 
-### Create Minio bucket, in my case `miniobucket`
+## Create Minio bucket, in my case `miniobucket`
 
 ```sql
 CREATE CHANGEFEED FOR TABLE office_dogs INTO 'experimental-s3://miniobucket/dogs?AWS_ACCESS_KEY_ID=miniominio&AWS_SECRET_ACCESS_KEY=miniominio13&AWS_ENDPOINT=http://minio:9000' with updated;
@@ -49,7 +49,7 @@ UPDATE office_dogs SET name = 'Baethoven' WHERE id = 1;
 201912182130536816253000000000001-e74c329c6545f502-1-2-00000002-office_dogs-1.ndjson
 ```
 
-### View the `.ndjson` files for all the changes
+## View the `.ndjson` files for all the changes
 
 ```bash
 head  *.ndjson

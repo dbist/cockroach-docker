@@ -56,7 +56,7 @@ RUN cockroach cert create-node web --certs-dir=/tmp/certs/web --ca-key=/tmp/safe
 
 # Stage 2 - share certs
 
-FROM alpine:latest
+FROM alpine:3.12
 
 LABEL maintainer="tjveil@gmail.com"
 
