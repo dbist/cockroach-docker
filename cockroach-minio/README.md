@@ -11,9 +11,8 @@ https://www.cockroachlabs.com/docs/v19.2/backup.html#backup-file-urls under S3-c
 
 Containers:
 1. CockroachDB: `cockroach-minio_crdb_1`
-2. Minio:	`cockroach-minio_minio_1`
-3. NiFi:	`cockroach-minio_nifi_1`
-
+2. Minio: `cockroach-minio_minio_1`
+3. NiFi: `cockroach-minio_nifi_1`
 
 ### Create Minio bucket, in my case `miniobucket`
 
