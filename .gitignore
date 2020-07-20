@@ -130,3 +130,6 @@ dmypy.json
 
 # Minio configs
 .minio.sys/
+
+# VSCode
+.vscode/
