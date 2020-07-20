@@ -16,7 +16,7 @@ RUN ./cockroach cert create-node cockroach localhost --certs-dir=/tmp/certs/cock
 
 # Stage 2 - share certs
 
-FROM alpine:3.12.0
+FROM alpine:3.12
 
 RUN mkdir -pv /certs/cockroach /certs/client
 

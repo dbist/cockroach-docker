@@ -6,9 +6,9 @@ set -e
 # can create the keytab with kadmin.local here and it is then useable
 # by cockroach.
 
-kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/gss_cockroach_1.gss_default@MY.EX"
+#kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/gss_cockroach_1.gss_default@MY.EX"
 kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/cockroach@MY.EX"
-kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/psql@MY.EX"
-kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/docker-gss_default@MY.EX"
+#kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/psql@MY.EX"
+#kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/docker-gss_default@MY.EX"
 
 krb5kdc -n
