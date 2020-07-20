@@ -1,7 +1,7 @@
 TODO:
 1. figure out how to programmatically update the /etc/hosts file, specifically on the psql machine for `kdc`, `psql` and `cockroach`
 
-# Sample hosts file
+# Sample hosts file, the `cockroach` IP seems to always be #.#.#.n-1
 
 ```
 192.168.240.5	psql
