@@ -2,6 +2,10 @@
 
 FROM cockroachdb/cockroach:v20.1.3 as generator
 
+LABEL maintainer="artemervits at gmail dot com"
+LABEL version="1.0"
+LABEL description="cockroach cert generator container"
+
 RUN mkdir -pv /tmp/certs/ca /tmp/certs/cockroach /tmp/certs/client /tmp/safe
 
 RUN ./cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key \
