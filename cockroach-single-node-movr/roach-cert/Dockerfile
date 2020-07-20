@@ -6,7 +6,7 @@
 
 # Stage 1 - generate certs
 
-FROM debian:9.8-slim as generator
+FROM debian:9.8-slim AS generator
 
 ARG DEBIAN_FRONTEND=noninteractive
 
