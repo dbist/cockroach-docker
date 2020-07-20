@@ -53,7 +53,7 @@ RUN cockroach cert create-node roach-2 --certs-dir=/tmp/certs/roach-2 --ca-key=/
 
 # Stage 2 - share certs
 
-FROM alpine:latest
+FROM alpine:3.12
 
 LABEL maintainer="tjveil@gmail.com"
 
