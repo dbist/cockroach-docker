@@ -56,7 +56,7 @@ RUN cockroach cert create-node jupyterlab --certs-dir=/tmp/certs/jupyterlab --ca
 
 # Stage 2 - share certs
 
-FROM alpine:latest
+FROM alpine:3.12
 
 LABEL maintainer="tjveil@gmail.com"
 

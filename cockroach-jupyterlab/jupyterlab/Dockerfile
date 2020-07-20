@@ -6,7 +6,7 @@ ENV GRANT_SUDO=yes
 ENV JUPYTER_ENABLE_LAB=yes
 USER root
 WORKDIR /home/jovyan/work
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs && rm -rf /var/lib/apt/lists/*
 USER jovyan
 COPY requirements.txt ./
