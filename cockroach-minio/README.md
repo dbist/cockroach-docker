@@ -10,7 +10,7 @@ As of version 19.2.2, Changefeeds require an enterprise license of CockroachDB.
 
 Containers:
 1. CockroachDB: `cockroach-minio_crdb_1`
-2. Minio:	`cockroach-minio_minio_1`
+2. Minio: `cockroach-minio_minio_1`
 3. NiFi: `cockroach-minio_nifi_1`
 
 ### Create Minio bucket, in my case `miniobucket`

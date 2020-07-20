@@ -15,11 +15,11 @@ Prerequisites:
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
 1) Operation order is important, execute `./up.sh` instead of `docker-compose up`
-	- monitor the status of services via `docker-compose logs`
+   - monitor the status of services via `docker-compose logs`
           use `docker-compose logs <containername>`, `docker-compose kill <containername>`, `docker-compose up -d <containername>`
           to debug and proceed.
-2) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
-3) visit the HAProxy UI @ http://localhost:8081
+2) visit the [CockroachDB UI](https://localhost:8080) and login with username `test` and password `password`
+3) visit the [HAProxy UI](http://localhost:8081)
 4) visit the JupyterLab webpage by getting the url from `docker logs jupyterlab` command.
 
 ### Open Interactive Shells
@@ -54,10 +54,10 @@ docker exec -it roach-0 ./cockroach sql --url 'postgresql://maxroach@roach-0:262
 
 ### NOTE: Currently requires an older version of Jupyterlab as the most current 2.0.1 reports `jupyterlab-sql` is outdated. See [issue](https://github.com/pbugnion/jupyterlab-sql/issues/131)
 
-### NOTE: passing url to `jupyterlab-sql` in the form `postgresql://maxroach@roach-0:26257?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt` doesn't work. Workaround is `postgresql://maxroach@roach-0?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt&port=26257`, see [issue](https://github.com/pbugnion/jupyterlab-sql/issues/135).
+### NOTE: passing url to `jupyterlab-sql` in the form `postgresql://maxroach@roach-0:26257?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt` doesn't work. Workaround is `postgresql://maxroach@roach-0?sslert=/certs/client.maxroach.crt&sslkey=/certs/client.maxroach.key&sslmode=verify-full&sslrootcert=/certs/ca.crt&port=26257`, see [issue](https://github.com/pbugnion/jupyterlab-sql/issues/135)
 
 ### NOTE: connecting from `jupyterlab` container through python is possible with
-```
+```python
 from psycopg2 import connect
 psql_conn = connect("dbname=movr user=maxroach password=maxroach host=roach-0 sslmode=require port=26257")
 psql_conn.close()

@@ -1,4 +1,4 @@
-# This a multi-stage build to create a jupyterlab container based on this [tutorial](https://www.datacamp.com/community/tutorials/sql-interface-within-jupyterlab).
+# This a multi-stage build to create a jupyterlab container based on this [tutorial](https://www.datacamp.com/community/tutorials/sql-interface-within-jupyterlab)
 
 Running the container individually requires 2 steps.
 
