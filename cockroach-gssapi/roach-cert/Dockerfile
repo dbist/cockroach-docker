@@ -1,5 +1,5 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach:v20.1.3 as generator
+FROM cockroachdb/cockroach:v20.1.3 AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
