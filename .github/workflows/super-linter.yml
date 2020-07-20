@@ -1,6 +1,5 @@
 # Super Linter
-
-name: Linter
+name: Super Linter
 
 on:
   push:
@@ -10,9 +9,7 @@ on:
 
 jobs:
   build:
-    
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Super-Linter
