@@ -4,13 +4,10 @@ FROM postgres:9.5
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
 LABEL description="psql client container"
-
-# installing dnsutils as we want to `nslookup` cockroach container
-# vim is needed to edit /etc/hosts to add cockroach node, remove when /etc/hosts
-# can be populated programmatically
+ENV REFRESHED_AT 2020_07_20
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
-  krb5-user dnsutils vim
+  krb5-user
 
 ENTRYPOINT ["/start.sh"]
