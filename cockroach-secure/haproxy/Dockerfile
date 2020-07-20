@@ -1,6 +1,6 @@
-FROM haproxy:latest
+FROM haproxy:2.2
 
-LABEL maintainer="tjveil@gmail.com"
+LABEL maintainer="artemervits at gmail dot com"
 
 COPY haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
 
