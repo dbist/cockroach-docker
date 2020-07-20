@@ -1,4 +1,8 @@
 version: '3.8'
+
+# adding hard-coded IP addresses for each node as we need /etc/hosts populated with `cockroach` IP for
+# kerberos to work
+
 services:
 
   roach-cert:
@@ -18,6 +22,9 @@ services:
       - keytab:/keytab
     depends_on:
       - roach-cert
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.3
 
   cockroach:
     container_name: cockroach
@@ -35,11 +42,16 @@ services:
     volumes:
       - certs-cockroach:/certs
       - keytab:/keytab
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.4
 
   psql:
     container_name: psql
     hostname: psql
     build: ./psql
+    extra_hosts:
+      - "cockroach:172.28.1.4"
     depends_on:
       - cockroach
       - kdc
@@ -56,8 +68,18 @@ services:
       - ./psql/start.sh:/start.sh
       - certs-client:/certs
       - keytab:/keytab
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.5
 
 volumes:
   keytab:
   certs-cockroach:
   certs-client:
+
+networks:
+  roachnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
