@@ -11,7 +11,7 @@ Prerequisites:
 * `roach-cert` - Holds certificates as volume mounts
 
 ## Getting started
->If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`. 
+>If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
 1) `docker-compose run web django-admin startproject composeexample .`
 
@@ -22,12 +22,12 @@ Starting roach-0    ... done
 ```
 
 3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
-	- monitor the status of services via `docker-compose logs`
-        - in case you need to adjust something in composexample/settings.py, you can
+   - monitor the status of services via `docker-compose logs`
+   - in case you need to adjust something in composexample/settings.py, you can
           use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
           to debug and proceed.
-4) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
-5) visit the HAProxy UI @ http://localhost:8081
+4) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
+5) visit the [HAProxy UI](http://localhost:8081)
 
 ### Open Interactive Shells
 ```bash

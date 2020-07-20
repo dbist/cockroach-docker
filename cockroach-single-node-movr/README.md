@@ -15,8 +15,8 @@ The same can also be achieved with command line, [OS-specific](http://www.chromi
 2. In terminal, run command like so: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --allow-insecure-localhost`
 
 1) because operation order is important, execute `./up.sh` instead of `docker-compose up`
-	- monitor the status of services via `docker-compose logs`
-2) visit the CockroachDB UI @ https://localhost:8080 and login with username `test` and password `password`
+   - monitor the status of services via `docker-compose logs`
+2) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
 
 ### Open Interactive Shells
 ```bash

@@ -1,3 +1,5 @@
+# Sample CockroachDB application using CockroachDB, MIT Kerberos and postgresql-client
+
 TODO:
 1. address dockerlint issues
 
