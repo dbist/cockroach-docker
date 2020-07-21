@@ -11,6 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+#    - uses: actions/checkout@v2  # use docker image below instead of building from scratch for faster execution
+    - uses: docker://github/super-linter:v3
     - name: Super-Linter
       uses: github/super-linter@v3.3.2
