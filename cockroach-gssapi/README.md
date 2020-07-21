@@ -2,6 +2,9 @@
 
 TODO:
 1. address dockerlint issues
+2. add `krbsrvname` example
+3. add `import` over `psql` example
+4. add multi-node cockroach cluster
 
 ------------------------------------------------------
 1. Run `./up.sh`
@@ -16,4 +19,40 @@ SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256, bits: 12
 Type "help" for help.
 
 defaultdb=>
+```
+
+5. Connect to the `kdc` container using `docker exec -it kdc bin/sh`
+
+```bash
+# kadmin.local
+Authenticating as principal root/admin@MY.EX with password.
+kadmin.local:  list_principals
+K/M@MY.EX
+kadmin/admin@MY.EX
+kadmin/changepw@MY.EX
+kadmin/e543e5072daf@MY.EX
+kiprop/e543e5072daf@MY.EX
+krbtgt/MY.EX@MY.EX
+postgres/cockroach@MY.EX
+tester@MY.EX
+kadmin.local:
+```
+
+6. Connect to the cockroach node
+
+```bash
+docker exec -it cockroach bash
+```
+
+7. Connect to sql shell with fallback root user and cert
+
+```bash
+cockroach sql --certs-dir=/certs --host=cockroach
+```
+
+8. If for any reason you'd like to re-authenticate with Kerberos, using `psql` container and tester user password [[psql]]:
+
+```bash
+kdestroy -A
+kinit tester
 ```
