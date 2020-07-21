@@ -133,3 +133,6 @@ dmypy.json
 
 # VSCode
 .vscode/
+
+# Ignore cruft go files
+cockroach-gssapi/psql/gss_test.go
