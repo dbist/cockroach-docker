@@ -71,7 +71,7 @@ kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@MY.EX"
 then, simply connect to cockroach from the `psql` container using
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require?krbsrvname=customspn" -U tester
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester
 ```
 
 In case you're not convinced that it takes effect, here's an example with an SPN that does not exist
@@ -80,4 +80,45 @@ In case you're not convinced that it takes effect, here's an example with an SPN
 psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=doesnotexist" -U tester
 psql: GSSAPI continuation error: Unspecified GSS failure.  Minor code may provide more information
 GSSAPI continuation error: Server doesnotexist/cockroach@MY.EX not found in Kerberos database
+```
+
+10. `IMPORT` over gssapi and psql can be done with the following steps
+
+a. start a webserver on your host and capture the IP and port
+
+```bash
+python3 -m http.server
+```
+b. take the import.sql file and copy it to the psql container
+
+```bash
+docker cp import/import.sql psql:/
+```
+
+c. grant access to the `tester` user to perform imports as it requires `admin` priveleges
+
+First connect with root user
+
+```bash
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester
+```
+then execute the grant
+
+```sql
+GRANT ADMIN TO tester;
+```
+
+d. Finally, execute the import command with the following step
+
+```bash
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester -f import.sql
+```
+
+```bash
+# psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester -f import.sql
+DROP TABLE
+       job_id       |  status   | fraction_completed | rows | index_entries | bytes
+--------------------+-----------+--------------------+------+---------------+-------
+ 574691207820935169 | succeeded |                  1 | 1000 |          1000 | 41030
+(1 row)
 ```
