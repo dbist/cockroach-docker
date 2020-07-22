@@ -2,9 +2,8 @@
 
 TODO:
 1. address dockerlint issues
-2. add `krbsrvname` example
-3. add `import` over `psql` example
-4. add multi-node cockroach cluster
+2. add `import` over `psql` example
+3. add multi-node cockroach cluster
 
 ------------------------------------------------------
 1. Run `./up.sh`
@@ -55,4 +54,24 @@ cockroach sql --certs-dir=/certs --host=cockroach
 ```bash
 kdestroy -A
 kinit tester
+```
+
+9. Using `krbsrvname` to override `postgres` SPN (service principal name) requires a new entry in Kerberos and the associated keytab
+
+```bash
+kadmin.local -q "addprinc -randkey customspn/cockroach@MY.EX
+kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@MY.EX"
+```
+then, simply connect to cockroach from the `psql` container using
+
+```bash
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require?krbsrvname=customspn"
+```
+
+In case you're not convinced that it takes effect, here's an example with an SPN that does not exist
+
+```bash
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=doesnotexist" -U tester
+psql: GSSAPI continuation error: Unspecified GSS failure.  Minor code may provide more information
+GSSAPI continuation error: Server doesnotexist/cockroach@MY.EX not found in Kerberos database
 ```
