@@ -2,8 +2,7 @@
 
 TODO:
 1. address dockerlint issues
-2. add `import` over `psql` example
-3. add multi-node cockroach cluster
+2. add multi-node cockroach cluster
 
 ------------------------------------------------------
 1. Run `./up.sh`
