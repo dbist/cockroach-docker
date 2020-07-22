@@ -49,6 +49,12 @@ docker exec -it cockroach bash
 cockroach sql --certs-dir=/certs --host=cockroach
 ```
 
+From the `psql` container, the fallback connection string is below
+
+```bash
+psql "postgresql://cockroach:26257?sslcert=/certs%2Fclient.root.crt&sslkey=/certs%2Fclient.root.key&sslmode=verify-full&sslrootcert=/certs%2Fca.crt"
+```
+
 8. If for any reason you'd like to re-authenticate with Kerberos, using `psql` container and tester user password [[psql]]:
 
 ```bash
@@ -65,7 +71,7 @@ kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@MY.EX"
 then, simply connect to cockroach from the `psql` container using
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require?krbsrvname=customspn"
+psql "postgresql://cockroach:26257/defaultdb?sslmode=require?krbsrvname=customspn" -U tester
 ```
 
 In case you're not convinced that it takes effect, here's an example with an SPN that does not exist
