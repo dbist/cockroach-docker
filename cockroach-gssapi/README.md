@@ -3,6 +3,9 @@
 TODO:
 1. address dockerlint issues
 2. add multi-node cockroach cluster
+3. add example using `master` branch without `psql`, native GSSAPI
+4. add django example and `krbsrvname`
+5. add sqlalchemy example
 
 ------------------------------------------------------
 1. Run `./up.sh`
