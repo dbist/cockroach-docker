@@ -26,16 +26,16 @@ defaultdb=>
 
 ```bash
 # kadmin.local
-Authenticating as principal root/admin@MY.EX with password.
+Authenticating as principal root/admin@EXAMPLE.COM with password.
 kadmin.local:  list_principals
-K/M@MY.EX
-kadmin/admin@MY.EX
-kadmin/changepw@MY.EX
-kadmin/e543e5072daf@MY.EX
-kiprop/e543e5072daf@MY.EX
-krbtgt/MY.EX@MY.EX
-postgres/cockroach@MY.EX
-tester@MY.EX
+K/M@EXAMPLE.COM
+kadmin/admin@EXAMPLE.COM
+kadmin/changepw@EXAMPLE.COM
+kadmin/e543e5072daf@EXAMPLE.COM
+kiprop/e543e5072daf@EXAMPLE.COM
+krbtgt/EXAMPLE.COM@MY.EX
+postgres/cockroach@EXAMPLE.COM
+tester@EXAMPLE.COM
 kadmin.local:
 ```
 
@@ -67,8 +67,8 @@ kinit tester
 9. Using `krbsrvname` to override `postgres` SPN (service principal name) requires a new entry in Kerberos and the associated keytab
 
 ```bash
-kadmin.local -q "addprinc -randkey customspn/cockroach@MY.EX
-kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@MY.EX"
+kadmin.local -q "addprinc -randkey customspn/cockroach@EXAMPLE.COM
+kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@EXAMPLE.COM"
 ```
 then, simply connect to cockroach from the `psql` container using
 
@@ -81,7 +81,7 @@ In case you're not convinced that it takes effect, here's an example with an SPN
 ```bash
 psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=doesnotexist" -U tester
 psql: GSSAPI continuation error: Unspecified GSS failure.  Minor code may provide more information
-GSSAPI continuation error: Server doesnotexist/cockroach@MY.EX not found in Kerberos database
+GSSAPI continuation error: Server doesnotexist/cockroach@EXAMPLE.COM not found in Kerberos database
 ```
 
 10. `IMPORT` over gssapi and psql can be done with the following steps

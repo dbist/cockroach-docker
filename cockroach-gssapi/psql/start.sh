@@ -2,7 +2,7 @@
 
 set -e
 
-echo psql | kinit tester@MY.EX
+echo psql | kinit tester@EXAMPLE.COM
 
 env
 
