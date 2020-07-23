@@ -6,6 +6,7 @@ TODO:
 3. add example using `master` branch without `psql`, native GSSAPI
 4. add django example and `krbsrvname`
 5. add sqlalchemy example
+6. add spring boot example
 
 ------------------------------------------------------
 1. Run `./up.sh`
