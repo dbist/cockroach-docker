@@ -11,7 +11,7 @@ TODO:
 ------------------------------------------------------
 1. Run `./up.sh`
 2. Connect to the `psql` container using `docker exec -it psql bash`.
-3. Connect to cockroach via psql with `psql "postgresql://cockroach:26257/defaultdb?sslmode=require" -U tester`
+3. Connect to cockroach via psql with `psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester`
 4. Tear it down with `./down.sh`
 
 
@@ -74,13 +74,13 @@ kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/cockroach@EXAMPLE.COM"
 then, simply connect to cockroach from the `psql` container using
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester
+psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
 In case you're not convinced that it takes effect, here's an example with an SPN that does not exist
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=doesnotexist" -U tester
+psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=doesnotexist" -U tester
 psql: GSSAPI continuation error: Unspecified GSS failure.  Minor code may provide more information
 GSSAPI continuation error: Server doesnotexist/cockroach@EXAMPLE.COM not found in Kerberos database
 ```
@@ -103,7 +103,7 @@ c. grant access to the `tester` user to perform imports as it requires `admin` p
 First connect with root user
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester
+psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 then execute the grant
 
@@ -114,14 +114,20 @@ GRANT ADMIN TO tester;
 d. Finally, execute the import command with the following step
 
 ```bash
-psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester -f import.sql
+psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester -f import.sql
 ```
 
 ```bash
-# psql "postgresql://cockroach:26257/defaultdb?sslmode=require&krbsrvname=customspn" -U tester -f import.sql
+# psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester -f import.sql
 DROP TABLE
        job_id       |  status   | fraction_completed | rows | index_entries | bytes
 --------------------+-----------+--------------------+------+---------------+-------
  574691207820935169 | succeeded |                  1 | 1000 |          1000 | 41030
 (1 row)
 ```
+
+11. Connect to psql using properties
+
+```bash
+psql "host=cockroach port=26257 sslmode=verify-full user=tester krbsrvname=customspn sslrootcert=/certs/ca.crt"
+```11. Connect to psql using properties
