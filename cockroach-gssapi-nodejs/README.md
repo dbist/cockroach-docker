@@ -34,3 +34,29 @@ docker exec -it cockroach bash
 ```bash
 cockroach sql --certs-dir=/certs --host=cockroach
 ```
+
+6. Connect to the node container
+
+```bash
+docker exec -it nodeapp bash
+```
+
+7. Check the node app works
+
+```bash
+docker logs nodeapp
+```
+
+```bash
+Password for tester@EXAMPLE.COM:
+NODE_VERSION=14.5.0
+HOSTNAME=nodeapp
+YARN_VERSION=1.22.4
+HOME=/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/app
+REFRESHED_AT=2020_07_24
+Initial balances:
+{ id: '1', balance: '1000' }
+{ id: '2', balance: '250' }
+```
