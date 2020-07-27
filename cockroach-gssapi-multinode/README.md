@@ -1,5 +1,4 @@
-# Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
-A 3 node *secure* CockroachDB cluster with Kerberos and HAProxy acting as load balancer
+# A Secure CockroachDB Cluster with Kerberos and HAProxy acting as load balancer
 ---
 
 Check out my series of articles on CockroachDB and Kerberos below:
