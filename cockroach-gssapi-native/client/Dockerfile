@@ -1,5 +1,5 @@
 # Build the test binary in a multistage build.
-FROM cockroachdb20.2-alpha.20200727
+FROM dbist/cockroachdb20.2-alpha.20200727:unstable
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
