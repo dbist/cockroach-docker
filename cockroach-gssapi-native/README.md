@@ -7,7 +7,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 3: [CockroachDB with MIT Kerberos and Docker Compose](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-3.html)
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
 
-------
+---
 1. Run `./up.sh`
 2. Connect to the `client` container using `docker exec -it client bash`.
 3. Connect to cockroach with `cockroach sql --url "postgresql://tester:nopassword@cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt"` and with custom SPN, `cockroach sql --url "postgresql://tester:nopassword@cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"`
