@@ -9,7 +9,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
 
 ---
-TODO:
+## TODO:
 1. address dockerlint issues
 2. add multi-node cockroach cluster
 3. add example using `master` branch without `psql`, native GSSAPI
@@ -17,7 +17,7 @@ TODO:
 5. add sqlalchemy example
 6. add spring boot example
 
-------------------------------------------------------
+---
 1. Run `./up.sh`
 2. Connect to the `psql` container using `docker exec -it psql bash`.
 3. Connect to cockroach via psql with `psql "postgresql://cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester`

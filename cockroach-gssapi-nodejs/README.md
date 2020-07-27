@@ -12,7 +12,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 TODO:
 1. Add kerberos support
 
-------------------------------------------------------
+---
 1. Run `./up.sh`
 2. Tear it down with `./down.sh`
 3. Connect to the `kdc` container using `docker exec -it kdc bin/sh`
