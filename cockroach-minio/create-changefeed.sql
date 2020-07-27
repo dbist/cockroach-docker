@@ -8,7 +8,7 @@ SET DATABASE = cdc_demo;
 
 CREATE TABLE office_dogs (
      id INT PRIMARY KEY,
-     name STRING);
+     name STRING(20));
 
 INSERT INTO office_dogs VALUES
    (1, 'Petee'),
