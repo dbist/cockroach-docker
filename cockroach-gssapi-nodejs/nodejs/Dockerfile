@@ -14,5 +14,7 @@ COPY app /app
 WORKDIR /app
 RUN npm install --save pg
 RUN npm install async
+RUN npm install standard --save-dev
+RUN npx standard --fix *.js
 
 ENTRYPOINT ["./start.sh"]
