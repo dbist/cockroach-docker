@@ -2,3 +2,13 @@
 
 ![Super Linter](https://github.com/dbist/cockroach-docker/workflows/Super%20Linter/badge.svg)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=alert_status)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=bugs)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=code_smells)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=coverage)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=ncloc)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=security_rating)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=sqale_index)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
