@@ -1,5 +1,5 @@
 # Build the test binary in a multistage build.
-FROM cockroachdb-custom-072720
+FROM cockroachdb20.2-alpha.20200727
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
