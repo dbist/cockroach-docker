@@ -133,3 +133,6 @@ dmypy.json
 
 # VSCode
 .vscode/
+
+# Nodejs
+/cockroach-gssapi-nodejs/nodejs/app/node_modules
