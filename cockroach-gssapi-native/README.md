@@ -111,3 +111,15 @@ root@cockroach:26257/defaultdb> SHOW CLUSTER SETTING server.host_based_authentic
 
 Time: 1.0508ms
 ```
+
+11. Using custom spn without `krbsrvname`
+
+```bash
+cockroach sql --certs-dir=/certs --url "postgresql://tester:nopassword@cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&spn=customspn/cockroach"
+```
+
+or
+
+```bash
+cockroach sql --certs-dir=/certs --url "postgresql://tester:nopassword@cockroach:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&service=customspn
+```
