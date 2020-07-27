@@ -1,16 +1,11 @@
 # Sample CockroachDB application using CockroachDB, MIT Kerberos and native `cockroach` GSSAPI client authentication
 ---
-
 Check out my series of articles on CockroachDB and Kerberos below:
 
 - Part 1: [CockroachDB with MIT Kerberos](https://blog.ervits.com/2020/05/three-headed-dog-meet-cockroach.html)
 - Part 2: [CockroachDB with Active Directory](https://blog.ervits.com/2020/06/three-headed-dog-meet-cockroach-part-2.html)
 - Part 3: [CockroachDB with MIT Kerberos and Docker Compose](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-3.html)
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
-
-## TODO:
-1. remove `client` container when 20.2 alpha2 ships
-2. replace the custom `cockroach` image with the official image
 
 ------
 1. Run `./up.sh`
