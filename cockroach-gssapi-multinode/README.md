@@ -76,3 +76,13 @@ defaultdb=>
 docker exec -it psql bash
 psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
+
+8) UPDATE with LB SPN only
+
+ psql "postgresql://lb:5432/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+
+ doesn't work
+
+ psql "postgresql://lb:5432/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+
+ works

@@ -97,6 +97,9 @@ services:
       - roach-0
       - roach-1
       - roach-2
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.7
 
   psql:
     container_name: psql
@@ -106,6 +109,7 @@ services:
       - "roach-0:172.28.1.4"
       - "roach-1:172.28.1.5"
       - "roach-2:172.28.1.6"
+      - "lb:172.28.1.7"
     depends_on:
       - roach-0
       - kdc
@@ -123,7 +127,7 @@ services:
       - keytab:/keytab
     networks:
       roachnet:
-        ipv4_address: 172.28.1.7
+        ipv4_address: 172.28.1.8
 
 networks:
   roachnet:
