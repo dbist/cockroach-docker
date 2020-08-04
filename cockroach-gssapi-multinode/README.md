@@ -76,3 +76,28 @@ defaultdb=>
 docker exec -it psql bash
 psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
+
+8) UPDATE with LB SPN only
+
+Using load balancer, `verify-full` does not work, unless the cert SAN is populated. `roach-cert` populates `lb` as part of `create-node` command.
+
+```bash
+root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+psql: server certificate for "roach-1" does not match host name "lb"
+root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+psql: server certificate for "roach-0" does not match host name "lb"
+root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+psql: server certificate for "roach-2" does not match host name "lb"
+```
+
+after addressing the SAN, the following works
+
+```bash
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+```
+
+This works with or without `lb` in the SAN.
+
+```bash
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+```
