@@ -135,4 +135,4 @@ dmypy.json
 .vscode/
 
 # Nodejs
-/cockroach-gssapi-nodejs/nodejs/app/node_modules
+cockroach-gssapi-nodejs/nodejs/app/node_modules
