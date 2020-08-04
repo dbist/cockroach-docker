@@ -20,15 +20,15 @@ var config = {
 // Create a pool.
 var pool = new pg.Pool(config)
 
-pool.connect(function (err, client, done) {
+pool.connect(function (errConn, client, done) {
   // Close communication with the database and exit.
   var finish = function () {
     done()
     process.exit()
   }
 
-  if (err) {
-    console.error('could not connect to cockroachdb', err)
+  if (errConn) {
+    console.error('could not connect to cockroachdb', errConn)
     finish()
   }
   async.waterfall([
@@ -45,9 +45,9 @@ pool.connect(function (err, client, done) {
       client.query('SELECT id, balance FROM accounts;', next)
     }
   ],
-  function (err, results) {
-    if (err) {
-      console.error('Error inserting into and selecting from accounts: ', err)
+  function (errInsert, results) {
+    if (errInsert) {
+      console.error('Error inserting into and selecting from accounts: ', errInsert)
       finish()
     }
 
