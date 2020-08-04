@@ -22,9 +22,9 @@ RUN cp -v /tmp/certs/client/client.* /tmp/certs/roach-0 \
     && cp -v /tmp/certs/client/client.* /tmp/certs/roach-2 \
     && cp -v /tmp/certs/client/client.* /tmp/certs/lb
 
-RUN cockroach cert create-node roach-0 --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-1 --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-2 --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-0 lb --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-1 lb --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-2 lb --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
 RUN cockroach cert create-node lb --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/ca.key
 
 # Stage 2 - share certs
