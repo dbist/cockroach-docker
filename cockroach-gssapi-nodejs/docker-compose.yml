@@ -71,9 +71,9 @@ services:
       roachnet:
         ipv4_address: 172.28.1.5
 
-  nodeapp:
-    container_name: nodeapp
-    hostname: nodeapp
+  nodejs:
+    container_name: nodejs
+    hostname: nodejs
     build: ./nodejs
     depends_on:
       - cockroach
