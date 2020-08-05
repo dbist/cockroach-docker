@@ -16,7 +16,7 @@ RUN ./cockroach cert create-client root --certs-dir=/tmp/certs/client --ca-key=/
 
 RUN cp -v /tmp/certs/client/client.* /tmp/certs/cockroach
 
-RUN ./cockroach cert create-node cockroach localhost --certs-dir=/tmp/certs/cockroach --ca-key=/tmp/safe/ca.key
+RUN ./cockroach cert create-node cockroach lb --certs-dir=/tmp/certs/cockroach --ca-key=/tmp/safe/ca.key
 
 # Stage 2 - share certs
 
