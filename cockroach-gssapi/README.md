@@ -128,4 +128,11 @@ DROP TABLE
 
 ```bash
 psql "host=cockroach port=26257 sslmode=verify-full user=tester krbsrvname=customspn sslrootcert=/certs/ca.crt"
-```11. Connect to psql using properties
+```
+
+12. Connect to psql via load balancer
+
+```bash
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
+```
+
