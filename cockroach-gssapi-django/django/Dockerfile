@@ -6,10 +6,10 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir code
 COPY requirements.txt code/
 WORKDIR code
-RUN apk update && apk add --no-cache --virtual .build-deps \
-    postgresql-dev gcc libpq python3-dev musl-dev linux-headers \
-    krb5-libs \
+RUN apk update && apk add --no-cache postgresql-dev gcc python3-dev musl-dev \
     && pip install --no-cache-dir -r requirements.txt \
-    && apk del .build-deps\
+    && apk add --no-cache krb5 libpq \
     && rm -rf /var/cache/apk/*
-RUN tail /dev/null
+#RUN tail /dev/null
+#ENTRYPOINT ["start.sh"]
+CMD ["start.sh"]

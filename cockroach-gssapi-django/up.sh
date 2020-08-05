@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# docker-compose run web django-admin startproject example .
+
 docker-compose build --no-cache
 docker-compose up -d
 

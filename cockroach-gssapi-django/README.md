@@ -30,6 +30,34 @@ Starting roach-cert ... done
 Starting roach-0    ... done
 ```
 
+2) Populate example/settings.py with the following
+
+a) ALLOWED_HOSTS = ['0.0.0.0']
+
+b)
+
+## THIS IS NOT USING KERBEROS AS ROOT USER IS FALLBACK
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_cockroachdb',
+        'NAME': 'defaultdb',
+        'USER': 'root',
+        'HOST': 'lb',
+        'PORT': '26257',
+        'OPTIONS': {
+            'sslmode': 'verify-full',
+            'sslrootcert': '/certs/ca.crt',
+            'sslcert': '/certs/client.root.crt',
+            'sslkey': '/certs/client.root.key',
+        },
+    },
+}
+```
+
+
+
 3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
    - monitor the status of services via `docker-compose logs`
    - in case you need to adjust something in composexample/settings.py, you can
