@@ -116,7 +116,6 @@ services:
     volumes:
       - .:/code
       - ./kdc/krb5.conf:/etc/krb5.conf
-      - ./psql/start.sh:/start.sh
       - certs-client:/certs
       - keytab:/keytab
     ports:
