@@ -15,7 +15,6 @@ COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
 ENTRYPOINT ["/start.sh"]
-RUN tail /dev/null
 
 
 # alpine doesn't work for some ambiguous python issue, possibly the lack
