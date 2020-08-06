@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:3.5-alpine
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="0.3"
 ENV REFRESHED_AT 2020_08_04
