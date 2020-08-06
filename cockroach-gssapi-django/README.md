@@ -67,7 +67,7 @@ DATABASES = {
         'HOST': 'lb',
         'PORT': '26257',
         'OPTIONS': {
-            'sslmode': 'verify-ca',
+            'sslmode': 'verify-full',
             'sslrootcert': '/certs/ca.crt',
             'krbsrvname': 'customspn',
         },
