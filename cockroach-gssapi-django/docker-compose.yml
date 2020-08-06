@@ -117,8 +117,8 @@ services:
       - .:/code
       - ./kdc/krb5.conf:/etc/krb5.conf
       - certs-client:/certs
-      - keytab:/keytab
       - ./django/start.sh:/start.sh
+      - keytab:/keytab
     ports:
       - "9999:9999"
     networks:

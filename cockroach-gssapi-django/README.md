@@ -103,6 +103,11 @@ Running migrations:
   Applying auth.0011_update_proxy_permissions... OK
   Applying sessions.0001_initial... OK
 ```
+
+## NOTE: need to stop and start the web node as kinit is having trouble getting password
+`docker-compose stop web`
+`docker-compose start web`
+
 3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
    - monitor the status of services via `docker-compose logs`
    - in case you need to adjust something in composexample/settings.py, you can
