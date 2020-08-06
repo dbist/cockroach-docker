@@ -69,7 +69,7 @@ DATABASES = {
         'OPTIONS': {
             'sslmode': 'verify-full',
             'sslrootcert': '/certs/ca.crt',
-            'krbsrvname': 'customspn',
+            'krbsrvname': 'cockroachdb',
         },
     },
 }
