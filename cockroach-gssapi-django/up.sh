@@ -29,3 +29,6 @@ docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
  --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"
+
+# `echo psql | kinit tester@EXAMPLE.COM` does not take effect as part of Dockerfile ENTRYPOINT for some reason, this is a workaround
+docker-compose exec web django/start.sh
