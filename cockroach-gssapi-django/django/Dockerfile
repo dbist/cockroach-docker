@@ -9,8 +9,8 @@ RUN apt-get update && \
   krb5-user \
   && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /code
-WORKDIR /code
+RUN mkdir /code/
+WORKDIR /code/
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
