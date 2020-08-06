@@ -6,7 +6,8 @@ ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
-  krb5-user
+  krb5-user \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /code
 WORKDIR /code
