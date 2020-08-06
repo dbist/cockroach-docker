@@ -56,6 +56,25 @@ DATABASES = {
 }
 ```
 
+## KERBEROS EXAMPLE SETTINGS
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_cockroachdb',
+        'NAME': 'defaultdb',
+        'USER': 'tester',
+        'HOST': 'lb',
+        'PORT': '26257',
+        'OPTIONS': {
+            'sslmode': 'verify-ca',
+            'sslrootcert': '/certs/ca.crt',
+            'krbsrvname': 'cockroachdb',
+        },
+    },
+}
+```
+
 3. Run migration
 
 ```python
