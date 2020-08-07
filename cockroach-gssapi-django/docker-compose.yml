@@ -122,7 +122,7 @@ services:
       - ./django/start.sh:/start.sh
       - keytab:/keytab
     ports:
-      - "9999:9999"
+      - "8000:8000"
     networks:
       roachnet:
         ipv4_address: 172.28.1.8
