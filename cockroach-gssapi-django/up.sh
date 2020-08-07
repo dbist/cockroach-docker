@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# this doesn't work yet, run locally with `django-admin startproject example .`
 # docker-compose run web django-admin startproject example .
 
 docker-compose build --no-cache

@@ -22,13 +22,35 @@ Check out my series of articles on CockroachDB and Kerberos below:
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1) `docker-compose run web django-admin startproject composeexample .`
-you can also generate project structure with `django-admin startproject projectname .` using locally installed django package and not rely on docker.
+1) This doesn't work yet, must initialize a Django project manually
+
+`docker-compose run web django-admin startproject composeexample .`
 
 ```bash
 14:32 $ docker-compose run web django-admin startproject composeexample .
 Starting roach-cert ... done
 Starting roach-0    ... done
+```
+
+Generate project structure with `django-admin startproject projectname .` using locally installed django package and not rely on docker.
+
+```bash
+pip3 install django==3.0
+Collecting django==3.0
+  Using cached Django-3.0-py3-none-any.whl (7.4 MB)
+Requirement already satisfied: pytz in /usr/local/lib/python3.8/site-packages (from django==3.0) (2020.1)
+Requirement already satisfied: asgiref~=3.2 in /usr/local/lib/python3.8/site-packages (from django==3.0) (3.2.10)
+Requirement already satisfied: sqlparse>=0.2.2 in /usr/local/lib/python3.8/site-packages (from django==3.0) (0.3.1)
+Installing collected packages: django
+  Attempting uninstall: django
+    Found existing installation: Django 2.2
+    Uninstalling Django-2.2:
+      Successfully uninstalled Django-2.2
+Successfully installed django-3.0
+```
+
+```bash
+django-admin startproject example_django_3_0 .
 ```
 
 2) Populate example/settings.py with the following
