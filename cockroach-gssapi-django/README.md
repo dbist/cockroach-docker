@@ -17,14 +17,16 @@ Check out my series of articles on CockroachDB and Kerberos below:
 * `lb` - HAProxy acting as load balancer
 * `roach-cert` - Holds certificates as volume mounts
 * `kdc` - MIT Kerberos realm
-* `web` - django server 
+* `web` - django server
 
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1) This doesn't work yet, must initialize a Django project manually
+1) This doesn't work, must initialize a Django project manually
 
 `docker-compose run web django-admin startproject composeexample .`
+
+Because I'm using ENTRYPOINT in django Dockerfile as oppose to the original docker-compose [example](https://docs.docker.com/compose/django/). My entrypoint expects kerberos present.
 
 ```bash
 14:32 $ docker-compose run web django-admin startproject composeexample .
