@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 volumes:
   certs-roach-0:
@@ -112,6 +112,8 @@ services:
       - lb
       - kdc
       - roach-0
+      - roach-1
+      - roach-2
     command: python manage.py runserver 0.0.0.0:9999
     volumes:
       - .:/code
