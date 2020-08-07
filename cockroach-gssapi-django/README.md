@@ -8,7 +8,8 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 3: [CockroachDB with MIT Kerberos and Docker Compose](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-3.html)
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
 - Part 5: [Executing CockroachDB table import via GSSAPI](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-5.html)
-- Part 6: [CockroachDB with MIT Kerberos and Django](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
+- Part 6: [Three-headed dog meet cockroach, part 6: CockroachDB, MIT Kerberos, HAProxy and Docker Compose](https://blog.ervits.com/2020/08/three-headed-dog-meet-cockroach-part-6.html)
+- Part 7777777: [CockroachDB with MIT Kerberos and Django](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
 ---
 
 ## Services

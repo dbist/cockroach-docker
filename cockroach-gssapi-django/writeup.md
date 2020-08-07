@@ -1,11 +1,12 @@
-# CockroachDB with MIT Kerberos and Docker Compose - Simplified 
+# CockroachDB with Django and MIT Kerberos
 ------------------------------------------------------
 - Part 1: [CockroachDB with MIT Kerberos](https://blog.ervits.com/2020/05/three-headed-dog-meet-cockroach.html)
 - Part 2: [CockroachDB with Active Directory](https://blog.ervits.com/2020/06/three-headed-dog-meet-cockroach-part-2.html)
 - Part 3: [CockroachDB with MIT Kerberos and Docker Compose](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-3.html)
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
 - Part 5: [Executing CockroachDB table import via GSSAPI](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-5.html)
-- Part 6: [CockroachDB with MIT Kerberos and Django](https://)
+- Part 6: [Three-headed dog meet cockroach, part 6: CockroachDB, MIT Kerberos, HAProxy and Docker Compose](https://blog.ervits.com/2020/08/three-headed-dog-meet-cockroach-part-6.html)
+- Part 7: [CockroachDB with MIT Kerberos and Django](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
 ---
 
 Today, I'm going to demonstrate how to leverage CockroachDB with MIT Kerberos and the Django project. We have a lot of customers using us for their Python database needs and you can view some of the options on our [docs](https://www.cockroachlabs.com/docs/stable/build-a-python-app-with-cockroachdb-django.html) site.
