@@ -114,7 +114,7 @@ services:
       - roach-0
       - roach-1
       - roach-2
-    command: python manage.py runserver 0.0.0.0:9999
+    command: python manage.py migrate
     volumes:
       - .:/code
       - ./kdc/krb5.conf:/etc/krb5.conf
