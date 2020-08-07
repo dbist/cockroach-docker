@@ -55,6 +55,12 @@ Successfully installed django-3.0
 django-admin startproject example_django_3_0 .
 ```
 
+## For Django 3.1, etc.
+
+```bash
+pip3 install django==3.1
+```
+
 2) Populate example/settings.py with the following
 
 a) ALLOWED_HOSTS = ['*']
