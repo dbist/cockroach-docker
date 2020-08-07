@@ -17,12 +17,13 @@ Check out my series of articles on CockroachDB and Kerberos below:
 * `lb` - HAProxy acting as load balancer
 * `roach-cert` - Holds certificates as volume mounts
 * `kdc` - MIT Kerberos realm
-* `client` - postgres-sql client node as CockroachDB < 20.2.alpha3 does not support GSSAPI
+* `web` - django server 
 
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
 1) `docker-compose run web django-admin startproject composeexample .`
+you can also generate project structure with `django-admin startproject projectname .` using locally installed django package and not rely on docker.
 
 ```bash
 14:32 $ docker-compose run web django-admin startproject composeexample .
@@ -32,7 +33,7 @@ Starting roach-0    ... done
 
 2) Populate example/settings.py with the following
 
-a) ALLOWED_HOSTS = ['0.0.0.0']
+a) ALLOWED_HOSTS = ['*']
 
 b)
 
@@ -77,6 +78,10 @@ DATABASES = {
 
 3. Run migration
 
+```bash
+docker exec -it bash sh
+```
+
 ```python
 python manage.py migrate
 ```
@@ -104,9 +109,27 @@ Running migrations:
   Applying sessions.0001_initial... OK
 ```
 
-## NOTE: need to stop and start the web node as kinit is having trouble getting password
-`docker-compose stop web`
-`docker-compose start web`
+4. Start the server if not started, [django UI](https://localhost:9999) should be able to tell.
+
+```bash
+python manage.py runserver 0.0.0.0:9999
+```
+
+```bash
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 07, 2020 - 16:20:56
+Django version 2.2.15, using settings 'example_django_2_2.settings'
+Starting development server at http://0.0.0.0:9999/
+Quit the server with CONTROL-C.
+```
+
+
+## NOTE: may need to stop and start the web node as kinit is having trouble getting password
+
+`docker-compose restart web`
 
 3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
    - monitor the status of services via `docker-compose logs`
@@ -122,6 +145,7 @@ docker exec -ti roach-0 /bin/bash
 docker exec -ti roach-1 /bin/bash
 docker exec -ti roach-2 /bin/bash
 docker exec -ti lb /bin/sh
+docker exec -ti web sh
 
 # shell
 docker exec -ti roach-cert /bin/sh

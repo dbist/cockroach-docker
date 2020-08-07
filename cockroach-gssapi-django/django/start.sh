@@ -6,4 +6,4 @@ echo psql | kinit tester@EXAMPLE.COM
 
 env
 
-#tail -f /dev/null
+tail -f /dev/null
