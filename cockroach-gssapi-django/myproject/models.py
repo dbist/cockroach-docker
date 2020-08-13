@@ -1,5 +1,8 @@
 from django.db import models
 
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
+
 class Customers(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=250)

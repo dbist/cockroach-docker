@@ -27,7 +27,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 
 Docker compose is based on the Docker [demo app](https://docs.docker.com/compose/django/). The Django application with CockroachDB is based on theCockroachDB Django [tutorial](https://docs.docker.com/compose/django/). Feel free to read the article [7](#Part 7) above.
 
-1. Unlike the Docker tutorial, we must initialize the project directory using a local django as our example expects KDC to be present at the time of initialization and the below command will not work 
+1. Unlike the Docker tutorial, we must initialize the project directory using a local django as our example expects KDC to be present at the time of initialization and the below command will not work
 
 `docker-compose run web django-admin startproject composeexample .`
 

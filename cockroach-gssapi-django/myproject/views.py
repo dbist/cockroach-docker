@@ -8,6 +8,9 @@ from django.db.transaction import atomic
 import json
 import sys
 import time
+import os
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
 
 from .models import *
 

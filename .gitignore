@@ -26,6 +26,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+cockroach-gssapi-django/myproject/__pycache__
+cockroach-gssapi-django/myproject/migrations/__pycache__
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
