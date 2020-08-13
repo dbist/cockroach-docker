@@ -115,6 +115,8 @@ services:
       - roach-1
       - roach-2
     command: python manage.py migrate
+    environment:
+      - SECRET_KEY='${DJANGO_SECRET_KEY}'
     volumes:
       - .:/code
       - ./kdc/krb5.conf:/etc/krb5.conf
