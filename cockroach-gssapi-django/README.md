@@ -1,4 +1,4 @@
-# A Secure CockroachDB Cluster with Kerberos and HAProxy acting as load balancer
+# A Secure CockroachDB Cluster with Kerberos, Django and HAProxy acting as load balancer
 ---
 
 Check out my series of articles on CockroachDB and Kerberos below:
@@ -23,8 +23,11 @@ Check out my series of articles on CockroachDB and Kerberos below:
 
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
+---
 
-1) This doesn't work, must initialize a Django project manually
+Docker compose is based on the Docker [demo app](https://docs.docker.com/compose/django/). The Django application with CockroachDB is based on theCockroachDB Django [tutorial](https://docs.docker.com/compose/django/). Feel free to read the article [7](#Part 7) above.
+
+1. Unlike the Docker tutorial, we must initialize the project directory using a local django as our example expects KDC to be present at the time of initialization and the below command will not work 
 
 `docker-compose run web django-admin startproject composeexample .`
 
@@ -36,7 +39,7 @@ Starting roach-cert ... done
 Starting roach-0    ... done
 ```
 
-Generate project structure with `django-admin startproject projectname .` using locally installed django package and not rely on docker.
+Generate project structure with `django-admin startproject myproject .` using locally installed django package and not rely on docker.
 
 ```bash
 pip3 install django==3.0
@@ -63,13 +66,13 @@ django-admin startproject example_django_3_0 .
 pip3 install django==3.1
 ```
 
-2) Populate example/settings.py with the following
+2. Populate the myproject/myproject/settings.py with the following
 
 a) ALLOWED_HOSTS = ['*']
 
 b)
 
-## THIS IS NOT USING KERBEROS AS ROOT USER IS FALLBACK
+This is an example of ssl authentication to Django using root user (fallback)
 
 ```python
 DATABASES = {
@@ -89,14 +92,14 @@ DATABASES = {
 }
 ```
 
-## KERBEROS EXAMPLE SETTINGS
+This is a Kerberos example
 
 ```python
 DATABASES = {
     'default': {
         'ENGINE': 'django_cockroachdb',
-        'NAME': 'defaultdb',
-        'USER': 'tester',
+        'NAME': 'bank',
+        'USER': 'django',
         'HOST': 'lb',
         'PORT': '26257',
         'OPTIONS': {
@@ -108,19 +111,49 @@ DATABASES = {
 }
 ```
 
-3. Run migration
+c) Add `myproject` to the list of installed apps
+
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'myproject',
+]
+```
+
+3. Write the application logic
+
+Use the source code in the CockroachDB Django tutorial.
+
+4. Setup and run the Django app
 
 ```bash
 docker exec -it bash sh
 ```
 
+```bash
+python manage.py makemigrations myproject
+```
+
 ```python
+Migrations for 'myproject':
+  myproject/migrations/0001_initial.py
+    - Create model Customers
+    - Create model Products
+    - Create model Orders
+```
+
+```bash
 python manage.py migrate
 ```
 
 ```python
 Operations to perform:
-  Apply all migrations: admin, auth, contenttypes, sessions
+  Apply all migrations: admin, auth, contenttypes, myproject, sessions
 Running migrations:
   Applying contenttypes.0001_initial... OK
   Applying auth.0001_initial... OK
@@ -138,13 +171,48 @@ Running migrations:
   Applying auth.0009_alter_user_last_name_max_length... OK
   Applying auth.0010_alter_group_name_max_length... OK
   Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying myproject.0001_initial... OK
   Applying sessions.0001_initial... OK
 ```
 
-4. Start the server if not started, [django UI](https://localhost:9999) should be able to tell.
+5. Connect to CockroachDB to confirm all of the new tables created
 
 ```bash
-python manage.py runserver 0.0.0.0:9999
+docker exec -it roach-0 sh
+cockroach sql --certs-dir=/certs --host=roach-0:26257
+```
+
+```sql
+root@roach-0:26257/defaultdb> use bank;
+SET
+
+Time: 1.5895ms
+
+root@roach-0:26257/bank> show tables;
+          table_name
+------------------------------
+  auth_group
+  auth_group_permissions
+  auth_permission
+  auth_user
+  auth_user_groups
+  auth_user_user_permissions
+  django_admin_log
+  django_content_type
+  django_migrations
+  django_session
+  myproject_customers
+  myproject_orders
+  myproject_orders_product
+  myproject_products
+(14 rows)
+```
+
+5. Start the server if not started, [django UI](https://localhost:9999) should be able to tell.
+
+```bash
+python manage.py runserver 0.0.0.0:8000
 ```
 
 ```bash
@@ -152,24 +220,58 @@ Watching for file changes with StatReloader
 Performing system checks...
 
 System check identified no issues (0 silenced).
-August 07, 2020 - 16:20:56
-Django version 2.2.15, using settings 'example_django_2_2.settings'
-Starting development server at http://0.0.0.0:9999/
+August 13, 2020 - 18:44:12
+Django version 3.1, using settings 'myproject.settings'
+Starting development server at http://0.0.0.0:8000/
 Quit the server with CONTROL-C.
 ```
-
 
 ## NOTE: may need to stop and start the web node as kinit is having trouble getting password
 
 `docker-compose restart web`
 
-3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
+6. Interact with Django and CockroachDB
+
+a) send a POST command
+
+```bash
+docker exec -it web curl --header "Content-Type: application/json" --request POST --data '{"name":"Carl"}' http://0.0.0.0:8000/customer/
+```
+
+b) send a GET command
+
+```bash
+docker exec -it web curl http://0.0.0.0:8000/customer/
+```
+
+```bash
+[{"id": 580891142121062403, "name": "Carl"}]
+```
+
+Verifying the same by accessing the database
+
+```bash
+docker exec -ti roach-0 sh
+cockroach sql --host=roach-0 --certs-dir=/certs --execute="select * from bank.myproject_customers;"
+```
+
+```bash
+          id         | name
+---------------------+-------
+  580891142121062403 | Carl
+(1 row)
+```
+
+---
+
+Summary: Order is important, execute `./up.sh` instead of `docker-compose up`
    - monitor the status of services via `docker-compose logs`
-   - in case you need to adjust something in composexample/settings.py, you can
+   - in case you need to adjust something in myproject/settings.py, you can
           use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
           to debug and proceed.
-4) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
-5) visit the [HAProxy UI](http://localhost:8081)
+- CockroachDB Admin [UI](https://localhost:8080) and login with username `test` and password `password`
+- HAProxy [UI](http://localhost:8081)
+- Django [UI](http://localhost:8000)
 
 ### Open Interactive Shells
 ```bash
@@ -178,61 +280,40 @@ docker exec -ti roach-1 /bin/bash
 docker exec -ti roach-2 /bin/bash
 docker exec -ti lb /bin/sh
 docker exec -ti web sh
-
-# shell
+docker exec -ti kdc sh
 docker exec -ti roach-cert /bin/sh
+```
 
-# cli inside the container
+Cockroach CLI
+
+```bash
 cockroach sql --certs-dir=/certs --host=roach-0
-
-# directly
-docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=roach-0
 ```
 
-6) Connect to `cockroach` using `psql`
+Verifying Kerberos
 
 ```bash
-docker exec -it psql bash
-psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
-```
+docker exec -ti web sh
+klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: django@EXAMPLE.COM
 
-```sql
-root@psql:/# psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
-psql (9.5.22, server 9.5.0)
-SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256, bits: 128, compression: off)
-Type "help" for help.
+Valid starting     Expires            Service principal
+08/13/20 18:44:02  08/14/20 18:44:02  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+	renew until 08/13/20 18:44:02
+08/13/20 18:44:12  08/14/20 18:44:02  customspn/lb@
+	renew until 08/13/20 18:44:02
+08/13/20 18:44:12  08/14/20 18:44:02  customspn/lb@EXAMPLE.COM
+	renew until 08/13/20 18:44:02
 
-defaultdb=>
-```
+kdestroy
+kinit django
+Password for django@EXAMPLE.COM:
+klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: django@EXAMPLE.COM
 
-7) Connect to `cockroach` using `psql` and `krbsrvname`
-
-```bash
-docker exec -it psql bash
-psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
-```
-
-8) UPDATE with LB SPN only
-
-Using load balancer, `verify-full` does not work, unless the cert SAN is populated. `roach-cert` populates `lb` as part of `create-node` command.
-
-```bash
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-1" does not match host name "lb"
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-0" does not match host name "lb"
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-2" does not match host name "lb"
-```
-
-after addressing the SAN, the following works
-
-```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-```
-
-This works with or without `lb` in the SAN.
-
-```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
+Valid starting     Expires            Service principal
+08/13/20 19:01:23  08/14/20 19:01:23  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+	renew until 08/13/20 19:01:23
 ```

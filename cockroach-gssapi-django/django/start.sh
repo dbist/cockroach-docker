@@ -2,7 +2,7 @@
 
 set -e
 
-echo psql | kinit tester@EXAMPLE.COM
+echo psql | kinit django@EXAMPLE.COM
 
 env
 echo "sleep 10"

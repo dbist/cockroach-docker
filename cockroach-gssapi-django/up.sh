@@ -9,12 +9,17 @@ docker-compose up -d
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="CREATE USER tester;"
+ --execute="CREATE USER IF NOT EXISTS django;"
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="GRANT ALL ON DATABASE defaultdb TO tester;"
+ --execute="CREATE DATABASE bank;"
+
+docker-compose exec roach-0 \
+ /cockroach/cockroach sql \
+ --certs-dir=/certs --host=roach-0 \
+ --execute="GRANT ALL ON DATABASE bank TO django;"
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
