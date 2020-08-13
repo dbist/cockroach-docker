@@ -301,9 +301,9 @@ Default principal: django@EXAMPLE.COM
 
 Valid starting     Expires            Service principal
 08/13/20 18:44:02  08/14/20 18:44:02  krbtgt/EXAMPLE.COM@EXAMPLE.COM
-	renew until 08/13/20 18:44:02
+        renew until 08/13/20 18:44:02
 08/13/20 18:44:12  08/14/20 18:44:02  customspn/lb@
-	renew until 08/13/20 18:44:02
+        renew until 08/13/20 18:44:02
 08/13/20 18:44:12  08/14/20 18:44:02  customspn/lb@EXAMPLE.COM
-	renew until 08/13/20 18:44:02
+        renew until 08/13/20 18:44:02
 ```
