@@ -3,9 +3,6 @@ from django.urls import path
 
 from .views import CustomersView, OrdersView, PingView, ProductView
 
-import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
-
 urlpatterns = [
     path('admin/', admin.site.urls),
 

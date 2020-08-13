@@ -265,15 +265,16 @@ cockroach sql --host=roach-0 --certs-dir=/certs --execute="select * from bank.my
 ---
 
 Summary: Order is important, execute `./up.sh` instead of `docker-compose up`
-   - monitor the status of services via `docker-compose logs`
-   - in case you need to adjust something in myproject/settings.py, you can
+- Monitor the status of services via `docker-compose logs`
+- In case you need to adjust something in myproject/settings.py, you can
           use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
           to debug and proceed.
 - CockroachDB Admin [UI](https://localhost:8080) and login with username `test` and password `password`
 - HAProxy [UI](http://localhost:8081)
 - Django [UI](http://localhost:8000)
 
-### Open Interactive Shells
+Open Interactive Shells
+
 ```bash
 docker exec -ti roach-0 /bin/bash
 docker exec -ti roach-1 /bin/bash
@@ -305,15 +306,4 @@ Valid starting     Expires            Service principal
 	renew until 08/13/20 18:44:02
 08/13/20 18:44:12  08/14/20 18:44:02  customspn/lb@EXAMPLE.COM
 	renew until 08/13/20 18:44:02
-
-kdestroy
-kinit django
-Password for django@EXAMPLE.COM:
-klist
-Ticket cache: FILE:/tmp/krb5cc_0
-Default principal: django@EXAMPLE.COM
-
-Valid starting     Expires            Service principal
-08/13/20 19:01:23  08/14/20 19:01:23  krbtgt/EXAMPLE.COM@EXAMPLE.COM
-	renew until 08/13/20 19:01:23
 ```
