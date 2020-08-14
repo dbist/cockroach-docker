@@ -1,0 +1,5 @@
+{
+    "ignore-errors": [
+        "invalid-create-option"
+    ]
+}

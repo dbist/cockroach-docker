@@ -32,7 +32,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('subtotal', models.DecimalField(decimal_places=2, max_digits=18)),
-                ('customer', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='myproject.customers')),
+                ('customer', models.ForeignKey(null=True,
+                                               on_delete=django.db.models.deletion.CASCADE,
+                                               to='myproject.customers')),
                 ('product', models.ManyToManyField(to='myproject.Products')),
             ],
         ),
