@@ -55,7 +55,13 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=print-statement,
+--disable=all, --disable=no-name-in-module, --disable=import-error
+
+# Enable the message, report, category or checker with the given id(s). You can
+# either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once). See also the "--disable" option for examples.
+--enable=c-extension-no-member, --enable=print-statement,
         parameter-unpacking,
         unpacking-in-except,
         old-raise-syntax,
@@ -89,7 +95,7 @@ disable=print-statement,
         coerce-method,
         delslice-method,
         getslice-method,
-        setslice-method,
+	setslice-method,
         no-absolute-import,
         old-division,
         dict-iter-method,
@@ -129,13 +135,6 @@ disable=print-statement,
         dict-keys-not-iterating,
         dict-values-not-iterating
 
-# Enable the message, report, category or checker with the given id(s). You can
-# either give multiple identifier separated by comma (,) or put this option
-# multiple time (only on the command line, not in the configuration file where
-# it should appear only once). See also the "--disable" option for examples.
-enable=c-extension-no-member
-
-
 [REPORTS]
 
 # Python expression which should return a note less than 10 (10 is the highest
@@ -155,10 +154,10 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 output-format=text
 
 # Tells whether to display a full report or only the messages
-reports=no
+reports=yes
 
 # Activate the evaluation score.
-score=no
+score=yes
 
 
 [REFACTORING]
