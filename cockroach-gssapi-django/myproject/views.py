@@ -1,3 +1,6 @@
+import json
+import time
+
 from django.http import JsonResponse, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import View
@@ -5,14 +8,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import Error, IntegrityError
 from django.db.transaction import atomic
 
-import json
-import sys
-import time
-import os
+from .models import Customers, Products, Orders
+from psycopg2 import errorcodes
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
-
-from .models import *
 
 # Warning: Do not use retry_on_exception in an inner nested transaction.
 def retry_on_exception(num_retries=3, on_failure=HttpResponse(status=500), delay_=0.5, backoff_=1.5):
@@ -28,14 +26,16 @@ def retry_on_exception(num_retries=3, on_failure=HttpResponse(status=500), delay
                     elif getattr(ex.__cause__, 'pgcode', '') == errorcodes.SERIALIZATION_FAILURE:
                         time.sleep(delay)
                         delay *= backoff_
-                except Error as ex:
+                except Error:
                     return on_failure
         return wrapper
     return retry
 
+
 class PingView(View):
     def get(self, request, *args, **kwargs):
         return HttpResponse("python/django", status=200)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomersView(View):
@@ -66,6 +66,7 @@ class CustomersView(View):
     # The PUT method is shadowed by the POST method, so there doesn't seem
     # to be a reason to include it.
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductView(View):
     def get(self, request, id=None, *args, **kwargs):
@@ -86,6 +87,7 @@ class ProductView(View):
 
     # The REST API outlined in the github does not say that /product/ needs
     # a PUT and DELETE method
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class OrdersView(View):
