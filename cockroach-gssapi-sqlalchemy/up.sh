@@ -34,4 +34,14 @@ docker-compose exec roach-0 \
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
+ --execute="SET CLUSTER SETTING server.auth_log.sql_connections.enabled = true;"
+
+docker-compose exec roach-0 \
+ /cockroach/cockroach sql \
+ --certs-dir=/certs --host=roach-0 \
+ --execute="SET CLUSTER SETTING server.auth_log.sql_sessions.enabled = true;"
+
+docker-compose exec roach-0 \
+ /cockroach/cockroach sql \
+ --certs-dir=/certs --host=roach-0 \
  --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"

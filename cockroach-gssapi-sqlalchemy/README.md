@@ -151,3 +151,12 @@ Time: 2.1635ms
 
 root@roach-0:26257/defaultdb> \q
 ```
+
+## NOTE
+Both `root` user using cert and `sqlalchemy` user using GSSAPI are leveraging `hostssl` connection, even though we specified `host all all ...` in our hba_conf config. To see that, take a look at enabling [authentication](https://www.cockroachlabs.com/docs/stable/query-behavior-troubleshooting.html#authentication-logs) logs and then inspect the logs.
+
+```bash
+I200817 19:06:12.898466 2878 sql/pgwire/conn.go:226  [n1,client=172.28.1.7:56844,hostssl,user=sqlalchemy] 14 session terminated; duration: 240.3243ms
+```
+
+The [`hostssl`](https://www.postgresql.org/docs/9.5/auth-pg-hba-conf.html) attempts to authenticate only when connection is made with SSL encryption.
