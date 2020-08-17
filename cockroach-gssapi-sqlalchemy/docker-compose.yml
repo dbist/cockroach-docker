@@ -114,7 +114,6 @@ services:
       - roach-0
       - roach-1
       - roach-2
-    command: python sqlalchemy-basic-sample.py
     volumes:
       - .:/code
       - ./kdc/krb5.conf:/etc/krb5.conf
