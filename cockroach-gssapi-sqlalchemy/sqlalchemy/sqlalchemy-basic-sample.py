@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from cockroachdb.sqlalchemy import run_transaction
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 Base = declarative_base()
 
@@ -94,7 +95,13 @@ def transfer_funds_randomly(session):
     source_id = get_random_account_id()
     sink_id = get_random_account_id()
 
-    source = session.query(Account).filter_by(id=source_id).one()
+    try:
+        source = session.query(Account).filter_by(id=source_id).one()
+    except NoResultFound:
+        print('No result was found')
+    except MultipleResultsFound:
+        print('Multiple results were found')
+
     amount = floor(source.balance/2)
 
     # Check balance of the first account.
