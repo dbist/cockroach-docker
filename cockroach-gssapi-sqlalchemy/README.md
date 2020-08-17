@@ -126,7 +126,7 @@ docker exec -it roach-0 sh
 ```
 
 ```sql
-# cockroach sql --certs-dir=/certs --host=roach-0
+cockroach sql --certs-dir=/certs --host=lb
 #
 # Welcome to the CockroachDB SQL shell.
 # All statements must be terminated by a semicolon.
