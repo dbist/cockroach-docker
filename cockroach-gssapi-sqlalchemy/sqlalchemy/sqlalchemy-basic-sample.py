@@ -30,8 +30,8 @@ if secure_cluster:
         'sslrootcert': '/certs/ca.crt',
         'user': 'sqlalchemy',
         'krbsrvname': 'customspn'
-#        'sslkey': '/certs/client.root.key',
-#        'sslcert': '/certs/client.root.crt'
+        # 'sslkey': '/certs/client.root.key',
+        # 'sslcert': '/certs/client.root.crt'
     }
 else:
     connect_args = {'sslmode': 'disable'}
