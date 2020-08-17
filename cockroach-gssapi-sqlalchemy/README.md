@@ -10,7 +10,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 5: [Executing CockroachDB table import via GSSAPI](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-5.html)
 - Part 6: [Three-headed dog meet cockroach, part 6: CockroachDB, MIT Kerberos, HAProxy and Docker Compose](https://blog.ervits.com/2020/08/three-headed-dog-meet-cockroach-part-6.html)
 - Part 7: [CockroachDB with MIT Kerberos and Django](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
-- Part 8: [CockroachDB with MIT Kerberos and SqlAlchemy]()
+- Part 8: [CockroachDB with MIT Kerberos and SQLAlchemy](https://blog.ervits.com/2020/08/cockroachdb-with-sqlalchemy-and-mit.html)
 ---
 
 ## Services
@@ -26,7 +26,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 ---
 
-The SqlAlchemy application with CockroachDB is based on the CockroachDB SqlAlchemy [tutorial](https://www.cockroachlabs.com/docs/stable/build-a-python-app-with-cockroachdb-sqlalchemy.html). Feel free to read the article [8](#Part 8) above.
+The SQLAlchemy application with CockroachDB is based on the CockroachDB SQLAlchemy [tutorial](https://www.cockroachlabs.com/docs/stable/build-a-python-app-with-cockroachdb-sqlalchemy.html). Feel free to read the article [8](#Part 8) above.
 
 1. Start the application
 
