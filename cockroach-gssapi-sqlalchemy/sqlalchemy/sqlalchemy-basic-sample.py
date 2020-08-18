@@ -1,7 +1,7 @@
 """Build a Python App with CockroachDB and SQLAlchemy,
 https://www.cockroachlabs.com/docs/stable/build-a-python-app-with-cockroachdb-sqlalchemy.html"""
 
-# pylint: disable=import-error
+# pylint: disable=E0401,C0330,C0103,R0903,C0103,W0612
 
 import random
 from math import floor
