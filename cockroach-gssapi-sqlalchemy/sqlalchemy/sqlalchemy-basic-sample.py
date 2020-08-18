@@ -1,18 +1,23 @@
+"""Build a Python App with CockroachDB and SQLAlchemy,
+https://www.cockroachlabs.com/docs/stable/build-a-python-app-with-cockroachdb-sqlalchemy.html"""
+
+# pylint: disable=import-error
+
 import random
 from math import floor
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from cockroachdb.sqlalchemy import run_transaction
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from cockroachdb.sqlalchemy import run_transaction
 
 Base = declarative_base()
 
 
-# The Account class corresponds to the "accounts" database table.
 class Account(Base):
+    """The Account class corresponds to the "accounts" database table."""
     __tablename__ = 'accounts'
-    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, primary_key=True)
     balance = Column(Integer)
 
 
@@ -54,21 +59,20 @@ seen_account_ids = set()
 
 # The code below generates random IDs for new accounts.
 
-def create_random_accounts(sess, n):
+def create_random_accounts(sess, num):
     """Create N new accounts with random IDs and random account balances.
-
     Note that since this is a demo, we don't do any work to ensure the
     new IDs don't collide with existing IDs.
     """
     new_accounts = []
-    elems = iter(range(n))
+    elems = iter(range(num))
     for i in elems:
         billion = 1000000000
         new_id = floor(random.random()*billion)
         seen_account_ids.add(new_id)
         new_accounts.append(
             Account(
-                id=new_id,
+                account_id=new_id,
                 balance=floor(random.random()*1000000)
             )
         )
@@ -79,11 +83,10 @@ run_transaction(sessionmaker(bind=engine),
                 lambda s: create_random_accounts(s, 100))
 
 
-# Helper for getting random existing account IDs.
-
 def get_random_account_id():
-    id = random.choice(tuple(seen_account_ids))
-    return id
+    """Helper for getting random existing account IDs."""
+    account_id = random.choice(tuple(seen_account_ids))
+    return account_id
 
 
 def transfer_funds_randomly(session):
@@ -96,7 +99,7 @@ def transfer_funds_randomly(session):
     sink_id = get_random_account_id()
 
     try:
-        source = session.query(Account).filter_by(id=source_id).one()
+        source = session.query(Account).filter_by(account_id=source_id).one()
     except NoResultFound:
         print('No result was found')
     except MultipleResultsFound:
@@ -109,7 +112,7 @@ def transfer_funds_randomly(session):
         raise InsufficientFundsError("Insufficient funds")
 
     source.balance -= amount
-    session.query(Account).filter_by(id=sink_id).update(
+    session.query(Account).filter_by(account_id=sink_id).update(
         {"balance": (Account.balance + amount)}
     )
 
@@ -120,4 +123,4 @@ run_transaction(sessionmaker(bind=engine), transfer_funds_randomly)
 
 
 class InsufficientFundsError(Exception):
-    pass
+    """Custom Error inherited from BaseException."""
