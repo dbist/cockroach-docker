@@ -75,7 +75,7 @@ def create_random_accounts(sess, num):
                 balance=floor(random.random()*1000000)
             )
         )
-        num = num -1
+        num = num - 1
     sess.add_all(new_accounts)
 
 
