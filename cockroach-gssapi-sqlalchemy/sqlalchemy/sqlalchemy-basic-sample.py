@@ -27,10 +27,10 @@ class Account(Base):
 # For more information, see
 # https://github.com/cockroachdb/sqlalchemy-cockroachdb.
 
-secure_cluster = True           # Set to False for insecure clusters
+SECURE_CLUSTER = True           # Set to False for insecure clusters
 connect_args = {}
 
-if secure_cluster:
+if SECURE_CLUSTER:
     connect_args = {
         'sslmode': 'verify-full',
         'sslrootcert': '/certs/ca.crt',
@@ -65,8 +65,7 @@ def create_random_accounts(sess, num):
     new IDs don't collide with existing IDs.
     """
     new_accounts = []
-    elems = iter(range(num))
-    for i in elems:
+    while num > 0:
         billion = 1000000000
         new_id = floor(random.random()*billion)
         seen_account_ids.add(new_id)
@@ -76,6 +75,7 @@ def create_random_accounts(sess, num):
                 balance=floor(random.random()*1000000)
             )
         )
+        num = num -1
     sess.add_all(new_accounts)
 
 
