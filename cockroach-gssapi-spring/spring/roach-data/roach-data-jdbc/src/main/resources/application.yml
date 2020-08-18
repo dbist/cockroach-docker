@@ -1,0 +1,40 @@
+########################
+# Spring boot properties
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+########################
+
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  liquibase:
+    change-log: classpath:db/changelog-master.xml
+    default-schema:
+    drop-first: false
+    contexts: crdb
+    enabled: true
+
+  datasource:
+    url: jdbc:postgresql://lb:26257/roach_data?sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key.pk8&sslmode=verify-full&sslrootcert=/certs/ca.crt
+    driver-class-name: org.postgresql.Driver
+    username: root
+    password:
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 4
+
+  jpa:
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: conditions,env,info,health,httptrace,metrics,threaddump,shutdown,configprops,liquibase
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: true
