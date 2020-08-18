@@ -1,0 +1,5 @@
+^__^
+(oo)\_______
+(__)\       )\/\   CockroachDB on Spring Data JDBC ${application.formatted-version}
+   ||----w |       powered by Spring Boot ${spring-boot.formatted-version}
+   ||     ||
