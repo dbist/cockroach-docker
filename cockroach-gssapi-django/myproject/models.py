@@ -1,5 +1,6 @@
 from django.db import models
 
+# pylint: disable=E0611
 
 class Customers(models.Model):
     id = models.AutoField(primary_key=True)
