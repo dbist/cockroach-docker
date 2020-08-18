@@ -1,3 +1,5 @@
+# pylint: disable=E0611
+
 import json
 import time
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+
+# pylint: disable=C0116,C0415
+
 import os
 import sys
 
