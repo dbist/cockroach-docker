@@ -59,11 +59,11 @@ docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=roach-0
 
 ```bash
 docker exec -it psql bash
-psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 ```
 
 ```sql
-root@psql:/# psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 psql (9.5.22, server 9.5.0)
 SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256, bits: 128, compression: off)
 Type "help" for help.
@@ -75,7 +75,7 @@ defaultdb=>
 
 ```bash
 docker exec -it psql bash
-psql "postgresql://roach-0:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
 8) UPDATE with LB SPN only

@@ -35,7 +35,7 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:v20.1.3
+    image: cockroachdb/cockroach:v20.1.6
     depends_on:
       - kdc
       - roach-cert
@@ -52,7 +52,7 @@ services:
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:v20.1.3
+    image: cockroachdb/cockroach:v20.1.6
     depends_on:
       - kdc
       - roach-cert
@@ -70,7 +70,7 @@ services:
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:v20.1.3
+    image: cockroachdb/cockroach:v20.1.6
     depends_on:
       - kdc
       - roach-cert
