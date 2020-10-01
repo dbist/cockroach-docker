@@ -1,10 +1,10 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach:v20.1.6 AS generator
+FROM cockroachdb/cockroach-unstable:v20.2.0-beta.3 AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
-LABEL version="2.0"
+LABEL version="3.0"
 LABEL description="cockroach cert generator container"
-ENV REFRESHED_AT 2020_09_29
+ENV REFRESHED_AT 2020_10_01
 
 RUN mkdir -pv /tmp/certs/ca /tmp/certs/roach-0 /tmp/certs/roach-1 /tmp/certs/roach-2 /tmp/safe /tmp/certs/client /tmp/certs/lb
 

@@ -35,11 +35,11 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:v20.1.6
+    image: cockroachdb/cockroach-unstable:v20.2.0-beta.3
     depends_on:
       - kdc
       - roach-cert
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
     environment:
       - KRB5_KTNAME=/keytab/crdb.keytab
     volumes:
@@ -52,12 +52,12 @@ services:
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:v20.1.6
+    image: cockroachdb/cockroach-unstable:v20.2.0-beta.3
     depends_on:
       - kdc
       - roach-cert
       - roach-0
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
     environment:
       - KRB5_KTNAME=/keytab/crdb.keytab
     volumes:
@@ -70,12 +70,12 @@ services:
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:v20.1.6
+    image: cockroachdb/cockroach-unstable:v20.2.0-beta.3
     depends_on:
       - kdc
       - roach-cert
       - roach-0
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
     environment:
       - KRB5_KTNAME=/keytab/crdb.keytab
     volumes:
@@ -101,28 +101,17 @@ services:
       roachnet:
         ipv4_address: 172.28.1.7
 
-  psql:
-    container_name: psql
-    hostname: psql
-    build: ./psql
+  client:
+    container_name: client
+    hostname: client
+    build: ./client
     extra_hosts:
-      - "roach-0:172.28.1.4"
-      - "roach-1:172.28.1.5"
-      - "roach-2:172.28.1.6"
       - "lb:172.28.1.7"
     depends_on:
-      - roach-0
-      - kdc
-      - roach-cert
-    environment:
-      - PGHOST=roach-0
-      - PGPORT=26257
-      - PGSSLMODE=verify-full
-      - PGSSLCERT=/certs/node.crt
-      - PGSSLKEY=/certs/node.key
+      - lb
     volumes:
       - ./kdc/krb5.conf:/etc/krb5.conf
-      - ./psql/start.sh:/start.sh
+      - ./client/start.sh:/start.sh
       - certs-client:/certs
       - keytab:/keytab
     networks:
