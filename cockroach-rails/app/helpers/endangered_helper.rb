@@ -1,0 +1,2 @@
+module EndangeredHelper
+end

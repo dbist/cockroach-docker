@@ -1,0 +1,14 @@
+{
+  "name": "sharkapp",
+  "private": true,
+  "dependencies": {
+    "@rails/webpacker": "^4.0.7",
+    "bootstrap": "^4.3.1",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.16.0",
+    "stimulus": "^1.1.1"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^3.8.1"
+  }
+}

@@ -1,0 +1,36 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Endangered Sharks</h1>
+
+<p>International Union for Conservation of Nature (ICUN) statuses: <b>vu:</b> Vulnerable, <b>en:</b> Endangered, <b>cr:</b> Critically Endangered </p>
+
+<div class="table-responsive">
+<table class="table table-striped table-dark">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>IUCN Status</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @endangered.each do |shark| %>
+      <tr>
+        <td><%= shark.name %></td>
+        <td><%= shark.iucn %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+</div>
+
+<br>
+
+  <%= form_tag endangered_destroy_path do %>
+  <%= submit_tag "Delete Endangered Sharks" %>
+  <% end %>
+
+  <br>
+
+<%= link_to 'New Shark', new_shark_path, :class => "btn btn-primary btn-sm" %> <%= link_to 'Home', home_index_path, :class => "btn btn-primary btn-sm" %>

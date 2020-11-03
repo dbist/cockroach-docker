@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+
+  app: 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+      - redis
+    ports: 
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - gem_cache:/usr/local/bundle/gems
+      - node_modules:/app/node_modules
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+
+  database:
+    container_name: crdb
+    hostname: database
+    image: cockroachdb/cockroach-unstable:v20.2.0-rc.4
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - "${PWD}/cockroach-data/crdb:/cockroach/cockroach-data"
+
+  redis:
+    image: redis:5.0.7
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - app      
+      - database
+      - redis
+    volumes:
+      - .:/app
+      - gem_cache:/usr/local/bundle/gems
+      - node_modules:/app/node_modules
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+    entrypoint: ./entrypoints/sidekiq-entrypoint.sh
+
+volumes:
+  gem_cache:
+  db_data:
+  node_modules:

@@ -1,0 +1,15 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Endangered Sharks</h1>
+
+<p>International Union for Conservation of Nature (ICUN) statuses: <b>vu:</b> Vulnerable, <b>en:</b> Endangered, <b>cr:</b> Critically Endangered </p>
+
+<br>
+
+  <%= form_tag endangered_upload_path do %>
+  <%= submit_tag "Import Endangered Sharks" %>
+  <% end %>
+
+  <br>
+
+<%= link_to 'New Shark', new_shark_path, :class => "btn btn-primary btn-sm" %> <%= link_to 'Home', home_index_path, :class => "btn btn-primary btn-sm" %>
