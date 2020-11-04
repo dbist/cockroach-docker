@@ -12,6 +12,8 @@ default: &default
   password: <%= ENV['DATABASE_PASSWORD'] %>
   port: <%= ENV['DATABASE_PORT'] || '26257' %>
   host: <%= ENV['DATABASE_HOST'] %>
+  sslmode: <%= ENV['DATABASE_SSLMODE'] %>
+  sslrootcert: <%= ENV['DATABASE_SSLROOTCERT'] %>
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
 

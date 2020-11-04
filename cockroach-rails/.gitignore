@@ -37,3 +37,6 @@
 yarn-debug.log*
 .yarn-integrity
 /cockroach-data
+/node1
+/node2
+/node3
