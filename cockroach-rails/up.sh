@@ -8,7 +8,7 @@ docker-compose up -d
 # --certs-dir=/certs --host=roach-0 \
 # --execute="CREATE DATABASE IF NOT EXISTS rails_development;"
 
-# docker exec -it roach-0 /cockroach/cockroach init --certs-dir=/certs --host=roach-0
+docker exec -it roach-0 /cockroach/cockroach init --certs-dir=/certs --host=roach-0
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
