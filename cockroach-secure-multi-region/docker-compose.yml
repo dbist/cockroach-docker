@@ -32,7 +32,7 @@ services:
     container_name: roach-sf-0
     hostname: roach-sf-0
     image: cockroachdb/cockroach:v20.2.0
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-0:26257 --advertise-addr=roach-sf-0:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-0:26257 --advertise-addr=roach-sf-0:26257 --max-sql-memory=.25 --cache=.25 --locality=region=us-west,az=us-west-1a
     volumes:
       - certs-roach-sf-0:/certs
       - "${PWD}/roach-sf-0:/cockroach/cockroach-data"
@@ -43,7 +43,7 @@ services:
     container_name: roach-sf-1
     hostname: roach-sf-1
     image: cockroachdb/cockroach:v20.2.0
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-1:26257 --advertise-addr=roach-sf-1:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-1:26257 --advertise-addr=roach-sf-1:26257 --max-sql-memory=.25 --cache=.25  --locality=region=us-west,az=us-west-1b
     volumes:
       - certs-roach-sf-1:/certs
       - "${PWD}/roach-sf-1:/cockroach/cockroach-data"
@@ -55,13 +55,83 @@ services:
     container_name: roach-sf-2
     hostname: roach-sf-2
     image: cockroachdb/cockroach:v20.2.0
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-2:26257 --advertise-addr=roach-sf-2:26257 --max-sql-memory=.25 --cache=.25
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-sf-2:26257 --advertise-addr=roach-sf-2:26257 --max-sql-memory=.25 --cache=.25  --locality=region=us-west,az=us-west-1c
     volumes:
       - certs-roach-sf-2:/certs
       - "${PWD}/roach-sf-2:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
       - roach-sf-0
+
+  roach-ny-0:
+    container_name: roach-ny-0
+    hostname: roach-ny-0
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-ny-0:26257 --advertise-addr=roach-ny-0:26257 --max-sql-memory=.25 --cache=.25  --locality=region=us-east,az=us-east-1a
+    volumes:
+      - certs-roach-ny-0:/certs
+      - "${PWD}/roach-ny-0:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+
+  roach-ny-1:
+    container_name: roach-ny-1
+    hostname: roach-ny-1
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-ny-1:26257 --advertise-addr=roach-ny-1:26257 --max-sql-memory=.25 --cache=.25 --locality=region=us-east,az=us-east-1b
+    volumes:
+      - certs-roach-ny-1:/certs
+      - "${PWD}/roach-ny-1:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-ny-0
+
+  roach-ny-2:
+    container_name: roach-ny-2
+    hostname: roach-ny-2
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-ny-2:26257 --advertise-addr=roach-ny-2:26257 --max-sql-memory=.25 --cache=.25 --locality=region=us-east,az=us-east-1c
+    volumes:
+      - certs-roach-ny-2:/certs
+      - "${PWD}/roach-ny-2:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-ny-0
+
+  roach-to-0:
+    container_name: roach-to-0
+    hostname: roach-to-0
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-to-0:26257 --advertise-addr=roach-to-0:26257 --max-sql-memory=.25 --cache=.25 --locality=region=tor,az=to-1a
+    volumes:
+      - certs-roach-to-0:/certs
+      - "${PWD}/roach-to-0:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+
+  roach-to-1:
+    container_name: roach-to-1
+    hostname: roach-to-1
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-to-1:26257 --advertise-addr=roach-to-1:26257 --max-sql-memory=.25 --cache=.25 --locality=region=tor,az=to-1b
+    volumes:
+      - certs-roach-to-1:/certs
+      - "${PWD}/roach-to-1:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-to-0
+
+  roach-to-2:
+    container_name: roach-to-2
+    hostname: roach-to-2
+    image: cockroachdb/cockroach:v20.2.0
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-sf-0,roach-ny-1,roach-to-2 --listen-addr=roach-to-2:26257 --advertise-addr=roach-to-2:26257 --max-sql-memory=.25 --cache=.25 --locality=region=tor,az=to-1c
+    volumes:
+      - certs-roach-to-2:/certs
+      - "${PWD}/roach-to-2:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-to-0
 
   lb_sf:
     container_name: lb_sf
@@ -79,3 +149,37 @@ services:
       - roach-sf-0
       - roach-sf-1
       - roach-sf-2
+
+  lb_ny:
+    container_name: lb_ny
+    hostname: lb_ny
+    build: haproxy_ny
+    ports:
+      - "26258:26257"
+      - "8090:8080"
+      - "8091:8081"
+    depends_on:
+      - roach-ny-0
+      - roach-ny-1
+      - roach-ny-2
+    links:
+      - roach-ny-0
+      - roach-ny-1
+      - roach-ny-2
+
+  lb_to:
+    container_name: lb_to
+    hostname: lb_to
+    build: haproxy_to
+    ports:
+      - "26259:26257"
+      - "8100:8080"
+      - "8181:8081"
+    depends_on:
+      - roach-to-0
+      - roach-to-1
+      - roach-to-2
+    links:
+      - roach-to-0
+      - roach-to-1
+      - roach-to-2
