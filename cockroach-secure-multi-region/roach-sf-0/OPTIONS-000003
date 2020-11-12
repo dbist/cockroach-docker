@@ -1,0 +1,91 @@
+[Version]
+  pebble_version=0.1
+
+[Options]
+  bytes_per_sync=524288
+  cache_size=2087007232
+  cleaner=delete
+  comparer=cockroach_comparator
+  delete_range_flush_delay=10s
+  disable_wal=false
+  flush_split_bytes=4194304
+  l0_compaction_concurrency=10
+  l0_compaction_threshold=2
+  l0_stop_writes_threshold=1000
+  l0_sublevel_compactions=true
+  lbase_max_bytes=67108864
+  max_concurrent_compactions=3
+  max_manifest_file_size=134217728
+  max_open_files=1043576
+  mem_table_size=67108864
+  mem_table_stop_writes_threshold=4
+  min_compaction_rate=4194304
+  min_flush_rate=4194304
+  merger=cockroach_merge_operator
+  strict_wal_tail=true
+  table_property_collectors=[TimeBoundTblPropCollectorFactory,DeleteRangeTblPropCollectorFactory]
+  wal_dir=
+  wal_bytes_per_sync=0
+
+[Level "0"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=2097152
+
+[Level "1"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=4194304
+
+[Level "2"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=8388608
+
+[Level "3"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=16777216
+
+[Level "4"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=33554432
+
+[Level "5"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=rocksdb.BuiltinBloomFilter
+  filter_type=table
+  index_block_size=262144
+  target_file_size=67108864
+
+[Level "6"]
+  block_restart_interval=16
+  block_size=32768
+  compression=Snappy
+  filter_policy=none
+  filter_type=table
+  index_block_size=262144
+  target_file_size=134217728
