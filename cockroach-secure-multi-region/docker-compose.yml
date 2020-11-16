@@ -10,7 +10,7 @@ volumes:
   certs-roach-to-0:
   certs-roach-to-1:
   certs-roach-to-2:
-  certs-roach-lb_to:
+  certs-roach-lb-to:
   certs-roach-lb-sf:
   certs-roach-lb-ny:
 
@@ -30,7 +30,7 @@ services:
       - certs-roach-to-0:/certs/roach-to-0
       - certs-roach-to-1:/certs/roach-to-1
       - certs-roach-to-2:/certs/roach-to-2
-      - certs-roach-lb_to:/certs/lb_to
+      - certs-roach-lb-to:/certs/lb_to
       - certs-roach-lb-sf:/certs/lb_sf
       - certs-roach-lb-ny:/certs/lb_ny
 
@@ -183,7 +183,7 @@ services:
       - roach-sf-1
       - roach-sf-2
     volumes:
-      - certs-roach-lb-sf:/certs/lb_sf
+      - certs-roach-lb-sf:/certs
     networks:
       roachnet:
         ipv4_address: 172.28.1.12
@@ -205,7 +205,7 @@ services:
       - roach-ny-1
       - roach-ny-2
     volumes:
-      - certs-roach-lb-ny:/certs/lb_ny
+      - certs-roach-lb-ny:/certs
     networks:
       roachnet:
         ipv4_address: 172.28.1.13
@@ -227,7 +227,7 @@ services:
       - roach-to-1
       - roach-to-2
     volumes:
-      - certs-roach-lb-to:/certs/lb_to
+      - certs-roach-lb-to:/certs
     networks:
       roachnet:
         ipv4_address: 172.28.1.14
