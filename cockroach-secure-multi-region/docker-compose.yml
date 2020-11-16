@@ -10,6 +10,9 @@ volumes:
   certs-roach-to-0:
   certs-roach-to-1:
   certs-roach-to-2:
+  certs-roach-lb_to:
+  certs-roach-lb-sf:
+  certs-roach-lb-ny:
 
 services:
 
@@ -27,6 +30,9 @@ services:
       - certs-roach-to-0:/certs/roach-to-0
       - certs-roach-to-1:/certs/roach-to-1
       - certs-roach-to-2:/certs/roach-to-2
+      - certs-roach-lb_to:/certs/lb_to
+      - certs-roach-lb-sf:/certs/lb_sf
+      - certs-roach-lb-ny:/certs/lb_ny
 
   roach-sf-0:
     container_name: roach-sf-0
@@ -38,6 +44,9 @@ services:
       - "${PWD}/roach-sf-0:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.3
 
   roach-sf-1:
     container_name: roach-sf-1
@@ -50,6 +59,9 @@ services:
     depends_on:
       - roach-cert
       - roach-sf-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.4
 
   roach-sf-2:
     container_name: roach-sf-2
@@ -62,6 +74,9 @@ services:
     depends_on:
       - roach-cert
       - roach-sf-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.5
 
   roach-ny-0:
     container_name: roach-ny-0
@@ -73,6 +88,9 @@ services:
       - "${PWD}/roach-ny-0:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.6
 
   roach-ny-1:
     container_name: roach-ny-1
@@ -85,6 +103,9 @@ services:
     depends_on:
       - roach-cert
       - roach-ny-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.7
 
   roach-ny-2:
     container_name: roach-ny-2
@@ -97,6 +118,9 @@ services:
     depends_on:
       - roach-cert
       - roach-ny-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.8
 
   roach-to-0:
     container_name: roach-to-0
@@ -108,6 +132,9 @@ services:
       - "${PWD}/roach-to-0:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.9
 
   roach-to-1:
     container_name: roach-to-1
@@ -120,6 +147,9 @@ services:
     depends_on:
       - roach-cert
       - roach-to-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.10
 
   roach-to-2:
     container_name: roach-to-2
@@ -132,6 +162,9 @@ services:
     depends_on:
       - roach-cert
       - roach-to-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.11
 
   lb_sf:
     container_name: lb_sf
@@ -149,6 +182,11 @@ services:
       - roach-sf-0
       - roach-sf-1
       - roach-sf-2
+    volumes:
+      - certs-roach-lb-sf:/certs/lb_sf
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.12
 
   lb_ny:
     container_name: lb_ny
@@ -166,6 +204,11 @@ services:
       - roach-ny-0
       - roach-ny-1
       - roach-ny-2
+    volumes:
+      - certs-roach-lb-ny:/certs/lb_ny
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.13
 
   lb_to:
     container_name: lb_to
@@ -183,3 +226,15 @@ services:
       - roach-to-0
       - roach-to-1
       - roach-to-2
+    volumes:
+      - certs-roach-lb-to:/certs/lb_to
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.14
+
+networks:
+  roachnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
