@@ -61,6 +61,35 @@ docker exec -ti roach-cert /bin/sh
 docker exec -ti web /bin/bash
 ```
 
+## If web container fails to start due to the following issue:
+
+```bash
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.7/site-packages/django/db/backends/base/base.py", line 219, in ensure_connection
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/django/db/utils.py", line 90, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/usr/local/lib/python3.7/site-packages/django/db/backends/base/base.py", line 219, in ensure_connection
+    self.connect()
+  File "/usr/local/lib/python3.7/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.7/site-packages/django/db/backends/base/base.py", line 200, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "/usr/local/lib/python3.7/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.7/site-packages/django/db/backends/postgresql/base.py", line 187, in get_new_connection
+    connection = Database.connect(**conn_params)
+  File "/usr/local/lib/python3.7/site-packages/psycopg2/__init__.py", line 127, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+django.db.utils.OperationalError: ERROR:  password authentication failed for user myprojectuser
+```
+
+Issue the following command to restart the container
+
+```bash
+docker-compose restart web
+```
+
 ## Apply migration
 
 ```bash
@@ -90,3 +119,4 @@ Running migrations:
   Applying auth.0012_alter_user_first_name_max_length... OK
   Applying sessions.0001_initial... OK
 ```
+
