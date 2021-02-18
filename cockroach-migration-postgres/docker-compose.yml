@@ -4,6 +4,7 @@ volumes:
   certs-roach-0:
   certs-roach-1:
   certs-roach-2:
+  certs-lb:
 
 services:
 
@@ -15,54 +16,72 @@ services:
       - certs-roach-0:/certs/roach-0
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
+      - certs-lb:/certs/lb
 
   roach-0:
     container_name: roach-0
     hostname: roach-0
     image: cockroachdb/cockroach:v20.2.5
+    restart: always
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-0:/certs
       - "${PWD}/roach-0:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.5
 
   roach-1:
     container_name: roach-1
     hostname: roach-1
     image: cockroachdb/cockroach:v20.2.5
+    restart: always
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-1:/certs
       - "${PWD}/roach-1:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
-      - roach-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.6
 
   roach-2:
     container_name: roach-2
     hostname: roach-2
     image: cockroachdb/cockroach:v20.2.5
+    restart: always
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-2:/certs
       - "${PWD}/roach-2:/cockroach/cockroach-data"
     depends_on:
       - roach-cert
-      - roach-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.7
 
   lb:
     container_name: lb
     hostname: lb
     build: haproxy
+    restart: always
     ports:
       - "26257:26257"
       - "8080:8080"
       - "8081:8081"
+    volumes:
+      - certs-lb:/certs
     depends_on:
       - roach-0
       - roach-1
       - roach-2
+    networks:
+      roachnet:
+        ipv4_address: 172.28.1.8
+  
 
   postgres:
     container_name: postgres
