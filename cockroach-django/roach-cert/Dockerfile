@@ -1,70 +1,43 @@
-####################################
-#   Multi-stage build
-#       1. generate certs
-#       2. share certs
-####################################
-
 # Stage 1 - generate certs
+FROM cockroachdb/cockroach:v20.2.5 AS generator
 
-FROM debian:9.8-slim AS generator
+LABEL maintainer="artemervits at gmail dot com"
+LABEL version="5.0"
+LABEL description="cockroach cert generator container"
+ENV REFRESHED_AT 2021_03_04
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-# todo: see if i can fix the slowness.  is this not specifying correct alias for create-node
-# todo: should secure run under something than 8080
-
-LABEL maintainer="tjveil@gmail.com"
-
-ARG CRDB_DOWNLOAD_URL=https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz
-ARG CRDB_DOWNLOAD_DIR=/tmp/crdb
-ARG CRDB_HOME=/opt/crdb
-
-ENV PATH=$CRDB_HOME:$PATH
-
-RUN mkdir -pv /tmp/certs/ca /tmp/certs/web /tmp/certs/roach-0 /tmp/certs/roach-1 /tmp/certs/roach-2 /tmp/safe /tmp/certs/client
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-utils libc6 curl ca-certificates tzdata \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -pv $CRDB_DOWNLOAD_DIR \
-    && mkdir -pv $CRDB_DOWNLOAD_DIR \
-    && curl -fSL "$CRDB_DOWNLOAD_URL" -o /tmp/crdb.tgz \
-    && tar -xvf /tmp/crdb.tgz -C $CRDB_DOWNLOAD_DIR --strip-components=1 \
-    && mv -v $CRDB_DOWNLOAD_DIR /opt \
-    && rm -rfv /tmp/crdb.tgz
+RUN mkdir -pv /tmp/certs/ca /tmp/certs/roach-0 /tmp/certs/roach-1 /tmp/certs/roach-2 /tmp/safe /tmp/certs/web /tmp/certs/lb
 
 RUN cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key \
-    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/client \
+    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/web \
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-0 \
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-1 \
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-2 \
-    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/web
+    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/lb
 
-RUN cockroach cert create-client root --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-client myprojectuser --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key
+RUN ./cockroach cert create-client root --certs-dir=/tmp/certs/web --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key
+RUN ./cockroach cert create-client roach --certs-dir=/tmp/certs/web --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key
 
-RUN cp -v /tmp/certs/client/client.* /tmp/certs/roach-0 \
-    && cp -v /tmp/certs/client/client.* /tmp/certs/roach-1 \
-    && cp -v /tmp/certs/client/client.* /tmp/certs/roach-2 \
-    && cp -v /tmp/certs/client/client.* /tmp/certs/web
+RUN cp -v /tmp/certs/web/client.* /tmp/certs/roach-0 \
+    && cp -v /tmp/certs/web/client.* /tmp/certs/roach-1 \
+    && cp -v /tmp/certs/web/client.* /tmp/certs/roach-2 \
+    && cp -v /tmp/certs/web/client.* /tmp/certs/lb
 
-RUN cockroach cert create-node roach-0 --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-1 --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-2 --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node web --certs-dir=/tmp/certs/web --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-0 lb --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-1 lb --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-2 lb --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node lb --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/ca.key
 
 # Stage 2 - share certs
 
 FROM alpine:3.12
 
-LABEL maintainer="tjveil@gmail.com"
-
-RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/web
+RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/web /certs/lb
 
 COPY --from=generator  /tmp/certs/roach-0/* /certs/roach-0/
 COPY --from=generator  /tmp/certs/roach-1/* /certs/roach-1/
 COPY --from=generator  /tmp/certs/roach-2/* /certs/roach-2/
 COPY --from=generator  /tmp/certs/web/* /certs/web/
+COPY --from=generator /tmp/certs/lb/* /certs/lb/
 
 CMD tail -f /dev/null

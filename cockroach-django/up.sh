@@ -20,11 +20,11 @@ docker-compose exec roach-0 \
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="CREATE USER myprojectuser WITH PASSWORD 'Q7gc8rEdS';"
+ --execute="CREATE USER roach WITH PASSWORD 'roach';"
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="GRANT ALL ON DATABASE myproject TO myprojectuser;"
+ --execute="GRANT ALL ON DATABASE myproject TO roach;"
 
 docker-compose exec roach-0 /cockroach/cockroach sql --certs-dir=/certs --host=roach-0 --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"

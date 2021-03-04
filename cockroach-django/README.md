@@ -29,14 +29,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django_cockroachdb',
         'NAME': 'myproject',
-        'USER': 'myprojectuser',
-        'HOST': 'roach-0',
+        'USER': 'roach',
+        'HOST': 'lb',
         'PORT': '26257',
         'OPTIONS': {
-            'sslmode': 'require',
+            'sslmode': 'verify-full',
             'sslrootcert': '/certs/ca.crt',
-            'sslcert': '/certs/client.myprojectuser.crt',
-            'sslkey': '/certs/client.myprojectuser.key',
+            'sslcert': '/certs/client.roach.crt',
+            'sslkey': '/certs/client.roach.key',
         },
     },
 }
@@ -120,3 +120,11 @@ Running migrations:
   Applying sessions.0001_initial... OK
 ```
 
+## Additionally, to open the Django frontend and verify
+
+Add the following to the `composeexample/settings.py`
+
+```python
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+```
+and restart the container
