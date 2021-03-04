@@ -1,7 +1,7 @@
-FROM python:3.7-slim
+FROM python:3.8-slim
 LABEL maintainer="artemervits at gmail dot com"
-LABEL version="0.2"
-ENV REFRESHED_AT 2020_07_20
+LABEL version="0.3"
+ENV REFRESHED_AT 2021_03_04
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
