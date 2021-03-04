@@ -14,6 +14,9 @@ Prerequisites:
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
+
+## The following step is no longer necessary, including composeexample as part of the repo. It can also be generated locally `django-admin startproject composeexample .`
+
 1) `docker-compose run web django-admin startproject composeexample .`
 
 ```bash
