@@ -90,6 +90,62 @@ Issue the following command to restart the container
 docker-compose restart web
 ```
 
+If you get the following error
+
+```python
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.9/threading.py", line 954, in _bootstrap_inner
+    self.run()
+  File "/usr/local/lib/python3.9/threading.py", line 892, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/utils/autoreload.py", line 53, in wrapper
+    fn(*args, **kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/core/management/commands/runserver.py", line 121, in inner_run
+    self.check_migrations()
+  File "/usr/local/lib/python3.9/site-packages/django/core/management/base.py", line 459, in check_migrations
+    executor = MigrationExecutor(connections[DEFAULT_DB_ALIAS])
+  File "/usr/local/lib/python3.9/site-packages/django/db/migrations/executor.py", line 18, in __init__
+    self.loader = MigrationLoader(self.connection)
+  File "/usr/local/lib/python3.9/site-packages/django/db/migrations/loader.py", line 53, in __init__
+    self.build_graph()
+  File "/usr/local/lib/python3.9/site-packages/django/db/migrations/loader.py", line 216, in build_graph
+    self.applied_migrations = recorder.applied_migrations()
+  File "/usr/local/lib/python3.9/site-packages/django/db/migrations/recorder.py", line 77, in applied_migrations
+    if self.has_table():
+  File "/usr/local/lib/python3.9/site-packages/django/db/migrations/recorder.py", line 55, in has_table
+    with self.connection.cursor() as cursor:
+  File "/usr/local/lib/python3.9/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/base/base.py", line 259, in cursor
+    return self._cursor()
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/base/base.py", line 235, in _cursor
+    self.ensure_connection()
+  File "/usr/local/lib/python3.9/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/base/base.py", line 219, in ensure_connection
+    self.connect()
+  File "/usr/local/lib/python3.9/site-packages/django/db/utils.py", line 90, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/base/base.py", line 219, in ensure_connection
+    self.connect()
+  File "/usr/local/lib/python3.9/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/base/base.py", line 200, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "/usr/local/lib/python3.9/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.9/site-packages/django/db/backends/postgresql/base.py", line 187, in get_new_connection
+    connection = Database.connect(**conn_params)
+  File "/usr/local/lib/python3.9/site-packages/psycopg2/__init__.py", line 127, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+django.db.utils.OperationalError: server closed the connection unexpectedly
+        This probably means the server terminated abnormally
+        before or while processing the request.
+```
+
+restart the web container again
+
+
 ## Apply migration
 
 ```bash
