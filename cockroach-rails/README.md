@@ -1,38 +1,32 @@
 # hello-world-ruby-activerecord
+Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
 This repo has a "Hello World" Ruby application that uses the [Active Record CockroachDB Adapter](https://github.com/cockroachdb/activerecord-cockroachdb-adapter) and [pg](https://rubygems.org/gems/pg) libraries to talk to [CockroachDB](https://www.cockroachlabs.com/docs/stable/).
 
 Prerequisites:
 
-- Install `libpq`. For example, on OS X using Homebrew:
-  ```shell
-  brew install libpq
-  ```
-- Configure `bundle` to use `libpq`.
-  ```shell
-  bundle config --local build.pg --with-opt-dir="/usr/local/opt/libpq"
-  ```
-  Set `--with-opt-dir` to the location of `libpq` for your OS.
-- Install the bundle:
-  ```shell
-  bundle install
-  ```
-- A local [CockroachDB demo cluster](https://www.cockroachlabs.com/docs/stable/cockroach-demo)
+cockroachdb-activerecord` 6.1
+CockroachDB 20.2
 
-To run the code:
+## Services
+* `roach-0` - CockroachDB node
+* `roach-1` - CockroachDB node
+* `roach-2` - CockroachDB node
+* `lb` - HAProxy acting as load balancer
+* `roach-cert` - Holds certificates as volume mounts
+* `rails` - rails node
 
-1. Start an empty [demo CockroachDB cluster](https://www.cockroachlabs.com/docs/stable/cockroach-demo).
+## Getting started
+>If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-    ~~~shell
-    cockroach demo --empty
-    ~~~
+## Getting Started
 
-2. Create a `bank` database and `maxroach` user as described in [Build a Ruby app with CockroachDB](https://www.cockroachlabs.com/docs/stable/build-a-ruby-app-with-cockroachdb-activerecord.html).
+1. Run `./up.sh` to start the environment
 
-3. From the [SQL client](https://www.cockroachlabs.com/docs/stable/cockroach-sql.html): `GRANT ALL ON DATABASE bank TO maxroach`
+2. Run `docker logs rails` to view the results
 
-4. In your terminal, run the code from the `hello-world-ruby-activerecord` directory:
+3. Run `docker exec -it roach-0 /cockroach/cockroach sql --certs=/certs --host=lb` to connecto to SQL shell
 
-    ```shell
-    ruby main.rb
-    ```
+4. Run `docker exec -it roach-0 sh` to connect to a Cockroach node's shell
+
+5. Run `docker exec -it rails sh` to connect to the rails node's shell
