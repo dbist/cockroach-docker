@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+
+  roach-cert:
+    container_name: roach-cert
+    hostname: roach-cert
+    build: roach-cert
+    volumes:
+      - certs-roach-0:/certs/roach-0
+      - certs-roach-1:/certs/roach-1
+      - certs-roach-2:/certs/roach-2
+      - certs-client:/certs/client
+
+  app: 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - lb
+      - redis
+    ports: 
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - gem_cache:/usr/local/bundle/gems
+      - node_modules:/app/node_modules
+      - certs-client:/certs
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+
+  roach-0:
+    container_name: roach-0
+    hostname: roach-0
+    image: cockroachdb/cockroach:v20.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-0:/certs
+      - "${PWD}/node1:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+
+  roach-1:
+    container_name: roach-1
+    hostname: roach-1
+    image: cockroachdb/cockroach:v20.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-1:/certs
+      - "${PWD}/node2:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-0
+
+  roach-2:
+    container_name: roach-2
+    hostname: roach-2
+    image: cockroachdb/cockroach:v20.2.5
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    volumes:
+      - certs-roach-2:/certs
+      - "${PWD}/node3:/cockroach/cockroach-data"
+    depends_on:
+      - roach-cert
+      - roach-0
+
+  lb:
+    container_name: lb
+    hostname: lb
+    build: haproxy
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - roach-0
+      - roach-1
+      - roach-2
+
+  redis:
+    image: redis:5.0.7
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - app      
+      - lb
+      - redis
+    volumes:
+      - .:/app
+      - gem_cache:/usr/local/bundle/gems
+      - node_modules:/app/node_modules
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+    entrypoint: ./entrypoints/sidekiq-entrypoint.sh
+
+volumes:
+  gem_cache:
+  db_data:
+  node_modules:
+  certs-roach-0:
+  certs-roach-1:
+  certs-roach-2:
+  certs-client:

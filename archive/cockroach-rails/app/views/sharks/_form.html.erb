@@ -1,0 +1,27 @@
+<%= form_with(model: shark, local: true) do |form| %>
+  <% if shark.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(shark.errors.count, "error") %> prohibited this shark from being saved:</h2>
+
+      <ul>
+      <% shark.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="field">
+    <%= form.label :facts %>
+    <%= form.text_area :facts %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

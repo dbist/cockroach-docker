@@ -1,0 +1,25 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @shark.name %>
+</p>
+
+<p>
+  <strong>Facts:</strong>
+  <%= @shark.facts %>
+</p>
+
+<h2>Posts</h2>
+
+<%= render 'sharks/posts' %>
+
+<%= link_to 'Edit', edit_shark_path(@shark), :class => "btn btn-primary btn-sm" %> <%= link_to 'Back', sharks_path, :class => "btn btn-primary btn-sm" %>
+
+<div data-controller="posts">
+	<button data-action="posts#showAll">Show Older Posts</button>
+
+	<div data-target="posts.show" style="visibility:hidden">
+		<%= render 'sharks/all' %>
+		</div>
+</div>

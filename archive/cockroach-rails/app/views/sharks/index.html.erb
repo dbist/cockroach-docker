@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Sharks</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Facts</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @sharks.each do |shark| %>
+      <tr>
+        <td><%= shark.name %></td>
+        <td><%= shark.facts %></td>
+        <td><%= button_to 'Show', shark_path(:id => shark.id), :method => :get %></td>
+	<td><%= button_to 'Edit', edit_shark_path(:id => shark.id), :method => :get %></td>
+        <td><%= button_to 'Destroy', shark_path(:id => shark.id), :method => :delete %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Shark', new_shark_path, :class => "btn btn-primary btn-sm" %> <%= link_to 'Home', home_index_path, :class => "btn btn-primary btn-sm" %>
