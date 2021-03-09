@@ -30,3 +30,9 @@ CockroachDB 20.2
 4. Run `docker exec -it roach-0 sh` to connect to a Cockroach node's shell
 
 5. Run `docker exec -it rails sh` to connect to the rails node's shell
+
+
+## Rails
+
+`main.rb` in the rails directory has a hello world sample.
+`devices.rb` is a new class to demonstrate UUID with ActiveRecord and Cockroach.
