@@ -6,4 +6,6 @@ if [ -f tmp/pids/server.pid ]; then
   rm tmp/pids/server.pid
 fi
 
-bundle exec rails s -b 0.0.0.0
+echo "starting up"
+sleep 10
+ruby ./rails/main.rb
