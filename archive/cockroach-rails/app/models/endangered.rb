@@ -1,2 +1,0 @@
-class Endangered < ApplicationRecord
-end
