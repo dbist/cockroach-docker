@@ -27,6 +27,9 @@ services:
       - certs-roach-0:/certs
     depends_on:
       - roach-cert
+#    networks:
+#      roachnet:
+#        ipv4_address: 172.28.1.3
 
   roach-1:
     container_name: roach-1
@@ -38,6 +41,9 @@ services:
     depends_on:
       - roach-cert
       - roach-0
+#    networks:
+#      roachnet:
+#        ipv4_address: 172.28.1.4
 
   roach-2:
     container_name: roach-2
@@ -49,6 +55,10 @@ services:
     depends_on:
       - roach-cert
       - roach-0
+#    networks:
+#      roachnet:
+#        ipv4_address: 172.28.1.5
+
 
   lb:
     container_name: lb
@@ -62,16 +72,48 @@ services:
       - roach-0
       - roach-1
       - roach-2
+#    networks:
+#      roachnet:
+#        ipv4_address: 172.28.1.6
 
   pgbouncer:
     container_name: pgbouncer
     hostname: pgbouncer
-    build: pgbouncer/.
+    image: bitnami/pgbouncer:1.15.0
     command: tail -f /dev/null
     volumes:
       - certs-pgbouncer:/certs
-    env_file:
-      - pgbouncer/cockroachdb.env
+    environment:
+      - POSTGRESQL_HOST=lb
+      - POSTGRESQL_PORT=26257
+      - POSTGRESQL_USERNAME=root
+      - POSTGRESQL_DATABASE=defaultdb
+      - PGBOUNCER_BIND_ADDRESS=*
+      - PGBOUNCER_PORT=27000
+      - PGBOUNCER_MAX_CLIENT_CONN=400
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+      - PGBOUNCER_AUTH_TYPE=cert
+      - PGBOUNCER_CLIENT_TLS_SSLMODE=verify-full
+      - PGBOUNCER_CLIENT_TLS_KEY_FILE=/certs/node.key
+      - PGBOUNCER_CLIENT_TLS_CERT_FILE=/certs/node.crt
+      - PGBOUNCER_CLIENT_TLS_CA_FILE=/certs/ca.crt
+#      - $PWD/pgbouncer/pgbouncer.conf:/etc/conf/pgbouncer.conf
+#    env_file:
+#      - pgbouncer/cockroachdb.env
+    ports:
+      - "27000:27000"
     depends_on:
       - lb
       - roach-cert
+#    networks:
+#      roachnet:
+#        ipv4_address: 172.28.1.7
+    restart: always
+
+#networks:
+#  roachnet:
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 172.28.0.0/16
+
