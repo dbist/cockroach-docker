@@ -66,8 +66,10 @@ services:
   pgbouncer:
     container_name: pgbouncer
     hostname: pgbouncer
-    build: pgbouncer/.
+    image: pgbouncer/pgbouncer:1.15.0
     command: tail -f /dev/null
+    ports:
+      - "27000:27000"
     volumes:
       - certs-pgbouncer:/certs
     env_file:
@@ -75,3 +77,4 @@ services:
     depends_on:
       - lb
       - roach-cert
+    #restart: always
