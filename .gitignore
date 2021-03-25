@@ -138,3 +138,5 @@ dmypy.json
 
 # Nodejs
 cockroach-gssapi-nodejs/nodejs/app/node_modules
+
+.idea

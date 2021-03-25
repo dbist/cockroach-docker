@@ -5,6 +5,7 @@ volumes:
   certs-roach-1:
   certs-roach-2:
   certs-pgbouncer:
+  certs-client:
 
 services:
 
@@ -17,6 +18,7 @@ services:
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
       - certs-pgbouncer:/certs/pgbouncer
+      - certs-client:/certs/client
 
   roach-0:
     container_name: roach-0
@@ -71,7 +73,7 @@ services:
     ports:
       - "27000:27000"
     volumes:
-      - certs-pgbouncer:/certs
+      - certs-client:/certs
     env_file:
       - pgbouncer/cockroachdb.env
     depends_on:
