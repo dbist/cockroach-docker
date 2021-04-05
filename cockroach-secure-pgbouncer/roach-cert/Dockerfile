@@ -1,5 +1,5 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach:v20.2.6 AS generator
+FROM cockroachdb/cockroach:latest AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="6.0"
@@ -33,7 +33,7 @@ RUN cockroach cert create-node lb --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/c
 RUN cockroach cert create-node pgbouncer --certs-dir=/tmp/certs/pgbouncer --ca-key=/tmp/safe/ca.key
 
 # Stage 2 - share certs
-FROM alpine:3
+FROM alpine:latest
 
 RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/client /certs/lb /certs/pgbouncer
 
@@ -43,5 +43,7 @@ COPY --from=generator  /tmp/certs/roach-2/* /certs/roach-2/
 COPY --from=generator  /tmp/certs/client/* /certs/client/
 COPY --from=generator /tmp/certs/lb/* /certs/lb/
 COPY --from=generator /tmp/certs/pgbouncer/* /certs/pgbouncer/
+
+RUN chmod 777 /certs/client/client.root.key
 
 CMD tail -f /dev/null
