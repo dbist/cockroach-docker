@@ -15,7 +15,8 @@ RUN cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-1 \
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/roach-2 \
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/lb \
-    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/pgbouncer
+    && cp -v /tmp/certs/ca/ca.crt /tmp/certs/pgbouncer \
+    && cp -v /tmp/safe/ca.key /tmp/certs/pgbouncer
 
 # create client certificate and distribute to all nodes
 RUN ./cockroach cert create-client root --certs-dir=/tmp/certs/client/ --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key \
@@ -44,6 +45,7 @@ COPY --from=generator  /tmp/certs/client/* /certs/client/
 COPY --from=generator /tmp/certs/lb/* /certs/lb/
 COPY --from=generator /tmp/certs/pgbouncer/* /certs/pgbouncer/
 
-RUN chmod 777 /certs/client/client.root.key
+RUN chmod 777 /certs/pgbouncer/client.root.key
+RUN chmod 777 /certs/pgbouncer/ca.key
 
 CMD tail -f /dev/null

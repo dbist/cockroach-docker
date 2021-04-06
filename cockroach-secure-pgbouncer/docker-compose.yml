@@ -73,7 +73,9 @@ services:
     ports:
       - "27000:27000"
     volumes:
-      - certs-client:/certs
+#      - certs-client:/certs
+      - certs-pgbouncer:/certs
+      - ${PWD}/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
     env_file:
       - pgbouncer/cockroachdb.env
     depends_on:
