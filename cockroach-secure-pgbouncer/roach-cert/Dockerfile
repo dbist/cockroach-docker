@@ -45,7 +45,7 @@ COPY --from=generator  /tmp/certs/client/* /certs/client/
 COPY --from=generator /tmp/certs/lb/* /certs/lb/
 COPY --from=generator /tmp/certs/pgbouncer/* /certs/pgbouncer/
 
-RUN chmod 777 /certs/pgbouncer/client.root.key
-RUN chmod 777 /certs/pgbouncer/ca.key
+RUN chmod 700 /certs/pgbouncer/client.root.key
+RUN chmod 700 /certs/pgbouncer/ca.key
 
 CMD tail -f /dev/null
