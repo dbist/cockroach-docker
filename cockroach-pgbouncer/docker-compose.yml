@@ -5,19 +5,19 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:v20.2.7
+    image: cockroachdb/cockroach:latest-v20.2
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
     
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:v20.2.7
+    image: cockroachdb/cockroach:latest-v20.2
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
     
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:v20.2.7
+    image: cockroachdb/cockroach:latest-v20.2
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
     
   lb:
@@ -50,7 +50,7 @@ services:
 
   client:
     container_name: client
-    image: cockroachdb/cockroach:v20.2.7
+    image: cockroachdb/cockroach:latest-v20.2
     entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
     hostname: client
     depends_on:
