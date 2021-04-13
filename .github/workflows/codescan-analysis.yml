@@ -17,7 +17,7 @@ jobs:
             -   name: Checkout repository
                 uses: actions/checkout@v2
             -   name: Cache files
-                uses: actions/cache@v2.1.4
+                uses: actions/cache@v2.1.5
                 with:
                     path: |
                         ~/.sonar
