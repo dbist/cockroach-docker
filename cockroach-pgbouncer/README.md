@@ -134,3 +134,19 @@ Starting pgbouncer.
 2021-04-08 15:09:11.049 UTC [1] LOG C-0x5585e0a471b0: roach/roach@192.168.48.7:55214 login attempt: db=roach user=roach tls=no
 2021-04-08 15:09:11.050 UTC [1] LOG S-0x5585e0aa9870: roach/roach@192.168.48.5:26257 new connection to server (from 192.168.48.6:58200)
 ```
+
+### Run a workload via LB and/or PGBouncer
+
+#### LB
+
+```bash
+docker exec -it client cockroach workload init ycsb --splits=50 'postgresql://root@lb:26257/ycsb?sslmode=disable'   
+docker exec -it client cockroach workload run ycsb --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@lb:26257/ycsb?sslmode=disable'
+```
+
+#### PGBouncer
+
+```bash
+docker exec -it client cockroach workload init ycsb --splits=50 'postgresql://root@pgbouncer:27000/ycsb?sslmode=disable'   
+docker exec -it client cockroach workload run ycsb --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@pgbouncer:27000/ycsb?sslmode=disable'
+```
