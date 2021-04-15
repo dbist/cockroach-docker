@@ -23,34 +23,35 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:v20.2.6
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    image: cockroachdb/cockroach:latest-v20.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25    
     volumes:
       - certs-roach-0:/certs
     depends_on:
       - roach-cert
 
+    
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:v20.2.6
+    image: cockroachdb/cockroach:latest-v20.2
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-1:/certs
     depends_on:
       - roach-cert
-      - roach-0
 
+    
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:v20.2.6
+    image: cockroachdb/cockroach:latest-v20.2
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-2:/certs
     depends_on:
       - roach-cert
-      - roach-0
+
 
   lb:
     container_name: lb
@@ -68,17 +69,32 @@ services:
   pgbouncer:
     container_name: pgbouncer
     hostname: pgbouncer
-    image: pgbouncer/pgbouncer:1.15.0
-    command: tail -f /dev/null
+    #image: cockroachdb/cockroach:latest-v20.2
+    build: pgbouncer/.
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
     ports:
       - "27000:27000"
     volumes:
-#      - certs-client:/certs
+      - ${PWD}/pgbouncer:/pgbouncer
       - certs-pgbouncer:/certs
-      - ${PWD}/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
     env_file:
       - pgbouncer/cockroachdb.env
+    ulimits: 
+      nproc: 65535
+      nofile:
+        soft: 1048576
+        hard: 1048576
     depends_on:
       - lb
-      - roach-cert
-    #restart: always
+    restart: always
+
+  client:
+    container_name: client
+    image: cockroachdb/cockroach:latest-v20.2
+    hostname: client
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    depends_on:
+      - lb
+      - pgbouncer
+    volumes:
+        - certs-client:/certs

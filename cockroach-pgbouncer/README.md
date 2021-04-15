@@ -137,16 +137,17 @@ Starting pgbouncer.
 
 ### Run a workload via LB and/or PGBouncer
 
+
+## PGBouncer
+
+```bash
+docker exec -it client cockroach workload init tpcc --split 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
+```
+
 #### LB
 
 ```bash
-docker exec -it client cockroach workload init ycsb --splits=50 'postgresql://root@lb:26257/ycsb?sslmode=disable'   
-docker exec -it client cockroach workload run ycsb --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@lb:26257/ycsb?sslmode=disable'
-```
-
-#### PGBouncer
-
-```bash
-docker exec -it client cockroach workload init ycsb --splits=50 'postgresql://root@pgbouncer:27000/ycsb?sslmode=disable'   
-docker exec -it client cockroach workload run ycsb --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@pgbouncer:27000/ycsb?sslmode=disable'
+docker exec -it client cockroach workload init tpcc --split 'postgresql://root@lb:26257/tpcc?sslmode=disable'   
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@lb:26257/tpcc?sslmode=disable'
 ```
