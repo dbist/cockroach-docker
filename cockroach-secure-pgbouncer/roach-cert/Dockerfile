@@ -54,4 +54,7 @@ COPY --from=generator /tmp/certs/lb/* /certs/lb/
 COPY --from=generator --chown=cockroach:cockroach /tmp/certs/pgbouncer/* /certs/pgbouncer/
 COPY --from=generator --chown=cockroach:cockroach /tmp/safe/ca.key /certs/pgbouncer/
 
+RUN chmod 400 /certs/pgbouncer/ca.key
+RUN chown -R cockroach:cockroach /certs
+
 CMD tail -f /dev/null
