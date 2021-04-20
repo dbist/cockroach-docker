@@ -117,3 +117,4 @@ docker exec -it client cockroach sql --certs-dir=/certs --host=lb --user=roach
 
 ```
 docker exec -it client cockroach sql --certs-dir=/certs --url "postgresql://roach@lb:26257/defaultdb?sslmode=verify-full"
+```
