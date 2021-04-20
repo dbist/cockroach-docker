@@ -103,4 +103,8 @@ docker exec -it client cockroach sql --certs-dir=/certs --host=pgbouncer --port=
 docker exec -it client cockroach sql --certs-dir=/certs --url "postgresql://roach@pgbouncer:27000/defaultdb?sslmode=verify-full"
 ```
 
+## Run tpcc workload using PGBouncer connection
 
+```
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=5 --warehouses 5 --drop --max-rate=1000 --tolerate-errors 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=%2Fcerts%2Fclient.roach.crt&sslkey=%2Fcerts%2Fclient.roach.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt&application_name=bouncer'
+```
