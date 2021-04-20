@@ -71,7 +71,7 @@ services:
     hostname: pgbouncer
     #image: cockroachdb/cockroach:latest-v20.2
     build: pgbouncer/.
-    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    #entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
     ports:
       - "27000:27000"
     volumes:

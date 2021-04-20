@@ -26,12 +26,15 @@ WORKDIR /pgbouncer
 COPY --chown=cockroach "userlist.txt" "/etc/pgbouncer"
 COPY --chown=cockroach "entrypoint.sh" "/opt/pgbouncer"
 
+RUN chmod +x /opt/pgbouncer/entrypoint.sh
+
 EXPOSE 27000
 
 # PGBouncer must start with a non-root user
 USER cockroach
 
-WORKDIR /home/cockroach
+WORKDIR /opt/pgbouncer
+RUN chmod +x /opt/pgbouncer/entrypoint.sh
 #RUN mkdir certs
 
 # Create a PGBouncer CA, doesn't work, need to  mount /certs volume first
