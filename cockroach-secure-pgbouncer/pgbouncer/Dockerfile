@@ -34,7 +34,6 @@ EXPOSE 27000
 USER cockroach
 
 WORKDIR /opt/pgbouncer
-RUN chmod +x /opt/pgbouncer/entrypoint.sh
 #RUN mkdir certs
 
 # Create a PGBouncer CA, doesn't work, need to  mount /certs volume first
