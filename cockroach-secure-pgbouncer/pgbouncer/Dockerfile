@@ -7,7 +7,7 @@ RUN rpm -ivh http://rpmfind.net/linux/centos/8.3.2011/BaseOS/x86_64/os/Packages/
     microdnf update && \
     microdnf install \
         pgbouncer \
-        postgresql95
+        vim
 
 RUN useradd cockroach
 
@@ -25,6 +25,9 @@ RUN chown -R cockroach:cockroach \
 WORKDIR /pgbouncer
 COPY --chown=cockroach "userlist.txt" "/etc/pgbouncer"
 COPY --chown=cockroach "entrypoint.sh" "/opt/pgbouncer"
+COPY --chown=cockroach "ca.cnf" "/home/cockroach/ca.cnf"
+COPY --chown=cockroach "node.cnf" "/home/cockroach/node.cnf"
+COPY --chown=cockroach "client.cnf" "/home/cockroach/client.cnf"
 
 RUN chmod +x /opt/pgbouncer/entrypoint.sh
 
@@ -33,12 +36,34 @@ EXPOSE 27000
 # PGBouncer must start with a non-root user
 USER cockroach
 
-WORKDIR /opt/pgbouncer
-#RUN mkdir certs
+WORKDIR /home/cockroach
+# Step 1 https://www.cockroachlabs.com/docs/v20.1/create-security-certificates-openssl
+# Create a PGBouncer CA
+RUN mkdir certs node_certs my-safe-directory
+RUN openssl genrsa -out my-safe-directory/ca.key 2048 && \
+    chmod 400 my-safe-directory/ca.key
 
-# Create a PGBouncer CA, doesn't work, need to  mount /certs volume first
-#RUN cockroach cert create-ca --certs-dir=certs --ca-key=/certs/ca.key --allow-ca-key-reuse
+RUN openssl req -new -x509 -config ca.cnf -key my-safe-directory/ca.key -out certs/ca.crt -days 365 -batch
+
+RUN rm -f index.txt serial.txt && \
+    touch index.txt && \
+    echo '01' > serial.txt
+
+# Create PGBouncer node certs
+RUN openssl genrsa -out certs/node.key 2048 && \
+    chmod 400 certs/node.key
+
+RUN openssl req -new -config node.cnf -key certs/node.key -out node.csr -batch
+RUN openssl ca -config ca.cnf -keyfile my-safe-directory/ca.key -cert certs/ca.crt -policy signing_policy -extensions signing_node_req -out certs/node.crt -outdir certs/ -in node.csr -batch
+RUN mv certs/node.* node_certs/
+
+# Create roach user cert
+RUN openssl genrsa -out certs/client.roach.key 2048 && \
+    chmod 400 certs/client.roach.key
+
+RUN openssl req -new -config client.cnf -key certs/client.roach.key -out client.roach.csr -batch
+RUN openssl ca -config ca.cnf -keyfile my-safe-directory/ca.key -cert certs/ca.crt -policy signing_policy -extensions signing_client_req -out certs/client.roach.crt -outdir certs/ -in client.roach.csr -batch
 
 # Fails to run with permission error still
-ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
+#ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
 
