@@ -93,18 +93,27 @@ docker exec -ti client cockroach sql --insecure --host=roach-0
 docker logs pgbouncer
 ```
 
-5. Connect to `cockroach sql` cli using
+5. Connect to `cockroach sql` cli using explicit connection, note, client cert for roach is generated using PGBouncer CA, root will need its own PGBouncer CA generated cert.
 
 ```
-docker exec -it client cockroach sql --certs-dir=/certs --host=pgbouncer --port=27000 --user=roach
+docker exec -it pgbouncer cockroach sql --certs-dir=certs --host=pgbouncer --port=27000 --user=roach
 ```
 
 ```
-docker exec -it client cockroach sql --certs-dir=/certs --url "postgresql://roach@pgbouncer:27000/defaultdb?sslmode=verify-full"
+docker exec -it pgbouncer cockroach sql --certs-dir=certs --url "postgresql://roach@pgbouncer:27000/defaultdb?sslmode=verify-full"
 ```
 
 ## Run tpcc workload using PGBouncer connection
 
 ```
-docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=5 --warehouses 5 --drop --max-rate=1000 --tolerate-errors 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=%2Fcerts%2Fclient.roach.crt&sslkey=%2Fcerts%2Fclient.roach.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt&application_name=bouncer'
+docker exec -it pgbouncer cockroach workload run tpcc --duration=120m --concurrency=5 --warehouses 5 --drop --max-rate=1000 --tolerate-errors 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=certs%2Fclient.roach.crt&sslkey=certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=certs%2Fca.crt&application_name=pgbouncer'
 ```
+
+6. Connecting to non-PGBouncer connections can be done the following ways
+
+```
+docker exec -it client cockroach sql --certs-dir=/certs --host=lb --user=roach
+```
+
+```
+docker exec -it client cockroach sql --certs-dir=/certs --url "postgresql://roach@lb:26257/defaultdb?sslmode=verify-full"
