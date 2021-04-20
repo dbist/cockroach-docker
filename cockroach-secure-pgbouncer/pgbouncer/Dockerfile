@@ -64,6 +64,5 @@ RUN openssl genrsa -out certs/client.roach.key 2048 && \
 RUN openssl req -new -config client.cnf -key certs/client.roach.key -out client.roach.csr -batch
 RUN openssl ca -config ca.cnf -keyfile my-safe-directory/ca.key -cert certs/ca.crt -policy signing_policy -extensions signing_client_req -out certs/client.roach.crt -outdir certs/ -in client.roach.csr -batch
 
-# Fails to run with permission error still
-#ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
+ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
 

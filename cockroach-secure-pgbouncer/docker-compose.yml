@@ -70,7 +70,7 @@ services:
     container_name: pgbouncer
     hostname: pgbouncer
     build: pgbouncer/.
-    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    #entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
     ports:
       - "27000:27000"
     volumes:
