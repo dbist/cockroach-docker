@@ -9,34 +9,36 @@ RUN rpm -ivh http://rpmfind.net/linux/centos/8.3.2011/BaseOS/x86_64/os/Packages/
         pgbouncer \
         vim
 
-RUN useradd cockroach
+FROM base AS pgbouncer
+
+RUN useradd postgres
 
 WORKDIR /etc/pgbouncer
 WORKDIR /var/log/pgbouncer
 WORKDIR /var/run/pgbouncer
 WORKDIR /opt/pgbouncer
 
-RUN chown -R cockroach:cockroach \
+RUN chown -R postgres:postgres \
         /etc/pgbouncer \
         /var/log/pgbouncer \
         /var/run/pgbouncer \
         /opt/pgbouncer
 
 WORKDIR /pgbouncer
-COPY --chown=cockroach "userlist.txt" "/etc/pgbouncer"
-COPY --chown=cockroach "entrypoint.sh" "/opt/pgbouncer"
-COPY --chown=cockroach "ca.cnf" "/home/cockroach/ca.cnf"
-COPY --chown=cockroach "node.cnf" "/home/cockroach/node.cnf"
-COPY --chown=cockroach "client.cnf" "/home/cockroach/client.cnf"
+COPY --chown=postgres "userlist.txt" "/etc/pgbouncer"
+COPY --chown=postgres "entrypoint.sh" "/opt/pgbouncer"
+COPY --chown=postgres "ca.cnf" "/home/postgres/ca.cnf"
+COPY --chown=postgres "node.cnf" "/home/postgres/node.cnf"
+COPY --chown=postgres "client.cnf" "/home/postgres/client.cnf"
 
 RUN chmod +x /opt/pgbouncer/entrypoint.sh
 
 EXPOSE 27000
 
 # PGBouncer must start with a non-root user
-USER cockroach
+USER postgres
 
-WORKDIR /home/cockroach
+WORKDIR /home/postgres
 # Step 1 https://www.cockroachlabs.com/docs/v20.1/create-security-certificates-openssl
 # Create a PGBouncer CA
 RUN mkdir certs node_certs my-safe-directory
@@ -66,3 +68,4 @@ RUN openssl ca -config ca.cnf -keyfile my-safe-directory/ca.key -cert certs/ca.c
 
 ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
 
+# Should I copy a layer from base here?
