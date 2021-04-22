@@ -70,7 +70,7 @@ docker exec -it client cockroach workload run tpcc \
 --duration=10m \
 --workers=100 \
 --tolerate-errors \
-'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/certs%2Fclient.roach.crt&sslkey=/shared/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/certs%2Fca.crt'
+'postgresql://roach@lb:26257/tpcc?sslcert=/shared/certs%2Fclient.roach.crt&sslkey=/shared/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/certs%2Fca.crt'
 ```
 
 ### with concurrency=10
@@ -86,7 +86,7 @@ I210422 15:35:56.138478 1 workload/cli/run.go:387  creating load generator... do
 4. Inspect the PGBouncer logs
 
 ```bash
-docker logs pgbouncer
+docker logs -f pgbouncer
 ```
 
 ## Connecting to non-PGBouncer connections can be done the following ways
