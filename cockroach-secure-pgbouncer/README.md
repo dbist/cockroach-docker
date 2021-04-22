@@ -57,7 +57,7 @@ This will load 2 GB of data for 10 warehouses, follow the tutorial [here](https:
 
 ```bash
 docker exec -it client cockroach workload fixtures import tpcc \
- --warehouses=10 'postgresql://roach@lb:26257/tpcc?sslcert=/certs%2Fclient.roach.crt&sslkey=/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/certs%2Fca.crt'
+ --warehouses=10 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/client/certs%2Fclient.roach.crt&sslkey=/shared/client/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/client/certs%2Fca.crt'
 ```
 
 ### Run the workload
@@ -70,7 +70,7 @@ docker exec -it client cockroach workload run tpcc \
 --duration=10m \
 --workers=100 \
 --tolerate-errors \
-'postgresql://roach@lb:26257/tpcc?sslcert=/shared/certs%2Fclient.roach.crt&sslkey=/shared/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/certs%2Fca.crt'
+'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/client/certs%2Fclient.roach.crt&sslkey=/shared/client/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/client/certs%2Fca.crt'
 ```
 
 ### with concurrency=10
