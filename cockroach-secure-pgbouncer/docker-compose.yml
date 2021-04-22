@@ -6,6 +6,8 @@ volumes:
   certs-roach-2:
   certs-pgbouncer:
   certs-client:
+  shared:
+    driver: local
 
 services:
 
@@ -76,6 +78,7 @@ services:
     volumes:
       - ${PWD}/pgbouncer:/pgbouncer
       - certs-pgbouncer:/certs
+      - shared:/shared
     env_file:
       - pgbouncer/cockroachdb.env
     ulimits: 
@@ -97,3 +100,4 @@ services:
       - pgbouncer
     volumes:
         - certs-client:/certs
+        - shared:/shared

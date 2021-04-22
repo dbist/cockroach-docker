@@ -40,75 +40,51 @@ PGBouncer is being load balanced via `haproxy`, it can be verified by inspecting
 ```bash
 DATABASES_HOST=lb
 DATABASES_PORT=26257
-DATABASES_DBNAME=defaultdb
+DATABASES_DBNAME=tpcc
 ```
 
-### Connect as root
+## Connect to PGBouncer from client, will connect to the database specified by the database PGBouncer is configured to
+
+Connect to `cockroach sql` cli using explicit connection, note, client cert for roach is generated using PGBouncer CA, root will need its own PGBouncer CA generated cert.
 
 ```bash
-docker exec -it client cockroach sql --insecure --url 'postgres://root@pgbouncer:27000'
+docker exec -it client cockroach sql --certs-dir=/shared/certs --host=pgbouncer --port=27000 --user=roach
 ```
 
-The port for connection string is the PGBouncer port, again inspecting the PGBouncer config file
+### Load the TPCC workload
+
+This will load 2 GB of data for 10 warehouses, follow the tutorial [here](https://www.cockroachlabs.com/docs/v20.2/performance-benchmarking-with-tpcc-local.html)
 
 ```bash
-PGBOUNCER_LISTEN_PORT=27000
+docker exec -it client cockroach workload fixtures import tpcc \
+ --warehouses=10 'postgresql://roach@lb:26257/tpcc?sslcert=/certs%2Fclient.roach.crt&sslkey=/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/certs%2Fca.crt'
 ```
 
-### Connect as roach
+### Run the workload
 
 ```bash
-docker exec -it client cockroach sql --insecure --url 'postgres://roach@pgbouncer:27000'
+docker exec -it client cockroach workload run tpcc \
+--warehouses=10 \
+--ramp=3m \
+--duration=10m \
+--concurrency=20 \
+'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/certs%2Fclient.roach.crt&sslkey=/shared/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/certs%2Fca.crt'
 ```
 
-### passing sslmode to the connection string invalidates the need to pass --insecure
+### with concurrency=10
 
 ```bash
-docker exec -it client cockroach sql --url 'postgres://roach@pgbouncer:27000?sslmode=disable'
+Initializing 20 connections...
+Initializing 100 workers and preparing statements...
+I210422 15:35:56.138478 1 workload/cli/run.go:387  creating load generator... done (took 1.3393289s)
 ```
 
 3. visit the [HAProxy UI](http://localhost:8081)
-
-### Open Interactive Shells
-```bash
-docker exec -ti roach-0 /bin/bash
-docker exec -ti roach-1 /bin/bash
-docker exec -ti roach-2 /bin/bash
-docker exec -ti lb /bin/sh
-docker exec -ti client /bin/bash
-
-# shell
-docker exec -ti roach-cert /bin/sh
-
-# cli inside the container
-cockroach sql --insecure --host=roach-0
-
-# directly
-docker exec -ti client cockroach sql --insecure --host=roach-0
-```
 
 4. Inspect the PGBouncer logs
 
 ```bash
 docker logs pgbouncer
-```
-
-5. Connect to `cockroach sql` cli using explicit connection, note, client cert for roach is generated using PGBouncer CA, root will need its own PGBouncer CA generated cert.
-
-```
-docker exec -it pgbouncer cockroach sql --certs-dir=certs --host=pgbouncer --port=27000 --user=roach
-```
-
-```
-docker exec -it pgbouncer cockroach sql --certs-dir=certs --url "postgresql://roach@pgbouncer:27000/defaultdb?sslmode=verify-full"
-```
-
-## Run a tpcc workload using PGBouncer connection
-
-TPCC instructions are located [here](https://www.cockroachlabs.com/docs/v20.2/performance-benchmarking-with-tpcc-local.html).
-
-```
-docker exec -it pgbouncer cockroach workload run tpcc --duration=120m --concurrency=5 --warehouses 5 --drop --max-rate=1000 --tolerate-errors 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=certs%2Fclient.roach.crt&sslkey=certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=certs%2Fca.crt&application_name=pgbouncer'
 ```
 
 6. Connecting to non-PGBouncer connections can be done the following ways

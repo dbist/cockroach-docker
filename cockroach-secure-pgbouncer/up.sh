@@ -15,3 +15,11 @@ docker-compose exec roach-0 \
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 --execute="GRANT ADMIN TO roach;"
+
+# Need to copy client certs for roach generated using PGBouncer CA to /shared directory
+docker-compose exec --user root pgbouncer \
+cp -r certs /shared/
+
+docker-compose exec roach-0 \
+ /cockroach/cockroach sql \
+ --certs-dir=/certs --host=roach-0 --execute="CREATE DATABASE tpcc;"
