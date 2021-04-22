@@ -3,6 +3,7 @@
 Prerequisites:
 
 ## Services
+
 * `roach-0` - CockroachDB node
 * `roach-1` - CockroachDB node
 * `roach-2` - CockroachDB node
@@ -11,6 +12,7 @@ Prerequisites:
 * `client` - client machine containing `cockroach` binary
 
 ## Getting started
+
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
 1. Start the tutorial using `./up.sh` script
@@ -33,7 +35,7 @@ GRANT
 Time: 87ms
 ```
 
-2. Connect to cockroach using PGBouncer
+2.Connect to cockroach using PGBouncer
 
 PGBouncer is being load balanced via `haproxy`, it can be verified by inspecting `pgbouncer/cockroachdb.env` file.
 
@@ -81,9 +83,9 @@ Initializing 100 workers and preparing statements...
 I210422 15:35:56.138478 1 workload/cli/run.go:387  creating load generator... done (took 1.3393289s)
 ```
 
-3. visit the [HAProxy UI](http://localhost:8081)
+3.Visit the [HAProxy UI](http://localhost:8081)
 
-4. Inspect the PGBouncer logs
+4.Inspect the PGBouncer logs
 
 ```bash
 docker logs -f pgbouncer
@@ -91,10 +93,10 @@ docker logs -f pgbouncer
 
 ## Connecting to non-PGBouncer connections can be done the following ways
 
-```
+```bash
 docker exec -it client cockroach sql --certs-dir=/certs --host=lb --user=roach
 ```
 
-```
+```bash
 docker exec -it client cockroach sql --certs-dir=/certs --url "postgresql://roach@lb:26257/defaultdb?sslmode=verify-full"
 ```
