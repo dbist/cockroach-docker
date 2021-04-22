@@ -6,8 +6,7 @@ RUN rpm -ivh http://rpmfind.net/linux/centos/8.3.2011/BaseOS/x86_64/os/Packages/
     rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
     microdnf update && \
     microdnf install \
-        pgbouncer \
-        vim
+        pgbouncer
 
 FROM base AS pgbouncer
 

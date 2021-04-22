@@ -18,20 +18,18 @@ RUN cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/pgbouncer
 
 # create root client certificates and distribute to all nodes
-RUN ./cockroach cert create-client root --certs-dir=/tmp/certs/client/ --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key \
+RUN cockroach cert create-client root --certs-dir=/tmp/certs/client/ --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key \
     && cp -v /tmp/certs/client/client.root.* /tmp/certs/roach-0 \
     && cp -v /tmp/certs/client/client.root.* /tmp/certs/roach-1 \
     && cp -v /tmp/certs/client/client.root.* /tmp/certs/roach-2 \
-    && cp -v /tmp/certs/client/client.root.* /tmp/certs/lb \
-    && cp -v /tmp/certs/client/client.root.* /tmp/certs/pgbouncer
+    && cp -v /tmp/certs/client/client.root.* /tmp/certs/lb
 
 # create roach client certificates and distribute to all nodes
 RUN ./cockroach cert create-client roach --certs-dir=/tmp/certs/client/ --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key \
     && cp -v /tmp/certs/client/client.roach.* /tmp/certs/roach-0 \
     && cp -v /tmp/certs/client/client.roach.* /tmp/certs/roach-1 \
     && cp -v /tmp/certs/client/client.roach.* /tmp/certs/roach-2 \
-    && cp -v /tmp/certs/client/client.roach.* /tmp/certs/lb \
-    && cp -v /tmp/certs/client/client.roach.* /tmp/certs/pgbouncer
+    && cp -v /tmp/certs/client/client.roach.* /tmp/certs/lb
 
 # create each node certificate (cert must have lb and pgbouncer)
 RUN cockroach cert create-node roach-0 lb pgbouncer --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
@@ -46,10 +44,10 @@ FROM alpine:latest
 RUN adduser postgres --no-create-home --disabled-password
 RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/client /certs/lb /certs/pgbouncer
 
-COPY --from=generator  /tmp/certs/roach-0/* /certs/roach-0/
-COPY --from=generator  /tmp/certs/roach-1/* /certs/roach-1/
-COPY --from=generator  /tmp/certs/roach-2/* /certs/roach-2/
-COPY --from=generator  /tmp/certs/client/* /certs/client/
+COPY --from=generator /tmp/certs/roach-0/* /certs/roach-0/
+COPY --from=generator /tmp/certs/roach-1/* /certs/roach-1/
+COPY --from=generator /tmp/certs/roach-2/* /certs/roach-2/
+COPY --from=generator /tmp/certs/client/* /certs/client/
 COPY --from=generator /tmp/certs/lb/* /certs/lb/
 COPY --from=generator --chown=postgres:postgres /tmp/certs/pgbouncer/* /certs/pgbouncer/
 COPY --from=generator --chown=postgres:postgres /tmp/safe/ca.key /certs/pgbouncer/

@@ -65,9 +65,11 @@ docker exec -it client cockroach workload fixtures import tpcc \
 ```bash
 docker exec -it client cockroach workload run tpcc \
 --warehouses=10 \
+--active-warehouses=10 \
 --ramp=3m \
 --duration=10m \
---concurrency=20 \
+--workers=100 \
+--tolerate-errors \
 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/certs%2Fclient.roach.crt&sslkey=/shared/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/certs%2Fca.crt'
 ```
 
@@ -87,7 +89,7 @@ I210422 15:35:56.138478 1 workload/cli/run.go:387  creating load generator... do
 docker logs pgbouncer
 ```
 
-6. Connecting to non-PGBouncer connections can be done the following ways
+## Connecting to non-PGBouncer connections can be done the following ways
 
 ```
 docker exec -it client cockroach sql --certs-dir=/certs --host=lb --user=roach
