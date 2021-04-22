@@ -18,7 +18,17 @@ docker-compose exec roach-0 \
 
 # Need to copy client certs for roach generated using PGBouncer CA to /shared directory
 docker-compose exec --user root pgbouncer \
-cp -r certs /shared/
+ mkdir -p /shared/client/certs
+docker-compose exec --user root pgbouncer \
+ cp -r /home/postgres/certs /shared/client
+
+# Need to copy server certs for pgbouncer generated using cockroach CA to /shared/node/certs directory
+docker-compose exec --user root pgbouncer \
+ mkdir -p /shared/node/certs
+docker-compose exec --user root pgbouncer \
+ cp -r /certs /shared/node
+docker-compose exec --user root pgbouncer \
+ chown -R postgres:root /shared/node/certs
 
 docker-compose exec roach-0 \
  /cockroach/cockroach sql \

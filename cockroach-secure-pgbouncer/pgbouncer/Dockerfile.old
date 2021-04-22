@@ -1,14 +1,43 @@
-FROM pgbouncer/pgbouncer:1.15.0 AS base
+FROM cockroachdb/cockroach:latest-v20.2 AS base
 
-USER postgres
+# Need c-ares library for pgbouncer
+# Installing pgbouncer from the postgresql repo
+RUN rpm -ivh http://rpmfind.net/linux/centos/8.3.2011/BaseOS/x86_64/os/Packages/c-ares-1.13.0-5.el8.x86_64.rpm && \
+    rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    microdnf update && \
+    microdnf install \
+        pgbouncer
+
+FROM base AS pgbouncer
+
+RUN useradd postgres
+
+WORKDIR /etc/pgbouncer
+WORKDIR /var/log/pgbouncer
+WORKDIR /var/run/pgbouncer
+WORKDIR /opt/pgbouncer
+
+RUN chown -R postgres:postgres \
+        /etc/pgbouncer \
+        /var/log/pgbouncer \
+        /var/run/pgbouncer \
+        /opt/pgbouncer
 
 WORKDIR /pgbouncer
 COPY --chown=postgres "userlist.txt" "/etc/pgbouncer"
-COPY --chown=postgres "ca.cnf" "/tmp/ca.cnf"
-COPY --chown=postgres "node.cnf" "/tmp/node.cnf"
-COPY --chown=postgres "client.cnf" "/tmp/client.cnf"
+COPY --chown=postgres "entrypoint.sh" "/opt/pgbouncer"
+COPY --chown=postgres "ca.cnf" "/home/postgres/ca.cnf"
+COPY --chown=postgres "node.cnf" "/home/postgres/node.cnf"
+COPY --chown=postgres "client.cnf" "/home/postgres/client.cnf"
 
-WORKDIR /tmp
+RUN chmod +x /opt/pgbouncer/entrypoint.sh
+
+EXPOSE 27000
+
+# PGBouncer must start with a non-root user
+USER postgres
+
+WORKDIR /home/postgres
 # Step 1 https://www.cockroachlabs.com/docs/v20.1/create-security-certificates-openssl
 # Create a PGBouncer CA
 RUN mkdir certs node_certs my-safe-directory
@@ -36,19 +65,6 @@ RUN openssl genrsa -out certs/client.roach.key 2048 && \
 RUN openssl req -new -config client.cnf -key certs/client.roach.key -out client.roach.csr -batch
 RUN openssl ca -config ca.cnf -keyfile my-safe-directory/ca.key -cert certs/ca.crt -policy signing_policy -extensions signing_client_req -out certs/client.roach.crt -outdir certs/ -in client.roach.csr -batch
 
-RUN rm -rf /tmp/certs/*.pem
-
-FROM base as pgbouncer
-
-USER postgres
-
-COPY --from=base --chown=postgres ["/tmp/certs", "/home/postgres/certs"]
-COPY --from=base --chown=postgres ["/tmp/node_certs", "/home/postgres/node_certs"]
-COPY --from=base --chown=postgres ["/tmp/my-safe-directory", "/home/postgres/my-safe-directory"]
-COPY --from=base --chown=postgres ["/opt/pgbouncer", "/opt/pgbouncer"]
-#COPY --chown=postgres ["/opt/pgbouncer/entrypoint.sh", "/opt/pgbouncer"]
-#RUN chmod +x /opt/pgbouncer/entrypoint.sh
-
-EXPOSE 27000
-WORKDIR /opt/pgbouncer
 ENTRYPOINT ["/opt/pgbouncer/entrypoint.sh"]
+
+# Should I copy a layer from base here?
