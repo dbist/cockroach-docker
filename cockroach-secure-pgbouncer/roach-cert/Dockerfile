@@ -43,7 +43,7 @@ RUN cockroach cert create-node pgbouncer --certs-dir=/tmp/certs/pgbouncer --ca-k
 FROM alpine:latest
 
 # need to add a cockroach user to set permissions on certs to non-root, pgbouncer requires it
-RUN adduser cockroach --no-create-home --disabled-password
+RUN adduser postgres --no-create-home --disabled-password
 RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/client /certs/lb /certs/pgbouncer
 
 COPY --from=generator  /tmp/certs/roach-0/* /certs/roach-0/
@@ -51,10 +51,10 @@ COPY --from=generator  /tmp/certs/roach-1/* /certs/roach-1/
 COPY --from=generator  /tmp/certs/roach-2/* /certs/roach-2/
 COPY --from=generator  /tmp/certs/client/* /certs/client/
 COPY --from=generator /tmp/certs/lb/* /certs/lb/
-COPY --from=generator --chown=cockroach:cockroach /tmp/certs/pgbouncer/* /certs/pgbouncer/
-COPY --from=generator --chown=cockroach:cockroach /tmp/safe/ca.key /certs/pgbouncer/
+COPY --from=generator --chown=postgres:postgres /tmp/certs/pgbouncer/* /certs/pgbouncer/
+COPY --from=generator --chown=postgres:postgres /tmp/safe/ca.key /certs/pgbouncer/
 
 RUN chmod 400 /certs/pgbouncer/ca.key
-RUN chown -R cockroach:cockroach /certs
+RUN chown -R postgres:postgres /certs
 
 CMD tail -f /dev/null

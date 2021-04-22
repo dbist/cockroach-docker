@@ -105,6 +105,8 @@ docker exec -it pgbouncer cockroach sql --certs-dir=certs --url "postgresql://ro
 
 ## Run a tpcc workload using PGBouncer connection
 
+TPCC instructions are located [here](https://www.cockroachlabs.com/docs/v20.2/performance-benchmarking-with-tpcc-local.html).
+
 ```
 docker exec -it pgbouncer cockroach workload run tpcc --duration=120m --concurrency=5 --warehouses 5 --drop --max-rate=1000 --tolerate-errors 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=certs%2Fclient.roach.crt&sslkey=certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=certs%2Fca.crt&application_name=pgbouncer'
 ```
