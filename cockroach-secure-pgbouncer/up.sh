@@ -1,5 +1,8 @@
 #!/bin/bash
-  
+
+# grab the latest cockroach image
+docker pull cockroachdb/cockroach:latest-v20.2
+
 docker-compose build --no-cache
 docker-compose up -d
 
