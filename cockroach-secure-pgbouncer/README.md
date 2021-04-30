@@ -67,6 +67,7 @@ docker exec -it client cockroach workload fixtures import tpcc \
 ```bash
 docker exec -it client cockroach workload run tpcc \
 --warehouses=10 \
+--conns 100 \
 --active-warehouses=10 \
 --ramp=3m \
 --duration=10m \
@@ -75,13 +76,7 @@ docker exec -it client cockroach workload run tpcc \
 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/client/certs%2Fclient.roach.crt&sslkey=/shared/client/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/client/certs%2Fca.crt'
 ```
 
-### with concurrency=10
-
-```bash
-Initializing 20 connections...
-Initializing 100 workers and preparing statements...
-I210422 15:35:56.138478 1 workload/cli/run.go:387  creating load generator... done (took 1.3393289s)
-```
+21.1 introduces `--idle-conns` flag that can be used
 
 3.Visit the [HAProxy UI](http://localhost:8081)
 
