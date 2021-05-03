@@ -67,7 +67,7 @@ docker exec -it client cockroach workload fixtures import tpcc \
 ```bash
 docker exec -it client cockroach workload run tpcc \
 --warehouses=10 \
---conns 100 \
+--conns 50 \
 --active-warehouses=10 \
 --ramp=3m \
 --duration=10m \
