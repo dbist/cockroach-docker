@@ -42,8 +42,8 @@ docker exec -ti lb /bin/sh
 docker exec -ti roach-cert /bin/sh
 
 # cli inside the container
-cockroach sql --certs-dir=/certs --host=roach-0
+cockroach sql --certs-dir=/certs --host=lb
 
 # directly
-docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=roach-0
+docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=lb
 ```
