@@ -1,9 +1,9 @@
-FROM alpine:3.12
+FROM alpine:3
 
 LABEL maintainer="artemervits at gmail dot com"
-LABEL version="2.0"
+LABEL version="3.0"
 LABEL description="kerberos kdc container"
-ENV REFRESHED_AT 2020_07_22
+ENV REFRESHED_AT 2021_05_25
 
 RUN apk add --no-cache \
   krb5-server \

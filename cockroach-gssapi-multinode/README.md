@@ -58,7 +58,7 @@ docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=roach-0
 6) Connect to `cockroach` using `psql`
 
 ```bash
-docker exec -it psql bash
+docker exec -it client bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 ```
 
@@ -102,3 +102,5 @@ This works with or without `lb` in the SAN.
 ```bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
 ```
+
+[HAProxy UI](http://localhost:8081/)
