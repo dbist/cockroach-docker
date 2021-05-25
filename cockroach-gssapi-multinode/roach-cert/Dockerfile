@@ -1,10 +1,10 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach-unstable:v20.2.0 AS generator
+FROM cockroachdb/cockroach:latest-v21.1 AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
-LABEL version="4.0"
+LABEL version="5.0"
 LABEL description="cockroach cert generator container"
-ENV REFRESHED_AT 2020_11_11
+ENV REFRESHED_AT 2021_05_25
 
 RUN mkdir -pv /tmp/certs/ca /tmp/certs/roach-0 /tmp/certs/roach-1 /tmp/certs/roach-2 /tmp/safe /tmp/certs/client /tmp/certs/lb
 
@@ -29,7 +29,7 @@ RUN cockroach cert create-node lb --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/c
 
 # Stage 2 - share certs
 
-FROM alpine:3.12
+FROM alpine:3
 
 RUN mkdir -pv /certs/roach-0 /certs/roach-1 /certs/roach-2 /certs/client /certs/lb
 
