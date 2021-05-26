@@ -28,6 +28,8 @@ services:
       - keytab:/keytab
     depends_on:
       - roach-cert
+    ports:
+      - "88:88"
     networks:
       roachnet:
         ipv4_address: 172.28.0.2

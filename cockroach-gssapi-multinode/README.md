@@ -103,4 +103,12 @@ This works with or without `lb` in the SAN.
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
 ```
 
+9) Connecting to CockroachDB using the native binary
+
+```bash
+docker exec -it client cockroach sql \
+ --certs-dir=/certs --url  "postgresql://tester:nopassword@lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
+```
+
+
 [HAProxy UI](http://localhost:8081/)
