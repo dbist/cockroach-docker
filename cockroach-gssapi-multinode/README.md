@@ -8,6 +8,11 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 3: [CockroachDB with MIT Kerberos and Docker Compose](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-3.html)
 - Part 4: [CockroachDB with MIT Kerberos and custom SPN](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach.html)
 - Part 5: [Executing CockroachDB table import via GSSAPI](https://blog.ervits.com/2020/07/three-headed-dog-meet-cockroach-part-5.html)
+- Part 6: [CockroachDB, MIT Kerberos, HAProxy and Docker Compose](https://blog.ervits.com/2020/08/three-headed-dog-meet-cockroach-part-6.html)
+- Part 7: [CockroachDB with Django and MIT Kerberos](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
+- Part 8: [CockroachDB with SQLAlchemy and MIT Kerberos](https://blog.ervits.com/2020/08/cockroachdb-with-sqlalchemy-and-mit.html)
+- Part 9: [CockroachDB with MIT Kerberos using a native client](https://blog.ervits.com/2020/10/cockroachdb-with-mit-kerberos-using.html)
+
 ---
 
 ## Services
@@ -17,98 +22,72 @@ Check out my series of articles on CockroachDB and Kerberos below:
 * `lb` - HAProxy acting as load balancer
 * `roach-cert` - Holds certificates as volume mounts
 * `kdc` - MIT Kerberos realm
-* `client` - postgres-sql client node as CockroachDB < 20.2.alpha3 does not support GSSAPI
+* `client` - cockroach client node, also has `psql` installed
 
 ## Getting started
+
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1) `docker-compose run web django-admin startproject composeexample .`
-
-```bash
-14:32 $ docker-compose run web django-admin startproject composeexample .
-Starting roach-cert ... done
-Starting roach-0    ... done
-```
-
-3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
-   - monitor the status of services via `docker-compose logs`
-   - in case you need to adjust something in composexample/settings.py, you can
-          use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
-          to debug and proceed.
-4) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
-5) visit the [HAProxy UI](http://localhost:8081)
-
 ### Open Interactive Shells
+
 ```bash
 docker exec -ti roach-0 /bin/bash
 docker exec -ti roach-1 /bin/bash
 docker exec -ti roach-2 /bin/bash
 docker exec -ti lb /bin/sh
+docker exec -ti client /bin/bash
+docker exec -ti kdc sh
 
-# shell
-docker exec -ti roach-cert /bin/sh
-
-# cli inside the container
-cockroach sql --certs-dir=/certs --host=roach-0
-
-# directly
-docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=roach-0
+docker exec -ti client cockroach sql --certs-dir=/certs --host=lb
 ```
 
-6) Connect to `cockroach` using `psql`
+1) execute `./up.sh` instead of `docker compose up`
+   - monitor the status of services via `docker compose logs`
+2) visit the [DB Console](http://localhost:8080)
+3) visit the [HAProxy UI](http://localhost:8081)
+
+4) Connect to `cockroach` using `psql`
+
+__Disclaimer__: given weird behavior on my host, I am unable to execute the below command on the latest CockroachDB
 
 ```bash
-docker exec -it client bash
+docker exec -it client
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 ```
 
 ```sql
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
-psql (9.5.22, server 9.5.0)
-SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256, bits: 128, compression: off)
-Type "help" for help.
-
-defaultdb=>
+psql: error: ERROR:  unimplemented: unimplemented client encoding: "sqlascii"
+HINT:  You have attempted to use a feature that is not yet implemented.
+See: https://go.crdb.dev/issue-v/35882/v21.1
 ```
 
-7) Connect to `cockroach` using `psql` and `krbsrvname`
+Shelling into the container and connecting works though
 
 ```bash
-docker exec -it psql bash
+docker exec -it client bash
+```
+
+```bash
+psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+```
+
+```sql
+psql (13.3, server 13.0.0)
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256, bits: 128, compression: off)
+Type "help" for help.
+
+defaultdb=> 
+```
+
+5) Connect to `cockroach` using `psql` and `krbsrvname`
+
+```bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
-8) UPDATE with LB SPN only
-
-Using load balancer, `verify-full` does not work, unless the cert SAN is populated. `roach-cert` populates `lb` as part of `create-node` command.
-
-```bash
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-1" does not match host name "lb"
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-0" does not match host name "lb"
-root@psql:/# psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-psql: server certificate for "roach-2" does not match host name "lb"
-```
-
-after addressing the SAN, the following works
-
-```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-```
-
-This works with or without `lb` in the SAN.
-
-```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-ca&sslrootcert=/certs/ca.crt&sslkey=/certs/ca.key" -U tester
-```
-
-9) Connecting to CockroachDB using the native binary
+6) Connecting to CockroachDB using the native binary
 
 ```bash
 docker exec -it client cockroach sql \
  --certs-dir=/certs --url  "postgresql://tester:nopassword@lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
 ```
-
-
-[HAProxy UI](http://localhost:8081/)
