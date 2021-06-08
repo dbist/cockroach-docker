@@ -47,3 +47,5 @@ cockroach sql --certs-dir=/certs --host=lb
 # directly
 docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=lb
 ```
+
+access [HAProxy](http://localhost:8081)

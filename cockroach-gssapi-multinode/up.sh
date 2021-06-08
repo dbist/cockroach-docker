@@ -19,9 +19,10 @@ docker compose exec roach-0 \
  --certs-dir=/certs --host=roach-0 \
  --execute="GRANT ALL ON DATABASE defaultdb TO tester;"
 
+docker compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="CREATE USER roach WITH PASSWORD roach;"
+ --execute="CREATE USER roach WITH PASSWORD 'roach';"
 
 docker compose exec roach-0 \
  /cockroach/cockroach sql \

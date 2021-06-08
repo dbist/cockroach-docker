@@ -1,10 +1,10 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach-unstable:v21.1.0-rc.1 AS generator
+FROM cockroachdb/cockroach:latest-v21.1 AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="5.0"
 LABEL description="cockroach cert generator container"
-ENV REFRESHED_AT 2021_03_08
+ENV REFRESHED_AT 2021_05_26
 
 RUN mkdir -pv /tmp/certs/ca /tmp/certs/roach-0 /tmp/certs/roach-1 /tmp/certs/roach-2 /tmp/safe /tmp/certs/client /tmp/certs/lb
 
@@ -16,6 +16,7 @@ RUN cockroach cert create-ca --certs-dir=/tmp/certs/ca --ca-key=/tmp/safe/ca.key
     && cp -v /tmp/certs/ca/ca.crt /tmp/certs/lb
 
 RUN ./cockroach cert create-client root --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key
+RUN ./cockroach cert create-client roach --certs-dir=/tmp/certs/client --ca-key=/tmp/safe/ca.key --also-generate-pkcs8-key
 
 RUN cp -v /tmp/certs/client/client.* /tmp/certs/roach-0 \
     && cp -v /tmp/certs/client/client.* /tmp/certs/roach-1 \
