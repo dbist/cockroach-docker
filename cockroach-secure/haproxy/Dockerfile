@@ -1,4 +1,4 @@
-FROM haproxy:2.3
+FROM haproxy
 
 LABEL maintainer="artemervits at gmail dot com"
 
