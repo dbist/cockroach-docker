@@ -135,8 +135,10 @@ dmypy.json
 
 # VSCode
 .vscode/
+/*.code-workspace
 
 # Nodejs
 cockroach-gssapi-nodejs/nodejs/app/node_modules
 
 .idea
+
