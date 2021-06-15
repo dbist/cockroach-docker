@@ -18,6 +18,9 @@ services:
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
       - certs-client:/certs/client
+    networks:
+      roachnet:
+        ipv4_address: 172.28.0.1
 
   kdc:
     container_name: kdc

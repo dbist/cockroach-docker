@@ -1,4 +1,5 @@
 # A Secure CockroachDB Cluster with Kerberos and HAProxy acting as load balancer
+
 ---
 
 Check out my series of articles on CockroachDB and Kerberos below:
@@ -16,13 +17,14 @@ Check out my series of articles on CockroachDB and Kerberos below:
 ---
 
 ## Services
-* `roach-0` - CockroachDB node
-* `roach-1` - CockroachDB node
-* `roach-2` - CockroachDB node
-* `lb` - HAProxy acting as load balancer
-* `roach-cert` - Holds certificates as volume mounts
-* `kdc` - MIT Kerberos realm
-* `client` - cockroach client node, also has `psql` installed
+
+  `roach-0` - CockroachDB node
+  `roach-1` - CockroachDB node
+  `roach-2` - CockroachDB node
+  `lb` - HAProxy acting as load balancer
+  `roach-cert` - Holds certificates as volume mounts
+  `kdc` - MIT Kerberos realm
+  `client` - cockroach client node, also has `psql` installed
 
 ## Getting started
 
@@ -41,12 +43,12 @@ docker exec -ti kdc sh
 docker exec -ti client cockroach sql --certs-dir=/certs --host=lb
 ```
 
-1) execute `./up.sh` instead of `docker compose up`
+1. execute `./up.sh` instead of `docker compose up`
    - monitor the status of services via `docker compose logs`
-2) visit the [DB Console](http://localhost:8080)
-3) visit the [HAProxy UI](http://localhost:8081)
+2. visit the [DB Console](http://localhost:8080)
+3. visit the [HAProxy UI](http://localhost:8081)
 
-4) Connect to `cockroach` using `psql`
+4. Connect to `cockroach` using `psql`
 
 __Disclaimer__: given weird behavior on my host, I am unable to execute the below command on the latest CockroachDB
 
@@ -79,13 +81,13 @@ Type "help" for help.
 defaultdb=> 
 ```
 
-5) Connect to `cockroach` using `psql` and `krbsrvname`
+#### Connect to `cockroach` using `psql` and `krbsrvname`
 
 ```bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
-6) Connecting to CockroachDB using the native binary
+#### Connecting to CockroachDB using the native binary
 
 ```bash
 docker exec -it client cockroach sql \
