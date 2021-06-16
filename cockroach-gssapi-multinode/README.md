@@ -16,6 +16,7 @@ Check out my series of articles on CockroachDB and Kerberos below:
 ---
 
 ## Services
+
 * `roach-0` - CockroachDB node
 * `roach-1` - CockroachDB node
 * `roach-2` - CockroachDB node
