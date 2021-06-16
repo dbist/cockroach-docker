@@ -6,6 +6,7 @@ volumes:
   certs-roach-2:
   keytab:
   certs-client:
+  certs-lb:
 
 services:
 
@@ -18,6 +19,7 @@ services:
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
       - certs-client:/certs/client
+      - certs-lb:/certs/lb
 
   kdc:
     container_name: kdc
@@ -96,6 +98,7 @@ services:
       - "8080:8080"
       - "8081:8081"
     depends_on:
+      - roach-cert
       - roach-0
       - roach-1
       - roach-2
@@ -111,10 +114,13 @@ services:
       - "lb:172.28.0.6"
     depends_on:
       - lb
+      - roach-cert
+      - kdc
     volumes:
       - ./kdc/krb5.conf:/etc/krb5.conf
       - ./client/start.sh:/start.sh
       - certs-client:/certs
+      - certs-lb:/lb/certs
       - keytab:/keytab
     networks:
       roachnet:
