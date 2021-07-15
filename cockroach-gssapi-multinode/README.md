@@ -12,6 +12,10 @@ Check out my series of articles on CockroachDB and Kerberos below:
 - Part 7: [CockroachDB with Django and MIT Kerberos](https://blog.ervits.com/2020/08/cockroachdb-with-django-and-mit-kerberos.html)
 - Part 8: [CockroachDB with SQLAlchemy and MIT Kerberos](https://blog.ervits.com/2020/08/cockroachdb-with-sqlalchemy-and-mit.html)
 - Part 9: [CockroachDB with MIT Kerberos using a native client](https://blog.ervits.com/2020/10/cockroachdb-with-mit-kerberos-using.html)
+- Part 10: [CockroachDB with MIT Kerberos along with cert user authentication](https://blog.ervits.com/2021/06/cockroachdb-with-mit-kerberos-along.html)
+- Part 11: [CockroachDB with GSSAPI deployed via systemd](https://blog.ervits.com/2021/07/cockroachdb-with-gssapi-deployed-via.html)
+- Part 12: [Selecting proper cipher for CockroachDB with GSSAPI](https://blog.ervits.com/2021/07/selecting-proper-encryption-type-for.html)
+- Part 13: [Overriding KRB5CCNAME for CockroachDB with GSSAPI](https://blog.ervits.com/2021/07/cockroachdb-with-gssapi-overriding.html)
 
 ---
 
