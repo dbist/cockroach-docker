@@ -79,7 +79,7 @@ jobs:
       # Once scan completes, pull SAST issues from Fortify on Demand and generate SARIF output.
       # TODO: Review Action inputs. For most users, these will be the same as used in the Perform SAST Scan step.
       - name: Download Results
-        uses: fortify/gha-fod-generate-sarif@1.1.0
+        uses: fortify/gha-fod-generate-sarif@v1.1.1
         with:
           base-url: https://ams.fortify.com
           tenant: ${{ secrets.FOD_TENANT }}
