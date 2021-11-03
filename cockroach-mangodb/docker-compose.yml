@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  roach-0:
+    container_name: roach-0
+    hostname: roach-0
+    image: cockroachdb/cockroach:latest-v21.1
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+
+  roach-1:
+    container_name: roach-1
+    hostname: roach-1
+    image: cockroachdb/cockroach:latest-v21.1
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+
+  roach-2:
+    container_name: roach-2
+    hostname: roach-2
+    image: cockroachdb/cockroach:latest-v21.1
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+
+  mangodb:
+    image: ghcr.io/mangodb-io/mangodb:latest
+    container_name: mangodb
+    ports:
+      - 27017:27017
+    command:
+      [
+        "--listen-addr=:27017",
+        "--postgresql-url=postgres://roach-0:26257/mangodb?sslmode=disable",
+      ]
