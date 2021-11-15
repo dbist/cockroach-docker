@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 volumes:
   certs-cockroach:
@@ -31,7 +31,7 @@ services:
   cockroach:
     container_name: cockroach
     hostname: cockroach
-    image: cockroachdb/cockroach:v20.1.3
+    image: cockroachdb/cockroach:latest-v21.2
     depends_on:
       - kdc
       - roach-cert
