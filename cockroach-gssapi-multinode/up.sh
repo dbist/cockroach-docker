@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker pull cockroachdb/cockroach:latest-v21.1
+docker pull cockroachdb/cockroach:latest-v21.2
 
 docker compose build --no-cache
 docker compose up -d
