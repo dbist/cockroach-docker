@@ -51,22 +51,54 @@ docker exec -ti client cockroach sql --certs-dir=/certs --host=lb
 2) visit the [DB Console](http://localhost:8080)
 3) visit the [HAProxy UI](http://localhost:8081)
 
-4) Connect to `cockroach` using `psql`
+4) Connecting to CockroachDB using the native binary
 
-__Disclaimer__: given weird behavior on my host, I am unable to execute the below command on the latest CockroachDB
+__NOTE__: /etc/hosts must not include entry for lb for `cockroach` binary to work with GSSAPI. It is included in /etc/hosts for `psql` binary to work only.
 
 ```bash
-docker exec -it client
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+docker exec -it client \
+cockroach sql --certs-dir=/certs --host=lb --user=tester
 ```
 
-```sql
-psql: error: ERROR:  unimplemented: unimplemented client encoding: "sqlascii"
+```bash
+#
+# Welcome to the CockroachDB SQL shell.
+# All statements must be terminated by a semicolon.
+# To exit, type: \q.
+#
+# Server version: CockroachDB CCL v21.2.0 (x86_64-unknown-linux-gnu, built 2021/11/15 13:58:04, go1.16.6) (same version as client)
+# Cluster ID: 71429258-dbc1-4fda-afb8-7a2d4920681c
+# Organization: Cockroach Labs - Production Testing
+#
+# Enter \? for a brief introduction.
+#
+tester@lb:26257/defaultdb> 
+```
+
+5) Connecting with native client and `--url` flag
+
+```bash
+docker exec -it client cockroach sql \
+ --certs-dir=/certs --url  "postgresql://tester:nopassword@lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
+```
+
+6) Connect to `cockroach` using `psql`
+
+__NOTE__: Directly connecting to `psql` from host fails
+
+```bash
+docker exec -it client psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+```
+
+```bash
+psql: error: connection to server at "lb" (172.28.0.6), port 26257 failed: connection to server at "lb" (172.28.0.6), port 26257 failed: ERROR:  unimplemented: unimplemented client encoding: "sqlascii"
 HINT:  You have attempted to use a feature that is not yet implemented.
-See: https://go.crdb.dev/issue-v/35882/v21.1
+See: https://go.crdb.dev/issue-v/35882/v21.2
 ```
 
-Shelling into the container and connecting works though
+You must shell into the container to connect to psql client
+
+__NOTE__: You must edit the /etc/hosts entry for LB container for `psql` to work and add an entry for `lb` with IP `172.28.0.6`.
 
 ```bash
 docker exec -it client bash
@@ -77,22 +109,22 @@ psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.
 ```
 
 ```sql
-psql (13.3, server 13.0.0)
+psql (14.1, server 13.0.0)
 SSL connection (protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256, bits: 128, compression: off)
 Type "help" for help.
 
 defaultdb=> 
 ```
 
-5) Connect to `cockroach` using `psql` and `krbsrvname`
+7) Connect to `cockroach` using `psql` and `krbsrvname`
 
 ```bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
-6) Connecting to CockroachDB using the native binary
+8) Connect to Cockroach using `psql` with parameters
 
 ```bash
-docker exec -it client cockroach sql \
- --certs-dir=/certs --url  "postgresql://tester:nopassword@lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
+ psql "host=lb port=26257 dbname=defaultdb user=tester"
 ```
+
