@@ -110,8 +110,9 @@ services:
     container_name: client
     hostname: client
     build: ./client
-    extra_hosts:
-      - "lb:172.28.0.6"
+    # this is no longer necessary to populate /etc/hosts, cockroach binary connects just fine
+    #extra_hosts:
+    #  - "lb:172.28.0.6"
     depends_on:
       - lb
       - roach-cert
