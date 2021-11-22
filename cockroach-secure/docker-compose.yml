@@ -1,9 +1,10 @@
-version: '3.8'
+version: '3.9'
 
 volumes:
   certs-roach-0:
   certs-roach-1:
   certs-roach-2:
+  certs-client:
 
 services:
 
@@ -15,12 +16,13 @@ services:
       - certs-roach-0:/certs/roach-0
       - certs-roach-1:/certs/roach-1
       - certs-roach-2:/certs/roach-2
+      - certs-client:/certs/client
 
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:latest-v21.1
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-0:8080
     volumes:
       - certs-roach-0:/certs
     depends_on:
@@ -29,8 +31,8 @@ services:
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:latest-v21.1
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-1:8080
     volumes:
       - certs-roach-1:/certs
     depends_on:
@@ -40,8 +42,8 @@ services:
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:latest-v21.1
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-2:8080
     volumes:
       - certs-roach-2:/certs
     depends_on:
@@ -60,3 +62,14 @@ services:
       - roach-0
       - roach-1
       - roach-2
+
+  client:
+    container_name: client
+    hostname: client
+    image: cockroachdb/cockroach:latest-v21.2
+    entrypoint: ["tail", "-f", "/dev/null"]
+    volumes:
+      - certs-client:/certs
+    depends_on:
+      - lb
+
