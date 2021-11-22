@@ -53,11 +53,13 @@ services:
   lb:
     container_name: lb
     hostname: lb
-    build: haproxy
+    image: haproxy
     ports:
       - "26000:26257"
       - "8080:8080"
       - "8081:8081"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
       - roach-0
       - roach-1
