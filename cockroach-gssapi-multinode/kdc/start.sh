@@ -6,9 +6,9 @@ set -e
 # can create the keytab with kadmin.local here and it is then useable
 # by cockroach.
 
-kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/lb@EXAMPLE.COM"
+kadmin.local -q "ktadd -k /keytab/crdb.keytab postgres/lb.local@EXAMPLE.COM"
 
 # This is an example of overriding postgres SPN
-kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/lb@EXAMPLE.COM"
+kadmin.local -q "ktadd -k /keytab/crdb.keytab customspn/lb.local@EXAMPLE.COM"
 
 krb5kdc -n

@@ -53,11 +53,9 @@ docker exec -ti client cockroach sql --certs-dir=/certs --host=lb
 
 4) Connecting to CockroachDB using the native binary
 
-__NOTE__: /etc/hosts must not include entry for lb for `cockroach` binary to work with GSSAPI. It is included in /etc/hosts for `psql` binary to work only.
-
 ```bash
 docker exec -it client \
-cockroach sql --certs-dir=/certs --host=lb --user=tester
+cockroach sql --certs-dir=/certs --host=lb.local --user=tester
 ```
 
 ```bash
@@ -72,14 +70,14 @@ cockroach sql --certs-dir=/certs --host=lb --user=tester
 #
 # Enter \? for a brief introduction.
 #
-tester@lb:26257/defaultdb> 
+tester@lb.local:26257/defaultdb> 
 ```
 
 5) Connecting with native client and `--url` flag
 
 ```bash
 docker exec -it client cockroach sql \
- --certs-dir=/certs --url  "postgresql://tester:nopassword@lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
+ --certs-dir=/certs --url  "postgresql://tester:nopassword@lb.local:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn"
 ```
 
 6) Connect to `cockroach` using `psql`
@@ -87,7 +85,7 @@ docker exec -it client cockroach sql \
 __NOTE__: Directly connecting to `psql` from host fails
 
 ```bash
-docker exec -it client psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+docker exec -it client psql "postgresql://lb.local:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 ```
 
 ```bash
@@ -96,16 +94,14 @@ HINT:  You have attempted to use a feature that is not yet implemented.
 See: https://go.crdb.dev/issue-v/35882/v21.2
 ```
 
-You must shell into the container to connect to psql client
-
-__NOTE__: You must edit the /etc/hosts entry for LB container for `psql` to work and add an entry for `lb` with IP `172.28.0.6`.
+Shelling into the container
 
 ```bash
 docker exec -it client bash
 ```
 
 ```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
+psql "postgresql://lb.local:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt" -U tester
 ```
 
 ```sql
@@ -116,15 +112,27 @@ Type "help" for help.
 defaultdb=> 
 ```
 
+using native binary
+
+```bash
+./cockroach sql --host=lb.local --certs-dir=/certs --user tester
+```
+
 7) Connect to `cockroach` using `psql` and `krbsrvname`
 
 ```bash
-psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
+psql "postgresql://lb.local:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
 
 8) Connect to Cockroach using `psql` with parameters
 
 ```bash
  psql "host=lb port=26257 dbname=defaultdb user=tester"
+```
+
+or
+
+```bash
+ psql "host=lb.local port=26257 dbname=defaultdb user=tester"
 ```
 

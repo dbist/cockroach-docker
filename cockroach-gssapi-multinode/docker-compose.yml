@@ -91,7 +91,7 @@ services:
 
   lb:
     container_name: lb
-    hostname: lb
+    hostname: lb.local
     build: haproxy
     ports:
       - "26257:26257"
@@ -110,9 +110,8 @@ services:
     container_name: client
     hostname: client
     build: ./client
-    # this is no longer necessary to populate /etc/hosts, cockroach binary connects just fine
-    #extra_hosts:
-    #  - "lb:172.28.0.6"
+    extra_hosts:
+      - "lb.local:172.28.0.6"
     depends_on:
       - lb
       - roach-cert

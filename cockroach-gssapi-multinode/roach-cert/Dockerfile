@@ -31,10 +31,10 @@ RUN ./cockroach cert create-client roach --certs-dir=/tmp/certs/client/ --ca-key
     && cp -v /tmp/certs/client/client.roach.* /tmp/certs/lb
 
 # create each node certificate (cert must have lb)
-RUN cockroach cert create-node roach-0 lb --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-1 lb --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node roach-2 lb --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
-RUN cockroach cert create-node lb --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-0 lb.local --certs-dir=/tmp/certs/roach-0 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-1 lb.local --certs-dir=/tmp/certs/roach-1 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node roach-2 lb.local --certs-dir=/tmp/certs/roach-2 --ca-key=/tmp/safe/ca.key
+RUN cockroach cert create-node lb.local --certs-dir=/tmp/certs/lb --ca-key=/tmp/safe/ca.key
 
 # Stage 2 - share certs
 
