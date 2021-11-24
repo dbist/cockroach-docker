@@ -94,7 +94,9 @@ HINT:  You have attempted to use a feature that is not yet implemented.
 See: https://go.crdb.dev/issue-v/35882/v21.2
 ```
 
-Shelling into the container
+see this [issue](https://github.com/cockroachdb/cockroach/issues/37129)
+
+Must shell into the container for psql
 
 ```bash
 docker exec -it client bash
