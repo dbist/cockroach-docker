@@ -1,41 +1,58 @@
-# Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
-Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
+# CockroachDB with unleash
+---
 
-* UPDATED: 11/11/20
+## Start project
 
-Prerequisites:
-
-## Services
-* `roach-0` - CockroachDB node
-* `roach-1` - CockroachDB node
-* `roach-2` - CockroachDB node
-* `lb` - HAProxy acting as load balancer
-* `roach-cert` - Holds certificates as volume mounts
-
-## Getting started
->If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
-
-1) because operation order is important, execute `./up.sh` instead of `docker compose up`
-   - monitor the status of services via `docker-compose logs`
-2) `docker compose ps`
-3) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
-4) visit the [HAProxy UI](http://localhost:8081)
-
-### Open Interactive Shells
 ```bash
-docker exec -ti roach-0 /bin/bash
-docker exec -ti roach-1 /bin/bash
-docker exec -ti roach-2 /bin/bash
-docker exec -ti lb /bin/sh
-
-# shell
-docker exec -ti roach-cert /bin/sh
-
-# cli inside the container
-cockroach sql --certs-dir=/certs --host=lb
-
-# directly
-docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=lb
+./up.sh
 ```
 
-access [HAProxy](http://localhost:8081)
+## After compose project is up, check the unleash logs
+
+```bash
+docker logs unleash
+```
+
+```bash
+[2022-01-06T20:43:18.237] [ERROR] server-impl.js - Failed to migrate db error: column "strategies" does not exist
+    at Parser.parseErrorMessage (/unleash/node_modules/pg-protocol/dist/parser.js:287:98)
+    at Parser.handlePacket (/unleash/node_modules/pg-protocol/dist/parser.js:126:29)
+    at Parser.parse (/unleash/node_modules/pg-protocol/dist/parser.js:39:38)
+    at Socket.<anonymous> (/unleash/node_modules/pg-protocol/dist/index.js:11:42)
+    at Socket.emit (events.js:400:28)
+    at addChunk (internal/streams/readable.js:293:12)
+    at readableAddChunk (internal/streams/readable.js:267:9)
+    at Socket.Readable.push (internal/streams/readable.js:206:10)
+    at TCP.onStreamRead (internal/stream_base_commons.js:188:23) {
+  length: 105,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'column_resolver.go',
+  line: '196',
+  routine: 'NewUndefinedColumnError'
+}
+[ERROR] error: column "strategies" does not exist
+    at Parser.parseErrorMessage (/unleash/node_modules/pg-protocol/dist/parser.js:287:98)
+    at Parser.handlePacket (/unleash/node_modules/pg-protocol/dist/parser.js:126:29)
+    at Parser.parse (/unleash/node_modules/pg-protocol/dist/parser.js:39:38)
+    at Socket.<anonymous> (/unleash/node_modules/pg-protocol/dist/index.js:11:42)
+    at Socket.emit (events.js:400:28)
+    at addChunk (internal/streams/readable.js:293:12)
+    at readableAddChunk (internal/streams/readable.js:267:9)
+    at Socket.Readable.push (internal/streams/readable.js:206:10)
+    at TCP.onStreamRead (internal/stream_base_commons.js:188:23)
+➜  cockroach-unleash git:(main) 
+```
+
+Filed with Unleash folks [#1240](https://github.com/Unleash/unleash/issues/1240)
