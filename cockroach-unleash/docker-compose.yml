@@ -1,0 +1,97 @@
+version: '3.9'
+
+volumes:
+  certs-roach-0:
+  certs-roach-1:
+  certs-roach-2:
+  certs-client:
+
+services:
+
+  #roach-cert:
+  #  container_name: roach-cert
+  #  hostname: roach-cert
+  #  build: roach-cert
+  #  volumes:
+  #    - certs-roach-0:/certs/roach-0
+  #    - certs-roach-1:/certs/roach-1
+  #    - certs-roach-2:/certs/roach-2
+  #    - certs-client:/certs/client
+
+  roach-0:
+    container_name: roach-0
+    hostname: roach-0
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-0:8080 --insecure
+    volumes:
+      - certs-roach-0:/certs
+  #  depends_on:
+  #    - roach-cert
+
+  roach-1:
+    container_name: roach-1
+    hostname: roach-1
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-1:8080 --insecure
+    volumes:
+      - certs-roach-1:/certs
+    depends_on:
+  #    - roach-cert
+      - roach-0
+
+  roach-2:
+    container_name: roach-2
+    hostname: roach-2
+    image: cockroachdb/cockroach:latest-v21.2
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-2:8080 --insecure
+    volumes:
+      - certs-roach-2:/certs
+    depends_on:
+  #    - roach-cert
+      - roach-0
+
+  lb:
+    container_name: lb
+    hostname: lb
+    image: haproxy
+    ports:
+      - "26000:26257"
+      - "8080:8080"
+      - "8081:8081"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - roach-0
+      - roach-1
+      - roach-2
+
+#  client:
+#    container_name: client
+#    hostname: client
+#    image: cockroachdb/cockroach:latest-v21.2
+#    entrypoint: ["tail", "-f", "/dev/null"]
+#    volumes:
+#      - certs-client:/certs
+#    depends_on:
+#      - lb
+
+  unleash:
+    container_name: unleash
+    hostname: unleash
+    image: unleashorg/unleash-server
+    env_file:
+      - unleash.env
+    volumes:
+      - certs-client:/certs
+    depends_on:
+      - lb
+    restart:
+      unless-stopped
+
+  #unleash2:
+  #  container_name: unleash2
+  #  hostname: unleash2
+  #  #build: ./unleash
+  #  entrypoint: ["node", "server.js"]
+  #  image: node:alpine
+  #  #entrypoint: ["tail", "-f", "/dev/null"]
