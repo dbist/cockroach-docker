@@ -170,6 +170,49 @@ CREATE SEQUENCE public.events_id_seq
 
 the `AS integer` syntax will be supported in 22.1, every sequence in this dump needs to be commented out
 
+Create sequences manually
+
+CREATE SEQUENCE public.addons_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE SEQUENCE public.events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
+CREATE SEQUENCE public.migrations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
+CREATE SEQUENCE public.roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+   
+CREATE SEQUENCE public.users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+After creating the sequences manually, import still breaks on
+
+```sql
+ERROR: referenced table "public.migrations_id_seq" not found in tables being imported (public.tag_types,public.unleash_session,public.client_instances,public.projects)
+```
+
+Engineering is looking.
