@@ -21,7 +21,7 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:${COCKROACHDB_VERSION}
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-0:8080 --insecure
     volumes:
       - certs-roach-0:/certs
@@ -31,7 +31,7 @@ services:
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:${COCKROACHDB_VERSION}
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-1:8080 --insecure
     volumes:
       - certs-roach-1:/certs
@@ -42,7 +42,7 @@ services:
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:${COCKROACHDB_VERSION}
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25 --http-addr=roach-2:8080 --insecure
     volumes:
       - certs-roach-2:/certs
@@ -75,12 +75,26 @@ services:
 #    depends_on:
 #      - lb
 
+  postgres:
+    container_name: pg
+    hostname: pg
+    image: postgres
+    ports:
+     - "5432:5432"
+    environment:
+     - POSTGRES_DB=unleash
+     - POSTGRES_USER=unleash_user
+     - POSTGRES_PASSWORD=some_password
+
   unleash:
     container_name: unleash
     hostname: unleash
     image: unleashorg/unleash-server
+    ports:
+     - "4242:4242"
     env_file:
-      - unleash.env
+      - unleash-pg.env
+      #-unleash-crdb.env
     volumes:
       - certs-client:/certs
     depends_on:

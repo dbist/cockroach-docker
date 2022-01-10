@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export COCKROACHDB_VERSION=latest-v21.2
+
 docker compose build --no-cache
 docker compose up -d
 
