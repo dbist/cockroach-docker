@@ -132,8 +132,7 @@ docker cp unleash.sql roach-0:/tmp/
 ## Restore the database
 
 ```sql
-root@lb:26257/defaultdb> import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_stateme
-nts;
+root@lb:26257/defaultdb> import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_statements;
 ERROR: referenced table "public.events_id_seq" not found in tables being imported (public.feature_types,public.projects)
 ```
 
@@ -168,9 +167,7 @@ CREATE SEQUENCE public.events_id_seq
     CACHE 1;
 ```
 
-the `AS integer` syntax will be supported in 22.1, every sequence in this dump needs to be commented out
-
-Create sequences manually
+#### the `AS integer` syntax will be supported in 22.1, every sequence in this dump needs to be commented out
 
 CREATE SEQUENCE public.addons_id_seq
     START WITH 1
@@ -185,7 +182,6 @@ CREATE SEQUENCE public.events_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
 
 CREATE SEQUENCE public.migrations_id_seq
     START WITH 1
@@ -208,11 +204,55 @@ CREATE SEQUENCE public.users_id_seq
     NO MAXVALUE
     CACHE 1;
 
+#### At this point, attempt to import again
 
-After creating the sequences manually, import still breaks on
-
-```sql
-ERROR: referenced table "public.migrations_id_seq" not found in tables being imported (public.tag_types,public.unleash_session,public.client_instances,public.projects)
+```bash
+docker cp unleash.sql roach-0:/tmp/
+docker exec -it roach-0 ./cockroach sql --host=lb --insecure -e "create database unleash;"
+docker exec -it roach-0 ./cockroach userfile upload /tmp/unleash.sql  --insecure --host=roach-0
 ```
 
-Engineering is looking.
+```bash
+successfully uploaded to userfile://defaultdb.public.userfiles_root/unleash.sql
+```
+
+#### Execute import
+
+```bash
+docker exec -it roach-0 ./cockroach sql -e "import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_statements"  --insecure --host=roach-0 --database=unleash
+```
+
+```sql
+        job_id       |  status   | fraction_completed | rows | index_entries | bytes
+---------------------+-----------+--------------------+------+---------------+--------
+  726931514777108481 | succeeded |                  1 |  166 |            59 | 16566
+(1 row)
+
+
+Time: 2.734s
+```
+
+
+
+
+
+
+LATER:
+
+ADD the following to server.js for ssl
+
+```bash
+    client: 'postgresql',
+    version: '10.5',
+    connection: {
+      host: 'localhost',
+      port: 26257,
+      user: 'root',
+      database: 'gigya_proxy',
+      ssl: {
+        ca: fs.readFileSync('/home/vagrant/.cockroach-certs/ca.crt').toString(),
+        key: fs.readFileSync('/home/vagrant/.cockroach-certs/client.root.key').toString(),
+        cert: fs.readFileSync('/home/vagrant/.cockroach-certs/client.root.crt').toString()
+      }
+    }
+```

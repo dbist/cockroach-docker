@@ -93,8 +93,8 @@ services:
     ports:
      - "4242:4242"
     env_file:
-      - unleash-pg.env
-      #-unleash-crdb.env
+      #- unleash-pg.env
+      - unleash-crdb.env
     volumes:
       - certs-client:/certs
     depends_on:
@@ -102,10 +102,19 @@ services:
     restart:
       unless-stopped
 
-  #unleash2:
-  #  container_name: unleash2
-  #  hostname: unleash2
-  #  #build: ./unleash
-  #  entrypoint: ["node", "server.js"]
-  #  image: node:alpine
-  #  #entrypoint: ["tail", "-f", "/dev/null"]
+  unleash2:
+    container_name: unleash2
+    hostname: unleash2
+    build: ./unleash2
+    ports:
+     - "4243:4242"
+    env_file:
+      #- unleash-pg.env
+      - unleash-crdb.env
+    entrypoint: ["node", "server.js"]
+    image: node:alpine
+    #entrypoint: ["tail", "-f", "/dev/null"]
+    depends_on:
+      - lb
+    restart:
+      unless-stopped

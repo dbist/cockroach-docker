@@ -22,18 +22,18 @@ docker exec -it roach-0 \
 #  --host=roach-0 --execute="GRANT ADMIN TO roach;"
 #  --certs-dir=/certs 
 
-docker compose exec roach-0 \
- /cockroach/cockroach sql \
-  --insecure \
-  --host=roach-0 \
-  --execute="CREATE DATABASE unleash;"
-# --certs-dir=/certs 
+# docker compose exec roach-0 \
+# /cockroach/cockroach sql \
+#  --insecure \
+#  --host=roach-0 \
+#  --execute="CREATE DATABASE unleash;"
+## --certs-dir=/certs 
 
-docker compose exec roach-0 \
- /cockroach/cockroach sql \
-  --insecure \
-  --host=roach-0 \
-  --execute="SET sql_safe_updates = false;"
+# docker compose exec roach-0 \
+# /cockroach/cockroach sql \
+#  --insecure \
+#  --host=roach-0 \
+#  --execute="SET sql_safe_updates = false;"
 
 
 # docker cp roach-0:/certs .
