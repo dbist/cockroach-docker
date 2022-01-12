@@ -1,17 +1,7 @@
 # CockroachDB with Unleash Feature Toggles
 ---
 
-## Start project
-
-```bash
-./up.sh
-```
-
-## After compose project is up, check the Unleash logs
-
-```bash
-docker logs unleash
-```
+Starting Unleash server with a vanilla CockroachDB instance will result in the following error messsage:
 
 ```bash
 [2022-01-06T20:43:18.237] [ERROR] server-impl.js - Failed to migrate db error: column "strategies" does not exist
@@ -57,12 +47,7 @@ docker logs unleash
 
 Filed with Unleash folks [#1240](https://github.com/Unleash/unleash/issues/1240)
 
-
-1/10/22
-
-spun up a PG container and as per Unleash support will attempt to initalize Unleash first with PG, then migrate the database to Cockroach
-
-From the host:
+As per Unleash folks, workaround is to pull a pgdump of Unleash and import into CockroachDB
 
 ```bash
 psql "postgresql://localhost:5432/unleash?sslmode=disable" -U unleash_user
@@ -106,44 +91,47 @@ unleash=# \dt
  public | users                | table | unleash_user
 ```
 
-```bash
-docker exec -it pg bash
-```
-
 ## Dump the database
 
 ```bash
 pg_dump unleash > /tmp/unleash.sql -U unleash_user
 ```
 
-## Copy the backup to host and then to one of the nodes
+## Upload the file to CockroachDB userfile filesystem
 
 ```bash
-docker cp pg:/tmp/unleash.sql
-docker cp unleash.sql roach-0:/tmp/
+cockroach userfile upload /tmp/unleash.sql  --insecure --host=lb
 ```
-
-## Upload the file to CockroachDB userfile
 
 ```bash
-./cockroach userfile upload /tmp/unleash.sql  --insecure --host=lb
+successfully uploaded to userfile://defaultdb.public.userfiles_root/unleash.sql
 ```
 
-## Restore the database
+## Import the database
 
 ```sql
 root@lb:26257/defaultdb> import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_statements;
+```
+
+This results in an error
+
+```sql
 ERROR: referenced table "public.events_id_seq" not found in tables being imported (public.feature_types,public.projects)
 ```
 
+This is due to the following syntax with SEQUENCE
+
 ```sql
-root@lb:26257/unleash> CREATE SEQUENCE public.events_id_seq
+CREATE SEQUENCE public.events_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+```
+
+```sql
 invalid syntax: statement ignored: at or near "start": syntax error: unimplemented: this syntax
 SQLSTATE: 0A000
 DETAIL: source SQL:
@@ -157,6 +145,8 @@ See: https://go.crdb.dev/issue-v/25110/v21.2
 
 ## Workaround
 
+Comment out the `AS integer` until CockroachDB 22.1 where this is acceptable
+
 ```sql
 CREATE SEQUENCE public.events_id_seq
     --AS integer
@@ -167,8 +157,9 @@ CREATE SEQUENCE public.events_id_seq
     CACHE 1;
 ```
 
-#### the `AS integer` syntax will be supported in 22.1, every sequence in this dump needs to be commented out
+every instance of the syntax needs to be addressed
 
+```sql
 CREATE SEQUENCE public.addons_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -203,23 +194,18 @@ CREATE SEQUENCE public.users_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-#### At this point, attempt to import again
-
-```bash
-docker cp unleash.sql roach-0:/tmp/
-docker exec -it roach-0 ./cockroach sql --host=lb --insecure -e "create database unleash;"
-docker exec -it roach-0 ./cockroach userfile upload /tmp/unleash.sql  --insecure --host=roach-0
 ```
 
+## Attempt to import again, optionally re-create the database
+
 ```bash
-successfully uploaded to userfile://defaultdb.public.userfiles_root/unleash.sql
+cockroach sql --host=lb --insecure -e "create database unleash;"
 ```
 
 #### Execute import
 
 ```bash
-docker exec -it roach-0 ./cockroach sql -e "import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_statements"  --insecure --host=roach-0 --database=unleash
+cockroach sql -e "import pgdump 'userfile://defaultdb.public.userfiles_root/unleash.sql' WITH ignore_unsupported_statements"  --insecure --host=roach-0 --database=unleash
 ```
 
 ```sql
@@ -232,27 +218,52 @@ docker exec -it roach-0 ./cockroach sql -e "import pgdump 'userfile://defaultdb.
 Time: 2.734s
 ```
 
-
-
-
-
-
-LATER:
-
-ADD the following to server.js for ssl
+## Clone the Unleash project
 
 ```bash
-    client: 'postgresql',
-    version: '10.5',
-    connection: {
-      host: 'localhost',
-      port: 26257,
-      user: 'root',
-      database: 'gigya_proxy',
-      ssl: {
-        ca: fs.readFileSync('/home/vagrant/.cockroach-certs/ca.crt').toString(),
-        key: fs.readFileSync('/home/vagrant/.cockroach-certs/client.root.key').toString(),
-        cert: fs.readFileSync('/home/vagrant/.cockroach-certs/client.root.crt').toString()
-      }
-    }
+git clone https://github.com/Unleash/unleash.git
+```
+
+## Change the client in the `db-pool.ts` to CockroachDB dialect
+
+```bash
+--- a/src/lib/db/db-pool.ts
++++ b/src/lib/db/db-pool.ts
+@@ -7,7 +7,7 @@ export function createDb({
+ }: Pick<IUnleashConfig, 'db' | 'getLogger'>): Knex {
+     const logger = getLogger('db-pool.js');
+     return knex({
+-        client: 'pg',
++        client: 'cockroachdb',
+         version: db.version,
+         connection: db,
+         pool: db.pool,
+```
+
+## Update the connect options in `server-dev.ts` to use details of CockroachDB cluster
+
+```bash
+--- a/src/server-dev.ts
++++ b/src/server-dev.ts
+@@ -8,10 +8,10 @@ process.nextTick(async () => {
+         await start(
+             createConfig({
+                 db: {
+-                    user: 'unleash_user',
+-                    password: 'passord',
++                    user: 'root',
++                    password: '',
+                     host: 'localhost',
+-                    port: 5432,
++                    port: 26257,
+                     database: 'unleash',
+                     ssl: false,
+                 },
+```
+
+## Start Unleash locally
+
+```bash
+yarn install
+yarn start:dev
 ```
