@@ -50,6 +50,16 @@ services:
       - roach-cert
       - roach-0
 
+  init:
+    container_name: init
+    image: cockroachdb/cockroach:v21.2.4
+    command: init --host=roach-0 --certs-dir=/certs
+    volumes:
+      - certs-client:/certs
+    depends_on:
+      - roach-cert
+      - roach-0
+
   lb:
     container_name: lb
     hostname: lb
