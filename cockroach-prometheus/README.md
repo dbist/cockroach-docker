@@ -53,8 +53,8 @@ cockroach workload run tpcc --duration=1h 'postgresql://root@lb:26257/tpcc?sslce
 
 open Prometheus at http://localhost:9090
 
-search a metric like `sql_insert_count` and watch the Prometheus graph
+search a metric like `sql_update_count` and watch the Prometheus graph
 
-
+![Update Count](images/updates.png)
 
 
