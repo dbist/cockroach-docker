@@ -1,4 +1,5 @@
-# Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
+Prometheus monitoring of a secured cluster via https://www.cockroachlabs.com/docs/stable/monitor-cockroachdb-with-prometheus.html
+
 Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
 * UPDATED: 11/11/20
@@ -39,3 +40,21 @@ docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=lb
 ```
 
 access [HAProxy](http://localhost:8081)
+
+
+
+run a workload on the client container
+
+```bash
+cockroach workload init tpcc 'postgresql://root@roach-0:26257/tpcc?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt'
+
+cockroach workload run tpcc --duration=1h 'postgresql://root@lb:26257/tpcc?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt'
+```
+
+open Prometheus at http://localhost:9090
+
+search a metric like `sql_insert_count` and watch the Prometheus graph
+
+
+
+
