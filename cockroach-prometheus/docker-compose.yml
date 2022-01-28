@@ -103,10 +103,18 @@ services:
     depends_on:
       - lb
 
-  prom:
-    container_name: prom
-    hostname: prom
-    build: prom/.
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    build: prometheus/.
     entrypoint: ["prometheus", "--config.file=prometheus.yml"]
     ports:
       - "9090:9090"
+  
+  alertmanager:
+    container_name: alertmanager
+    hostname: alertmanager
+    image: prom/alertmanager
+    entrypoint: ["alertmanager", "--config.file=simple.yml"]
+    ports:
+      - "9093:9093"
