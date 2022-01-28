@@ -114,7 +114,14 @@ services:
   alertmanager:
     container_name: alertmanager
     hostname: alertmanager
-    image: prom/alertmanager
-    entrypoint: ["alertmanager", "--config.file=simple.yml"]
+    build: alertmanager/.
+    entrypoint: ["alertmanager", "--config.file=alertmanager.yml"]
     ports:
       - "9093:9093"
+
+  grafana:
+    container_name: grafana
+    hostname: grafana
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
