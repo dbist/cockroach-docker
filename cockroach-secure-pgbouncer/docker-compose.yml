@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 volumes:
   certs-roach-0:
@@ -32,7 +32,6 @@ services:
     depends_on:
       - roach-cert
 
-    
   roach-1:
     container_name: roach-1
     hostname: roach-1
@@ -43,7 +42,6 @@ services:
     depends_on:
       - roach-cert
 
-    
   roach-2:
     container_name: roach-2
     hostname: roach-2
@@ -54,6 +52,15 @@ services:
     depends_on:
       - roach-cert
 
+  init:
+    container_name: init
+    image: cockroachdb/cockroach:latest-v21.1
+    command: init --host=roach-0 --certs-dir=/certs
+    volumes:
+      - certs-client:/certs
+    depends_on:
+      - roach-cert
+      - roach-0
 
   lb:
     container_name: lb
