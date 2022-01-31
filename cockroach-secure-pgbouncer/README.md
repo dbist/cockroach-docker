@@ -50,7 +50,7 @@ DATABASES_DBNAME=tpcc
 Connect to `cockroach sql` cli using explicit connection, note, client cert for roach is generated using PGBouncer CA, root will need its own PGBouncer CA generated cert.
 
 ```bash
-docker exec -it client cockroach sql --certs-dir=/shared/certs --host=pgbouncer --port=27000 --user=roach
+docker exec -it client cockroach sql --certs-dir=/shared/client/certs --host=pgbouncer --port=27000 --user=roach
 ```
 
 ### Load the TPCC workload
