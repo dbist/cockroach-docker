@@ -126,6 +126,19 @@ services:
       roachnet:
         ipv4_address: 172.28.0.7
 
+  init:
+    container_name: init
+    image: cockroachdb/cockroach:latest-v21.2
+    command: init --host=roach-0 --certs-dir=/certs
+    volumes:
+      - certs-client:/certs
+    depends_on:
+      - roach-cert
+      - roach-0
+    networks:
+      roachnet:
+        ipv4_address: 172.28.0.8
+
 networks:
   roachnet:
     ipam:
