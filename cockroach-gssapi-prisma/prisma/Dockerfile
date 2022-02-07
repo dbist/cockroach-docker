@@ -15,10 +15,10 @@ RUN npm install
 
 # TODO: use builder and copy cockroach binary into node image
 
-RUN curl https://binaries.cockroachdb.com/cockroach-v21.2.4.linux-amd64.tgz | tar -xz && cp -i cockroach-v21.2.4.linux-amd64/cockroach /usr/local/bin/
+RUN curl https://binaries.cockroachdb.com/cockroach-v21.2.5.linux-amd64.tgz | tar -xz && cp -i cockroach-v21.2.5.linux-amd64/cockroach /usr/local/bin/
 RUN mkdir -p /usr/local/lib/cockroach && \
- cp -i cockroach-v21.2.4.linux-amd64/lib/libgeos.so /usr/local/lib/cockroach/ && \
- cp -i cockroach-v21.2.4.linux-amd64/lib/libgeos_c.so /usr/local/lib/cockroach/
+ cp -i cockroach-v21.2.5.linux-amd64/lib/libgeos.so /usr/local/lib/cockroach/ && \
+ cp -i cockroach-v21.2.5.linux-amd64/lib/libgeos_c.so /usr/local/lib/cockroach/
 COPY .env .
 COPY start.sh .
 ENTRYPOINT ["./start.sh"]

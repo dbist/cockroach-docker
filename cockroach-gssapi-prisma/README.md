@@ -186,3 +186,50 @@ CREATE TABLE
 CREATE TABLE
 GRANT
 ```
+
+additionally, we can set debug mode on for Prisma with
+
+```bash
+export DEBUG="*"
+```
+
+```bash
+root@prisma:/cockroachdb# npx prisma db pull
+  prisma:loadEnv project root found at /cockroachdb/package.json +0ms
+  prisma:tryLoadEnv Environment variables loaded from /cockroachdb/.env +0ms
+Environment variables loaded from .env
+  prisma:engines binaries to download libquery-engine, migration-engine, introspection-engine, prisma-fmt +0ms
+Prisma schema loaded from prisma/schema.prisma
+  prisma:getConfig Using CLI Query Engine (Node-API Library) at: /cockroachdb/node_modules/@prisma/engines/libquery_engine-debian-openssl-1.1.x.so.node +0ms
+Datasource "db": CockroachDB database "defaultdb", schema "public" at "lb.local:26257"
+
+Introspecting based on datasource defined in prisma/schema.prisma …
+  prisma:introspectionEngine:rpc starting introspection engine with binary: /cockroachdb/node_modules/@prisma/engines/introspection-engine-debian-openssl-1.1.x +0ms
+  prisma:introspectionEngine:rpc SENDING RPC CALL {"id":1,"jsonrpc":"2.0","method":"introspect","params":[{"schema":"generator client {\n  provider        = \"prisma-client-js\"\n  previewFeatures = [\"cockroachdb\"]\n}\n\ndatasource db {\n  provider = \"cockroachdb\"\n  url      = env(\"DATABASE_URL\")\n}\n"}]} +7ms
+  prisma:introspectionEngine:rpc {
+  prisma:introspectionEngine:rpc   jsonrpc: '2.0',
+  prisma:introspectionEngine:rpc   error: {
+  prisma:introspectionEngine:rpc     code: 4466,
+  prisma:introspectionEngine:rpc     message: 'An error happened. Check the data field for details.',
+  prisma:introspectionEngine:rpc     data: {
+  prisma:introspectionEngine:rpc       is_panic: false,
+  prisma:introspectionEngine:rpc       message: 'Error in connector: Error querying the database: Error querying the database: Error querying the database: authentication error: unsupported authentication method',
+  prisma:introspectionEngine:rpc       backtrace: null
+  prisma:introspectionEngine:rpc     }
+  prisma:introspectionEngine:rpc   },
+  prisma:introspectionEngine:rpc   id: 1
+  prisma:introspectionEngine:rpc } +17ms
+
+Error: Error: Error in connector: Error querying the database: Error querying the database: Error querying the database: authentication error: unsupported authentication method
+
+    at Object.<anonymous> (/cockroachdb/node_modules/prisma/build/index.js:46490:29)
+    at Object.handleResponse (/cockroachdb/node_modules/prisma/build/index.js:46368:38)
+    at LineStream4.<anonymous> (/cockroachdb/node_modules/prisma/build/index.js:46446:20)
+    at LineStream4.emit (node:events:520:28)
+    at addChunk (node:internal/streams/readable:324:12)
+    at readableAddChunk (node:internal/streams/readable:297:9)
+    at LineStream4.Readable.push (node:internal/streams/readable:234:10)
+    at LineStream4._pushBuffer (/cockroachdb/node_modules/prisma/build/index.js:46211:21)
+    at LineStream4._transform (/cockroachdb/node_modules/prisma/build/index.js:46205:12)
+    at LineStream4.Transform._write (node:internal/streams/transform:184:23
+```
