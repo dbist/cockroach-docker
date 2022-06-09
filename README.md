@@ -12,4 +12,3 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=security_rating)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=sqale_index)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=dbist_cockroach-docker&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=dbist_cockroach-docker)
-

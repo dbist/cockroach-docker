@@ -135,4 +135,3 @@ psql "host=cockroach port=26257 sslmode=verify-full user=tester krbsrvname=custo
 ```bash
 psql "postgresql://lb:26257/defaultdb?sslmode=verify-full&sslrootcert=/certs/ca.crt&krbsrvname=customspn" -U tester
 ```
-

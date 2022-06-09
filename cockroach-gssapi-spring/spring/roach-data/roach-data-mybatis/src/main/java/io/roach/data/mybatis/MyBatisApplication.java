@@ -115,4 +115,3 @@ public class MyBatisApplication implements CommandLineRunner {
         executorService.shutdownNow();
     }
 }
-

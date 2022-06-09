@@ -84,4 +84,3 @@ services:
       - certs-client:/certs
     depends_on:
       - lb
-

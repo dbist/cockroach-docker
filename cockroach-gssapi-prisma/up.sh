@@ -23,7 +23,7 @@ docker compose exec roach-0 \
 docker compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="GRANT ADMIN TO roach;"  
+ --execute="GRANT ADMIN TO roach;"
 
 docker compose exec roach-0 \
  /cockroach/cockroach sql \

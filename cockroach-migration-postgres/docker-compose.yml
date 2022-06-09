@@ -81,7 +81,7 @@ services:
     networks:
       roachnet:
         ipv4_address: 172.28.1.8
-  
+
 
   postgres:
     container_name: postgres

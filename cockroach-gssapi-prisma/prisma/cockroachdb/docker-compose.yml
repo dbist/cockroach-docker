@@ -13,5 +13,3 @@ services:
     command: start-single-node --insecure --advertise-host localhost
 volumes:
   cockroach:
-
-

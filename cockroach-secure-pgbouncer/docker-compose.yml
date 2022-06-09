@@ -26,7 +26,7 @@ services:
     container_name: roach-0
     hostname: roach-0
     image: cockroachdb/cockroach:latest-v21.1
-    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25    
+    command: start --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
     volumes:
       - certs-roach-0:/certs
     depends_on:
@@ -88,7 +88,7 @@ services:
       - shared:/shared
     env_file:
       - pgbouncer/cockroachdb.env
-    ulimits: 
+    ulimits:
       nproc: 65535
       nofile:
         soft: 1048576

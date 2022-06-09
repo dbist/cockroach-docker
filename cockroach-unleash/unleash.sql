@@ -1508,4 +1508,3 @@ ALTER TABLE ONLY public.user_splash
 --
 -- PostgreSQL database dump complete
 --
-

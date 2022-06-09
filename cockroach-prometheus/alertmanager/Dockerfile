@@ -7,5 +7,3 @@ ENV REFRESHED_AT 2022_01_27
 
 COPY alertmanager.yml .
 COPY rules .
-
-

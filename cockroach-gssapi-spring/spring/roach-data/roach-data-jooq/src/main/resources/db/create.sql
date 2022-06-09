@@ -15,4 +15,3 @@ create table account
 --     (2, 500.00,'Bob','expense'),
 --     (3, 500.00,'Bobby Tables','asset'),
 --     (4, 500.00,'Doris','expense');
-

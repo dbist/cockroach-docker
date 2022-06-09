@@ -52,7 +52,7 @@ docker logs unleash
     at readableAddChunk (internal/streams/readable.js:267:9)
     at Socket.Readable.push (internal/streams/readable.js:206:10)
     at TCP.onStreamRead (internal/stream_base_commons.js:188:23)
-➜  cockroach-unleash git:(main) 
+➜  cockroach-unleash git:(main)
 ```
 
 Filed with Unleash folks [#1240](https://github.com/Unleash/unleash/issues/1240)
@@ -74,7 +74,7 @@ Type "help" for help.
 
 unleash=# \dt
                   List of relations
- Schema |         Name         | Type  |    Owner     
+ Schema |         Name         | Type  |    Owner
 --------+----------------------+-------+--------------
  public | addons               | table | unleash_user
  public | api_tokens           | table | unleash_user
@@ -196,7 +196,7 @@ CREATE SEQUENCE public.roles_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-   
+
 CREATE SEQUENCE public.users_id_seq
     START WITH 1
     INCREMENT BY 1

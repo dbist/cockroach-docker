@@ -39,7 +39,7 @@ npm install
 <details>
 <summary><strong>Alternative:</strong>Clone this repository</summary>
 
-Clone this repository: 
+Clone this repository:
 
 ```
 git clone git@github.com:prisma/prisma-examples.git --depth=1

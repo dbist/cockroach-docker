@@ -12,7 +12,7 @@ RUN apk add --update --no-cache \
    less \
    libstdc++ \
    libffi-dev \
-   libc-dev \ 
+   libc-dev \
    linux-headers \
    libxml2-dev \
    libxslt-dev \
@@ -27,5 +27,5 @@ COPY Gemfile Gemfile.lock ./
 RUN gem install bundler pg
 RUN bundle config --local build.pg --with-opt-dir="/usr/local/opt/libpq"
 RUN bundle install
-COPY . ./ 
+COPY . ./
 ENTRYPOINT ["./rails/docker-entrypoint.sh"]

@@ -11,4 +11,3 @@ receivers:
 - name: 'webhook'
   webhook_configs:
   - url: 'http://alertmanagerwh:30500/'
-

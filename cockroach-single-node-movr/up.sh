@@ -26,4 +26,3 @@ docker-compose exec roach-0 \
  /cockroach/cockroach sql --certs-dir=/certs \
  --host=roach-0 \
  --execute="SET CLUSTER SETTING server.remote_debugging.mode = \"any\";"
-

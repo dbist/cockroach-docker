@@ -18,7 +18,7 @@ This mode breaks a few session-based features of PostgreSQL. You can use it only
 One glaring issue with transaction pooling is inability to run prepared statements. In fact, we have to disable them. For our workload, we do not use any prepared statements but if you consider running apps taking advtantage of prepared statements, this won't be for you.
 
 https://www.pgbouncer.org/faq.html#how-to-use-prepared-statements-with-transaction-pooling
-[PGBouncer FAQ](https://www.pgbouncer.org/faq.html) 
+[PGBouncer FAQ](https://www.pgbouncer.org/faq.html)
 
 
 
@@ -28,7 +28,7 @@ docker exec -it client cockroach workload fixtures import tpcc \
  --warehouses=10 'postgresql://roach@pgbouncer:27000/tpcc?sslcert=/shared/client/certs%2Fclient.roach.crt&sslkey=/shared/client/certs%2Fclient.roach.key&sslmode=verify-full&sslrootcert=/shared/client/certs%2Fca.crt'
 ```
 
-## 10min Session pooling 
+## 10min Session pooling
 
 ```bash
 docker exec -it client cockroach workload run tpcc \
@@ -137,7 +137,7 @@ _elapsed___errors_____ops(total)___ops/sec(cum)__avg(ms)__p50(ms)__p95(ms)__p99(
   599.3s        0            123            0.2     13.3     12.6     22.0     29.4     30.4  stockLevel
 
 _elapsed___errors_____ops(total)___ops/sec(cum)__avg(ms)__p50(ms)__p95(ms)__p99(ms)_pMax(ms)__result
-  599.3s        0           2850            4.8     38.0     37.7     71.3     96.5    302.0  
+  599.3s        0           2850            4.8     38.0     37.7     71.3     96.5    302.0
 Audit check 9.2.1.7: SKIP: not enough delivery transactions to be statistically significant
 Audit check 9.2.2.5.1: SKIP: not enough orders to be statistically significant
 Audit check 9.2.2.5.2: SKIP: not enough orders to be statistically significant
@@ -238,7 +238,7 @@ _elapsed___errors_____ops(total)___ops/sec(cum)__avg(ms)__p50(ms)__p95(ms)__p99(
  1235.5s        0            243            0.2     14.0     12.6     23.1     35.7     44.0  stockLevel
 
 _elapsed___errors_____ops(total)___ops/sec(cum)__avg(ms)__p50(ms)__p95(ms)__p99(ms)_pMax(ms)__result
- 1235.5s        0           5713            4.6     46.9     39.8     79.7    151.0   4563.4  
+ 1235.5s        0           5713            4.6     46.9     39.8     79.7    151.0   4563.4
 Audit check 9.2.1.7: SKIP: not enough delivery transactions to be statistically significant
 Audit check 9.2.2.5.1: SKIP: not enough orders to be statistically significant
 Audit check 9.2.2.5.2: SKIP: not enough orders to be statistically significant

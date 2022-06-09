@@ -20,14 +20,14 @@ docker exec -it roach-0 \
 # docker compose exec roach-0 \
 # /cockroach/cockroach sql \
 #  --host=roach-0 --execute="GRANT ADMIN TO roach;"
-#  --certs-dir=/certs 
+#  --certs-dir=/certs
 
 # docker compose exec roach-0 \
 # /cockroach/cockroach sql \
 #  --insecure \
 #  --host=roach-0 \
 #  --execute="CREATE DATABASE unleash;"
-## --certs-dir=/certs 
+## --certs-dir=/certs
 
 # docker compose exec roach-0 \
 # /cockroach/cockroach sql \

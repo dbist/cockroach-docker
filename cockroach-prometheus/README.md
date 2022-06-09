@@ -60,4 +60,3 @@ search a metric like `sql_update_count` and watch the Prometheus graph
 __NOTE:__ Alert Manager alerts are not correct, TestAlert is not firing
 
 Grafana configuration is manual, for datasource, you must use the container hostname of the Prometheus container, i.e. http://prometheus:9090, not localhost.
-

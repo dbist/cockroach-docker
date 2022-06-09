@@ -134,4 +134,3 @@ public class JooQApplication implements CommandLineRunner {
         executorService.shutdownNow();
     }
 }
-

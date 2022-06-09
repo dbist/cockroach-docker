@@ -46,5 +46,5 @@ Result: BulkWriteResult {
     upserted: []
   }
 }
-test> 
+test>
 ```

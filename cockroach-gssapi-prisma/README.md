@@ -70,7 +70,7 @@ cockroach sql --certs-dir=/certs --host=lb.local --user=tester
 #
 # Enter \? for a brief introduction.
 #
-tester@lb.local:26257/defaultdb> 
+tester@lb.local:26257/defaultdb>
 ```
 
 5) Connecting with native client and `--url` flag
@@ -111,7 +111,7 @@ psql (14.1, server 13.0.0)
 SSL connection (protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256, bits: 128, compression: off)
 Type "help" for help.
 
-defaultdb=> 
+defaultdb=>
 ```
 
 using native binary
@@ -171,7 +171,7 @@ docker logs prisma --follow
 ```
 
 ```bash
-Password for tester@EXAMPLE.COM: 
+Password for tester@EXAMPLE.COM:
 NODE_VERSION=17.4.0
 HOSTNAME=prisma
 YARN_VERSION=1.22.17

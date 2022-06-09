@@ -1,4 +1,4 @@
-# Use the standard Cockroach image with krb5-user library 
+# Use the standard Cockroach image with krb5-user library
 FROM cockroachdb/cockroach:latest-v21.2
 
 LABEL maintainer="artemervits at gmail dot com"

@@ -17,10 +17,9 @@ First create the DB schema:
 Then generate code by activating a Maven profile called _generate_:
 
     mvn -P generate clean install
-   
-(Note: this will fail with an error when using CRDB even if classes are generated correctly)    
+
+(Note: this will fail with an error when using CRDB even if classes are generated correctly)
 
 Finally drop the table
 
     drop table account cascade;
-    

@@ -110,7 +110,7 @@ services:
     entrypoint: ["prometheus", "--config.file=prometheus.yml"]
     ports:
       - "9090:9090"
-  
+
   alertmanager:
     container_name: alertmanager
     hostname: alertmanager

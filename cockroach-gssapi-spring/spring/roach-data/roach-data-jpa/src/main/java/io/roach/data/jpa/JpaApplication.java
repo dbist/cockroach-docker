@@ -93,4 +93,3 @@ public class JpaApplication implements CommandLineRunner {
         executorService.shutdownNow();
     }
 }
-

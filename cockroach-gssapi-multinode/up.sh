@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker pull cockroachdb/cockroach:latest-v22.1 
+docker pull cockroachdb/cockroach:latest-v22.1
 
 docker compose build --no-cache
 docker compose up -d
@@ -23,7 +23,7 @@ docker compose exec roach-0 \
 docker compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="GRANT ADMIN TO roach;"  
+ --execute="GRANT ADMIN TO roach;"
 
 docker compose exec roach-0 \
  /cockroach/cockroach sql \
