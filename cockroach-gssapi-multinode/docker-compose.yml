@@ -39,7 +39,7 @@ services:
   roach-0:
     container_name: roach-0
     hostname: roach-0
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:latest-v22.1
     depends_on:
       - kdc
       - roach-cert
@@ -56,7 +56,7 @@ services:
   roach-1:
     container_name: roach-1
     hostname: roach-1
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:latest-v22.1
     depends_on:
       - kdc
       - roach-cert
@@ -74,7 +74,7 @@ services:
   roach-2:
     container_name: roach-2
     hostname: roach-2
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:latest-v22.1
     depends_on:
       - kdc
       - roach-cert
@@ -128,7 +128,7 @@ services:
 
   init:
     container_name: init
-    image: cockroachdb/cockroach:latest-v21.2
+    image: cockroachdb/cockroach:latest-v22.1
     command: init --host=roach-0 --certs-dir=/certs
     volumes:
       - certs-client:/certs
