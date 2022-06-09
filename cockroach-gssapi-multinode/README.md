@@ -46,6 +46,13 @@ docker exec -ti kdc sh
 docker exec -ti client cockroach sql --certs-dir=/certs --host=lb.local
 ```
 
+## Accessing the cluster via gssapi
+
+```bash
+docker exec -ti client cockroach sql --certs-dir=/certs --host=lb.local --user=tester
+```
+
+
 1) execute `./up.sh` instead of `docker compose up`
    - monitor the status of services via `docker compose logs`
 2) visit the [DB Console](http://localhost:8080)
