@@ -2,5 +2,7 @@
 
 set -e
 
-sleep 10
-python manage.py runserver 0.0.0.0:8000
+python init_db.py
+python app.py
+sleep 5
+flask run -h flask -p 8000

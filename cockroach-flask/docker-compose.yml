@@ -77,8 +77,13 @@ services:
     container_name: flask
     build: flask/.
     command: tail -f /dev/null
+    # entrypoint: ["./docker-entrypoint.sh"]
+#    environment:
+#      - DATABASE_URL="postgresql://root@lb:26257/flask_db?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt"
+#      - FLASK_APP=app
+#      - FLASK_ENV=development
     volumes:
-      - .:/flask
+      - .:/code
       - certs-web:/certs
     ports:
       - "8000:8000"
