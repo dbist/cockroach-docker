@@ -1,4 +1,4 @@
-FROM haproxy:2.5
+FROM haproxy:haproxy:lts-bullseye
 
 LABEL maintainer="artemervits at gmail dot com"
 

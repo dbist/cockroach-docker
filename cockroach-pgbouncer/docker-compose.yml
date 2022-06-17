@@ -7,18 +7,24 @@ services:
     hostname: roach-0
     image: cockroachdb/cockroach:latest-v22.1
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
 
   roach-1:
     container_name: roach-1
     hostname: roach-1
     image: cockroachdb/cockroach:latest-v22.1
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
 
   roach-2:
     container_name: roach-2
     hostname: roach-2
     image: cockroachdb/cockroach:latest-v22.1
     command: start --logtostderr=WARNING --log-file-verbosity=WARNING --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
 
   init:
     container_name: init
@@ -43,14 +49,22 @@ services:
   pgbouncer:
     container_name: pgbouncer
     hostname: pgbouncer
-    image: pgbouncer/pgbouncer:1.15.0
-    command: tail -f /dev/null
+    image: docker.io/bitnami/pgbouncer:1
     ports:
-      - "27000:27000"
+      - "6432:6432"
+    environment:
+      - POSTGRESQL_USERNAME=root
+      - POSTGRESQL_PASSWORD=
+      - POSTGRESQL_DATABASE=defaultdb
+      - POSTGRESQL_HOST=lb
+      - POSTGRESQL_PORT=26257
+      - PGBOUNCER_DATABASE=defaultdb
+      - PGBOUNCER_AUTH_TYPE=trust
+      - PGBOUNCER_AUTH_USER="root"
+      - PGBOUNCER_AUTH_FILE=/opt/bitnami/pgbouncer/conf/userlist.txt
+      - PGBOUNCER_IGNORE_STARTUP_PARAMETERS=extra_float_digits
     volumes:
       - ${PWD}/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
-    env_file:
-      - pgbouncer/cockroachdb.env
     depends_on:
       - lb
     restart: always
