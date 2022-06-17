@@ -137,14 +137,20 @@ Starting pgbouncer.
 
 ### Run a workload via LB and/or PGBouncer
 
-#### LB
+#### LB: init tpcc benchmark
 
 ```bash
-docker exec -it client cockroach workload init tpcc --split 'postgresql://root@lb:26257/tpcc?sslmode=disable'
+docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 'postgresql://root@lb:26257/tpcc?sslmode=disable'
 ```
 
-## PGBouncer
+## LB: execute the tpcc workload
 
 ```bash
-docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@lb:26257/tpcc?sslmode=disable'
+```
+
+## PGBouncer: execute the tpcc workload
+
+```bash
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
 ```
