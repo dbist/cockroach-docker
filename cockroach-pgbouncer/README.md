@@ -169,22 +169,4 @@ connect to PGBouncer
 docker exec -it client cockroach sql --url 'postgresql://root@pgbouncer:6432/defaultdb?sslmode=disable'
 
 
-config file in
-
-```bash
-I have no name!@pgbouncer:/$ cat /opt/bitnami/pgbouncer/conf/pgbouncer.ini
-[databases]
-defaultdb=host=lb port=26257 dbname=defaultdb auth_user="root"
-
-[pgbouncer]
-listen_port=6432
-listen_addr=0.0.0.0
-auth_file=/opt/bitnami/pgbouncer/conf/userlist.txt
-auth_type=trust
-pidfile=/opt/bitnami/pgbouncer/tmp/pgbouncer.pid
-logfile=/opt/bitnami/pgbouncer/logs/pgbouncer.log
-admin_users=root
-client_tls_sslmode=disable
-server_tls_sslmode=disable
-ignore_startup_parameters=extra_float_digits
-```
+config file in /opt/bitnami/pgbouncer/conf/pgbouncer.ini

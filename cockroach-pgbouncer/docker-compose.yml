@@ -51,11 +51,9 @@ services:
     hostname: pgbouncer
     image: docker.io/bitnami/pgbouncer:1
     ports:
-      - "6432:6432"
+      - "27000:27000"
     env_file:
       - pgbouncer/cockroachdb.env
-    volumes:
-      - ${PWD}/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
     depends_on:
       - lb
     restart: always
