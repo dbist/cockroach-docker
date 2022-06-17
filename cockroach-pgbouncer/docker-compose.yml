@@ -52,17 +52,8 @@ services:
     image: docker.io/bitnami/pgbouncer:1
     ports:
       - "6432:6432"
-    environment:
-      - POSTGRESQL_USERNAME=root
-      - POSTGRESQL_PASSWORD=
-      - POSTGRESQL_DATABASE=defaultdb
-      - POSTGRESQL_HOST=lb
-      - POSTGRESQL_PORT=26257
-      - PGBOUNCER_DATABASE=defaultdb
-      - PGBOUNCER_AUTH_TYPE=trust
-      - PGBOUNCER_AUTH_USER="root"
-      - PGBOUNCER_AUTH_FILE=/opt/bitnami/pgbouncer/conf/userlist.txt
-      - PGBOUNCER_IGNORE_STARTUP_PARAMETERS=extra_float_digits
+    env_file:
+      - pgbouncer/cockroachdb.env
     volumes:
       - ${PWD}/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
     depends_on:
