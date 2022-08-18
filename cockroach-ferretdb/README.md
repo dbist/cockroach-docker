@@ -86,25 +86,4 @@ test> db.inventory.insertMany( [
 }
 ```
 
-## This is where it used to break
-
-```bash
-test> db.test.insert({name: "Ada Lovelace", age: 205})
-DeprecationWarning: Collection.insert() is deprecated. Use insertOne, insertMany, or bulkWrite.
-Uncaught:
-MongoBulkWriteError: connection 3 to 172.23.0.4:27017 closed
-Result: BulkWriteResult {
-  result: {
-    ok: 1,
-    writeErrors: [],
-    writeConcernErrors: [],
-    insertedIds: [ { index: 0, _id: ObjectId("6182e88d9e28440843d37de8") } ],
-    nInserted: 0,
-    nUpserted: 0,
-    nMatched: 0,
-    nModified: 0,
-    nRemoved: 0,
-    upserted: []
-  }
-}
-test>
+See the following for more examples: https://blog.ervits.com/2022/08/using-cockroachdb-as-backend-for-oss.html
