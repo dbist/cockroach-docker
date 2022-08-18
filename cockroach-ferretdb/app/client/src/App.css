@@ -1,0 +1,192 @@
+.app {
+  text-align: center;
+}
+
+.app-logo {
+  height: 40vmin;
+}
+
+.app-header {
+  background-color: #003545;
+  min-height: 125px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.title-text {
+  padding-top: 10px;
+  margin: 0px;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.sub-title-text {
+  margin: 0px;
+  font-size: small;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
+
+.align-left {
+  text-align: left;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.padding-10 {
+  padding: 15px;
+}
+
+.margin-top-10 {
+  margin-top: 10px;
+}
+
+.margin-left-10 {
+  margin-left: 10px;
+}
+
+.width-60 {
+  width: 60%;
+}
+
+.width-70 {
+  width: 70%;
+}
+
+.width-15 {
+  width: 15%;
+}
+
+.display-inline-block {
+  display: inline-block;
+}
+
+.text-align-left {
+  text-align: left;
+}
+
+.task-item {
+  margin-top: 5px;
+  padding: 10px;
+  border-bottom: 1px dotted #c0c0c0;
+}
+
+button {
+  border-radius: 5px;
+  background: #96DDCF;
+  border-color: #E5E1E5;
+  color: #ffffff;
+
+}
+
+button:hover {
+  cursor: pointer;
+  background: grey;
+}
+
+.add-task {
+  margin-top: 25px;
+  margin-bottom: 35px;
+}
+
+.add-task button {
+  font-weight: bold;
+  width: 350px;
+  height: 50px;
+  font-size: large;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border-color: #2F99A3;
+  transform: translate(-50%,-50%);
+  outline: none;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+}
+
+.modal-title {
+  background-color: #003545;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  padding: 15px;
+}
+
+.modal-title h3 {
+  color: #ffffff;
+  margin: 0px;
+}
+
+.form-main {
+  padding: 15px;
+  min-width: 300px;
+  text-align: center;
+}
+
+.form-entry p {
+  text-align: left;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.form-entry input {
+  width: 90%;
+  height: 25px;
+  font-size: large;
+  border-radius: 5px;
+  border-color: #c0c0c0;
+}
+
+.form-action {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+
+.form-action button {
+  font-size: large;
+  font-weight: bold;
+  width: 75px;
+  height: 35px;
+}
+
+.task-completed {
+  text-decoration: line-through;
+  color: grey;
+}
+
+.clickable:hover {
+  cursor: pointer;
+}

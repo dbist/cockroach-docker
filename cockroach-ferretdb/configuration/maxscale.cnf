@@ -1,0 +1,76 @@
+[maxscale]
+threads=auto
+admin_secure_gui=false
+
+# this enables external access to the REST API outside of localhost
+# please review / modify for any public / non development environments
+admin_host=0.0.0.0
+
+# Server definitions
+#
+# Set the address of the server to the network
+# address of a MariaDB server.
+#
+
+[server1]
+type=server
+address=mdb
+port=3306
+protocol=MariaDBBackend
+
+# Monitor for the servers
+#
+# This will keep MaxScale aware of the state of the servers.
+# MariaDB Monitor documentation:
+# https://mariadb.com/kb/en/maxscale-25-monitors/
+
+[MariaDB-Monitor]
+type=monitor
+module=mariadbmon
+servers=server1
+user=maxscale
+password=Password123!
+monitor_interval=2000
+
+# Service definitions
+#
+# Service Definition for a read-only service and
+# a read/write splitting service.
+#
+
+# ReadWriteSplit documentation:
+# https://mariadb.com/kb/en/mariadb-maxscale-25-readwritesplit/
+
+[Read-Write-Service]
+type=service
+router=readwritesplit
+servers=server1
+user=maxscale
+password=Password123!
+
+# Listener definitions for the services
+#
+# These listeners represent the ports the
+# services will listen on.
+#
+
+[Read-Write-Listener]
+type=listener
+service=Read-Write-Service
+protocol=MariaDBClient
+port=4006
+
+# The NoSQL Listener
+#
+# Uses the new nosqlprotocol protocol
+# Listens on port 17017
+# Connects to MariaDB via the Read-Write-Service
+#
+
+[MongoDB-Listener]
+type=listener
+service=Read-Write-Service
+protocol=nosqlprotocol
+nosqlprotocol.user=maxscale
+nosqlprotocol.password=Password123!
+port=17017
