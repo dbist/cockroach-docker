@@ -87,3 +87,6 @@ test> db.inventory.insertMany( [
 ```
 
 See the following for more examples: https://blog.ervits.com/2022/08/using-cockroachdb-as-backend-for-oss.html
+
+
+** NOTE: to update package-lock.json run  in the app/client/ directory**
