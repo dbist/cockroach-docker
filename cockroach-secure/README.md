@@ -18,7 +18,7 @@ Prerequisites:
 1) because operation order is important, execute `./up.sh` instead of `docker compose up`
    - monitor the status of services via `docker-compose logs`
 2) `docker compose ps`
-3) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `test` and password `password`
+3) visit the CockroachDB [Admin UI](https://localhost:8080) and login with username `roach` and password `roach`
 4) visit the [HAProxy UI](http://localhost:8081)
 
 ### Open Interactive Shells
