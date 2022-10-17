@@ -161,12 +161,10 @@ docker exec -it client cockroach workload run tpcc --duration=120m --concurrency
 
 
 
-
 WIP
 
 connect to PGBouncer
 
-docker exec -it client cockroach sql --url 'postgresql://root@pgbouncer:6432/defaultdb?sslmode=disable'
-
+docker exec -it client cockroach sql --url 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
 
 config file in /opt/bitnami/pgbouncer/conf/pgbouncer.ini
