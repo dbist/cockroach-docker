@@ -13,7 +13,7 @@ docker compose exec roach-0 \
 docker compose exec roach-0 \
  /cockroach/cockroach sql \
  --certs-dir=/certs --host=roach-0 \
- --execute="GRANT ALL ON DATABASE defaultdb TO tester;"
+ --execute="GRANT ALL ON DATABASE defaultdb TO tester WITH GRANT OPTION;"
 
 docker compose exec roach-0 \
  /cockroach/cockroach sql \

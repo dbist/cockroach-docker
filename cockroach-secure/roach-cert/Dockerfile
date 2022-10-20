@@ -1,5 +1,5 @@
 # Stage 1 - generate certs
-FROM cockroachdb/cockroach:latest-v22.1 AS generator
+FROM cockroachdb/cockroach-unstable:v22.2.0-beta.4 AS generator
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="6.0"
