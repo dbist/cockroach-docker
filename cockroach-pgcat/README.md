@@ -16,7 +16,7 @@ Prerequisites:
 1. Start the tutorial using `./up.sh` script
 
 ```bash
-Creating network "cockroach-pgbouncer_default" with the default driver
+Creating network "cockroach-pgcat_default" with the default driver
 Creating roach-0 ... done
 Creating roach-1 ... done
 Creating roach-2 ... done
@@ -33,7 +33,7 @@ pgcat config file `pgcat.toml` file.
 ### Connect as root
 
 ```bash
-docker exec -it client cockroach sql --insecure --url 'postgres://root@pgcat:6432?sslmode=disable'
+docker exec -it client cockroach sql --insecure --url 'postgres://root@pgcat:6432/defaultdb?sslmode=disable'
 ```
 
 ```bash
@@ -57,8 +57,8 @@ The logs say
 ```
 
 # cli inside the container
-cockroach sql --insecure --host=roach-0
+cockroach sql --insecure --host=pgcat --port=6432 --database=defaultdb --user=root
 
 # directly
-docker exec -ti client cockroach sql --insecure --host=roach-0
+docker exec -ti client cockroach sql --insecure --host=pgcat --port=6432 --database=defaultdb --user=root
 ```
