@@ -28,37 +28,39 @@ Cluster successfully initialized
 
 2. Connect to cockroach using pgcat
 
-pgcat config file `pgcat.toml` file.
+pgcat config file `pgcat.toml`.
 
-### Connect as root
-
-```bash
-docker exec -it client cockroach sql --insecure --url 'postgres://root@pgcat:6432/defaultdb?sslmode=disable'
-```
+# Access SQL CLI via pgcat
 
 ```bash
-#
-# Welcome to the CockroachDB SQL shell.
-# All statements must be terminated by a semicolon.
-# To exit, type: \q.
-#
-ERROR: server closed the connection.
-Is this a CockroachDB node?
-EOF
-Failed running "sql"
+docker exec -it client cockroach sql --url 'postgres://pgcat:6432/tpcc?sslmode=disable'
 ```
 
-The logs say
+or
 
 ```bash
-[2022-11-14T20:18:45.620009Z INFO  pgcat::pool] Creating a new server connection Address { id: 3, host: "lb", port: 26257, shard: 1, database: "defaultdb", role: Replica, replica_number: 0, address_index: 1, username: "root", pool_name: "postgres" }
-[2022-11-14T20:18:45.624554Z DEBUG pgcat::server] Server connection marked for clean up
-[2022-11-14T20:20:06.564588Z WARN  pgcat] Client disconnected with error ClientError
+docker exec -it client cockroach sql --insecure --host=pgcat --port=6432 --database=tpcc
 ```
 
-# cli inside the container
-cockroach sql --insecure --host=pgcat --port=6432 --database=defaultdb --user=root
+### Run a workload via LB and/or PGBouncer
 
-# directly
-docker exec -ti client cockroach sql --insecure --host=pgcat --port=6432 --database=defaultdb --user=root
+## initialize workload with transaction pool
+
+```bash
+docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 'postgresql://root@pgcat:6432/tpcc?sslmode=disable'
+I221114 21:03:32.556426 1 ccl/workloadccl/fixture.go:318  [-] 1  starting import of 9 tables
+W221114 21:03:32.822631 1 ccl/workloadccl/fixture.go:534  [-] 2  error enabling automatic stats: driver: bad connection
+Error: importing fixture: importing table warehouse: pq: unknown prepared statement ""
+```
+
+you must use the `session` pool_mode to initialize tpcc or use the load balancer url.
+
+```bash
+docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 'postgresql://root@pgcat:6432/tpcc?sslmode=disable'
+```
+
+## pgcat: execute the tpcc workload
+
+```bash
+docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@pgcat:6432/tpcc?sslmode=disable'
 ```

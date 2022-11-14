@@ -33,7 +33,7 @@ shutdown_timeout = 60000
 ban_time = 60 # seconds
 
 # Reload config automatically if it changes.
-autoreload = false
+autoreload = true
 
 # TLS
 # tls_certificate = "server.cert"
@@ -48,11 +48,11 @@ admin_password = ""
 # configs are structured as pool.<pool_name>
 # the pool_name is what clients use as database name when connecting
 # For the example below a client can connect using "postgres://sharding_user:sharding_user@pgcat_host:pgcat_port/sharded"
-[pools.defaultdb]
+[pools.tpcc]
 # Pool mode (see PgBouncer docs for more).
 # session: one server connection per connected client
 # transaction: one server connection per client transaction
-pool_mode = "transaction"
+pool_mode = "session"
 
 # If the client doesn't specify, route traffic to
 # this role by default.
@@ -84,7 +84,7 @@ primary_reads_enabled = true
 sharding_function = "sha1"
 
 # Credentials for users that may connect to this cluster
-[pools.defaultdb.users.0]
+[pools.tpcc.users.0]
 username = "root"
 password = ""
 # Maximum number of server connections that can be established for this user
@@ -96,25 +96,25 @@ pool_size = 9
 statement_timeout = 0
 
 # Shard 0
-[pools.defaultdb.shards.0]
+[pools.tpcc.shards.0]
 # [ host, port, role ]
 servers = [
     [ "roach-0", 26257, "primary" ],
     [ "lb", 26257, "replica" ],
 ]
 # Database name (e.g. "postgres")
-database = "defaultdb"
+database = "tpcc"
 
-[pools.defaultdb.shards.1]
+[pools.tpcc.shards.1]
 servers = [
     [ "roach-1", 26257, "primary" ],
     [ "lb", 26257, "replica" ],
 ]
-database = "defaultdb"
+database = "tpcc"
 
-[pools.defaultdb.shards.2]
+[pools.tpcc.shards.2]
 servers = [
     [ "roach-2", 26257, "primary" ],
     [ "lb", 26257, "replica" ],
 ]
-database = "defaultdb"
+database = "tpcc"
