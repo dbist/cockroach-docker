@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+
+  roach-0:
+    container_name: roach-0
+    hostname: roach-0
+    image: cockroachdb/cockroach:latest-v22.1
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+
+  roach-1:
+    container_name: roach-1
+    hostname: roach-1
+    image: cockroachdb/cockroach:latest-v22.1
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+
+  roach-2:
+    container_name: roach-2
+    hostname: roach-2
+    image: cockroachdb/cockroach:latest-v22.1
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+
+  init:
+    container_name: init
+    image: cockroachdb/cockroach:latest-v22.1
+    command: init --host=roach-0 --insecure
+    depends_on:
+      - roach-0
+
+  lb:
+    container_name: lb
+    hostname: lb
+    build: haproxy
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - roach-0
+      - roach-1
+      - roach-2
+
+  pgcat:
+    container_name: pgcat
+    hostname: pgcat
+    build: ./pgcat
+    command:
+      - "pgcat"
+      - "/etc/pgcat/pgcat.toml"
+    environment:
+      - RUST_LOG=debug
+    ports:
+      - "6432:6432"
+      - "9930:9930"
+    depends_on:
+      - lb
+    restart: always
+
+  client:
+    container_name: client
+    image: cockroachdb/cockroach:latest-v22.1
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    hostname: client
+    depends_on:
+      - lb
+      - pgcat
