@@ -81,7 +81,7 @@ primary_reads_enabled = true
 # pg_bigint_hash: PARTITION BY HASH (Postgres hashing function)
 # sha1: A hashing function based on SHA1
 #
-sharding_function = "sha1"
+sharding_function = "pg_bigint_hash"
 
 # Credentials for users that may connect to this cluster
 [pools.tpcc.users.0]
@@ -90,7 +90,7 @@ password = ""
 # Maximum number of server connections that can be established for this user
 # The maximum number of connection from a single Pgcat process to any database in the cluster
 # is the sum of pool_size across all users.
-pool_size = 9
+pool_size = 30
 
 # Maximum query duration. Dangerous, but protects against DBs that died in a non-obvious way.
 statement_timeout = 0
@@ -99,22 +99,21 @@ statement_timeout = 0
 [pools.tpcc.shards.0]
 # [ host, port, role ]
 servers = [
-    [ "roach-0", 26257, "primary" ],
-    [ "lb", 26257, "replica" ],
+    [ "lb", 26257, "primary" ],
 ]
+# [ "roach-0", 26257, "primary" ],
+
 # Database name (e.g. "postgres")
 database = "tpcc"
 
 [pools.tpcc.shards.1]
 servers = [
-    [ "roach-1", 26257, "primary" ],
-    [ "lb", 26257, "replica" ],
+    [ "lb", 26257, "primary" ],
 ]
 database = "tpcc"
 
 [pools.tpcc.shards.2]
 servers = [
-    [ "roach-2", 26257, "primary" ],
-    [ "lb", 26257, "replica" ],
+    [ "lb", 26257, "primary" ],
 ]
 database = "tpcc"

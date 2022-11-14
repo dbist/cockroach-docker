@@ -4,7 +4,6 @@ WORKDIR /app
 RUN cargo build --release
 
 FROM debian:bullseye-slim
-RUN mkdir -p /etc/pgcat
 COPY --from=builder /app/target/release/pgcat /usr/bin/pgcat
 COPY --from=builder /app/pgcat.toml /etc/pgcat/pgcat.toml
 WORKDIR /etc/pgcat
