@@ -3,7 +3,7 @@
 docker compose build --no-cache
 docker compose up -d
 
-docker compose exec roach-0 \
+docker compose exec client \
   /cockroach/cockroach sql \
   --host=lb \
   --insecure \
