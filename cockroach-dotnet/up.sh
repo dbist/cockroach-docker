@@ -3,8 +3,8 @@
 docker compose build --no-cache
 docker compose up -d
 
-docker compose exec client \
+docker compose exec roach-0 \
   /cockroach/cockroach sql \
-  --host=lb \
+  --host=roach-0 \
   --insecure \
-  --execute="CREATE DATABASE bank;"
+  --execute="CREATE DATABASE IF NOT EXISTS bank;"

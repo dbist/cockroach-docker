@@ -61,4 +61,4 @@ services:
       - "3000:3000"
     depends_on:
       - client
-    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    entrypoint: ["dotnet", "run"]
