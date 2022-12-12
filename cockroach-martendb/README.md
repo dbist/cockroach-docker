@@ -62,7 +62,71 @@ docker logs app
 ## WIP
 
 ```bash
----> Npgsql.PostgresException (0x80004005): 0A000: at or near "language": syntax error: unimplemented: this syntax
+Unhandled exception. Marten.Exceptions.MartenSchemaException: DDL Execution for 'All Configured Changes' Failed!
+
+CREATE OR REPLACE FUNCTION public.mt_immutable_timestamp(value text) RETURNS timestamp without time zone LANGUAGE sql IMMUTABLE AS
+$function$
+select value::timestamp
+
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.mt_immutable_timestamptz(value text) RETURNS timestamp with time zone LANGUAGE sql IMMUTABLE AS
+$function$
+select value::timestamptz
+
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.mt_grams_vector(text)
+        RETURNS tsvector
+        LANGUAGE plpgsql
+        IMMUTABLE STRICT
+AS $function$
+BEGIN
+        RETURN (SELECT array_to_string(mt_grams_array($1), ' ')::tsvector);
+END
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.mt_grams_query(text)
+        RETURNS tsquery
+        LANGUAGE plpgsql
+        IMMUTABLE STRICT
+AS $function$
+BEGIN
+        RETURN (SELECT array_to_string(mt_grams_array($1), ' & ')::tsquery);
+END
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.mt_grams_array(words text)
+        RETURNS text[]
+        LANGUAGE plpgsql
+        IMMUTABLE STRICT
+AS $function$
+        DECLARE result text[];
+        DECLARE word text;
+        DECLARE clean_word text;
+        BEGIN
+                FOREACH word IN ARRAY string_to_array(words, ' ')
+                LOOP
+                     clean_word = regexp_replace(word, '[^a-zA-Z0-9]+', '','g');
+                     FOR i IN 1 .. length(clean_word)
+                     LOOP
+                         result := result || quote_literal(substr(lower(clean_word), i, 1));
+                         result := result || quote_literal(substr(lower(clean_word), i, 2));
+                         result := result || quote_literal(substr(lower(clean_word), i, 3));
+                     END LOOP;
+                END LOOP;
+
+                RETURN ARRAY(SELECT DISTINCT e FROM unnest(result) AS a(e) ORDER BY e);
+        END;
+$function$;
+
+
+
+ ---> Npgsql.PostgresException (0x80004005): 0A000: at or near "language": syntax error: unimplemented: this syntax
 
 DETAIL: source SQL:
 CREATE OR REPLACE FUNCTION public.mt_grams_vector(text)
