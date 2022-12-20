@@ -141,3 +141,4 @@ dmypy.json
 cockroach-gssapi-nodejs/nodejs/app/node_modules
 
 .idea
+.DS_Store
