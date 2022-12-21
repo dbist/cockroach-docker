@@ -63,7 +63,13 @@ docker exec -ti client cockroach sql --insecure --host=roach-0
 docker logs pgbench
 ```
 
-4. Run the workload
+4. Inspect all of the container logs
+
+```bash
+docker compose logs --follow
+```
+
+5. Run the workload
 
 Initialize
 
@@ -85,11 +91,14 @@ pgbench \
  --host=${PGHOST} \
  --no-vacuum \
  --file=original.sql@1 \
- --client=25 \
+ --client=8 \
  --jobs=8 \
  --username=${PGUSER} \
  --port=${PGPORT} \
  --scale=${SCALE} \
+ --failures-detailed \
+ --verbose-errors \
+ --max-tries=3 \
  ${PGDATABASE} \
  -T 60 \
  -P 5
@@ -107,6 +116,9 @@ pgbench \
  --username=${PGUSER} \
  --port=${PGPORT} \
  --scale=${SCALE} \
+ --failures-detailed \
+ --verbose-errors \
+ --max-tries=3 \
  ${PGDATABASE} \
  -T 60 \
  -P 5
