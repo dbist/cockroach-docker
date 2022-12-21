@@ -8,3 +8,5 @@ docker compose exec roach-0 \
   --host=roach-0 \
   --insecure \
   --execute="CREATE DATABASE IF NOT EXISTS pgbench;"
+
+docker compose logs --follow

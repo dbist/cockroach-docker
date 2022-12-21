@@ -59,12 +59,11 @@ services:
     hostname: pgbench
     build: pgbench/.
     entrypoint: ["tail", "-f", "/dev/null"]
-    #entrypoint: ["docker-entrypoint-initdb.d/init.sh"]
     environment:
       - PGHOST=lb
       - PGUSER=root
       - PGPORT=26257
       - PGDATABASE=pgbench
-      - SCALE=100
+      - SCALE=10
     depends_on:
       - lb
