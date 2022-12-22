@@ -1,9 +1,9 @@
 \set aid random(1, 100000 * :scale)
-\set delta random(0, 100 * :scale)
-\set tid random(0, 10 * :scale)
-\set bid random(0, 100 * :scale)
+\set bid random(1, 1 * :scale)
+\set tid random(1, 10 * :scale)
+\set delta random(-5000, 5000)
 
--- https://www.postgresql.org/docs/13/pgbench.html
+-- https://www.postgresql.org/docs/15/pgbench.html
 -- What Is the “Transaction” Actually Performed in pgbench?
 -- If you select the simple-update built-in (also -N), steps 4 and 5 aren't included in the transaction. This will avoid update contention on these tables, but it makes the test case even less like TPC-B.
 -- If you select the select-only built-in (also -S), only the SELECT is issued.
