@@ -62,7 +62,7 @@ docker logs postgresql
 4. Inspect all of the container logs
 
 ```bash
-docker compose logs -f docker-compose-postgresql.yml --follow
+docker compose -f docker-compose-postgresql.yml logs --follow
 ```
 
 5. Create the sample database
