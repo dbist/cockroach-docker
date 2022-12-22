@@ -32,7 +32,7 @@ Cluster successfully initialized
 ### Connect as root
 
 ```bash
-docker exec -it client cockroach sql --insecure --url 'postgres://root@lb:26000/defaultdb&sslmode=disable'
+docker exec -it client cockroach sql --insecure --url 'postgres://root@lb:26000/defaultdb?sslmode=disable'
 ```
 
 2. visit the [HAProxy UI](http://localhost:8081)
