@@ -64,6 +64,6 @@ services:
       - PGUSER=root
       - PGPORT=26000
       - PGDATABASE=example
-      - SCALE=10
+      - SCALE=100
     depends_on:
       - lb
