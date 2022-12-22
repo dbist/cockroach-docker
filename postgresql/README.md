@@ -1,4 +1,4 @@
-# Sample 3 node *insecure* CockroachDB cluster with HAProxy acting as load balancer and pgbench
+# Sample 3 node *insecure* CockroachDB cluster with HAProxy acting as load balancer and PostgreSQL client, which includes `psql`, `pgbench`, etc.
 
 Prerequisites:
 
@@ -7,21 +7,21 @@ Prerequisites:
 * `roach-1` - CockroachDB node
 * `roach-2` - CockroachDB node
 * `lb` - HAProxy acting as load balancer
-* `pgbench` - PostgreSQL benchmarking utility
+* `postgresql` - PostgreSQL container including psql and pgbench
 * `client` - client machine containing `cockroach` binary
 
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1. Start the tutorial using `./up.sh` script
+1. Start the tutorial using `./up.sh docker-compose-postgresql.yml` script
 
 ```bash
-Creating network "cockroach-pgbouncer_default" with the default driver
+Creating network "cockroach-docker_default" with the default driver
 Creating roach-0 ... done
 Creating roach-1 ... done
 Creating roach-2 ... done
 Creating lb      ... done
-Creating pgbench ... done
+Creating postgresql ... done
 Creating client    ... done
 Cluster successfully initialized
 CREATE ROLE
@@ -48,7 +48,7 @@ docker exec -ti roach-1 /bin/bash
 docker exec -ti roach-2 /bin/bash
 docker exec -ti lb /bin/sh
 docker exec -ti client /bin/bash
-docker exec -ti pgbench /bin/bash
+docker exec -ti postgresql /bin/bash
 
 # cli inside the container
 cockroach sql --insecure --host=lb
@@ -60,16 +60,22 @@ docker exec -ti client cockroach sql --insecure --host=roach-0
 3. Inspect the pgbench logs
 
 ```bash
-docker logs pgbench
+docker logs postgresql
 ```
 
 4. Inspect all of the container logs
 
 ```bash
-docker compose logs --follow
+docker compose logs -f docker-compose-postgresql.yml --follow
 ```
 
-5. Run the workload
+5. Create the sample database
+
+```bash
+psql -c "CREATE DATABASE example IF NOT EXISTS;"
+```
+
+6. Run the workload
 
 Initialize
 
@@ -81,6 +87,7 @@ pgbench \
  --port=${PGPORT} \
  --no-vacuum \
  --scale=${SCALE} \
+ --foreign-keys \
  ${PGDATABASE}
 ```
 
@@ -90,7 +97,7 @@ Run the default `tpcb-like` workload
 pgbench \
  --host=${PGHOST} \
  --no-vacuum \
- --file=original.sql@1 \
+ --file=tpcb-original.sql@1 \
  --client=8 \
  --jobs=8 \
  --username=${PGUSER} \
@@ -110,7 +117,7 @@ Run the optimized workload
 pgbench \
  --host=${PGHOST} \
  --no-vacuum \
- --file=final.sql@1 \
+ --file=tpcb-cockroach.sql@1 \
  --client=25 \
  --jobs=8 \
  --username=${PGUSER} \
