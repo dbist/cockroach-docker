@@ -54,16 +54,16 @@ services:
     depends_on:
       - lb
 
-  pgbench:
-    container_name: pgbench
-    hostname: pgbench
-    build: pgbench/.
-    entrypoint: ["tail", "-f", "/dev/null"]
+  postgresql:
+    container_name: postgresql
+    hostname: postgresql
+    build: postgresql/.
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
     environment:
       - PGHOST=lb
       - PGUSER=root
-      - PGPORT=26257
-      - PGDATABASE=pgbench
+      - PGPORT=26000
+      - PGDATABASE=example
       - SCALE=10
     depends_on:
       - lb
