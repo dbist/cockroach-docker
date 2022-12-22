@@ -13,9 +13,12 @@ Prerequisites:
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1. Start the tutorial using `./up.sh docker-compose-postgresql.yml` script
+1. Start the tutorial with a helper script from the parent directory.
 
 ```bash
+cd cockroach-docker
+./up.sh docker-compose-postgresql.yml
+
 Creating network "cockroach-docker_default" with the default driver
 Creating roach-0 ... done
 Creating roach-1 ... done
@@ -24,13 +27,6 @@ Creating lb      ... done
 Creating postgresql ... done
 Creating client    ... done
 Cluster successfully initialized
-CREATE ROLE
-
-Time: 9ms
-
-GRANT
-
-Time: 87ms
 ```
 
 ### Connect as root
