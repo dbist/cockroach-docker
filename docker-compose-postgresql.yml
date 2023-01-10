@@ -64,6 +64,23 @@ services:
       - PGUSER=root
       - PGPORT=26000
       - PGDATABASE=example
-      - SCALE=100
+      - SCALE=10
+    depends_on:
+      - lb
+
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./postgresql/flyway/sql:/flyway/sql
+      - ./postgresql/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     depends_on:
       - lb
