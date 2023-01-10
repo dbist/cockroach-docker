@@ -65,64 +65,65 @@ docker logs postgresql
 docker compose -f docker-compose-postgresql.yml logs --follow
 ```
 
-5. Create the sample database
+5. Run the workload
 
 ```bash
-psql -c "CREATE DATABASE example IF NOT EXISTS;"
+docker exec -it postgresql bash
 ```
-
-6. Run the workload
 
 Initialize
 
 ```bash
-pgbench \
- --initialize \
- --host=${PGHOST} \
- --username=${PGUSER} \
- --port=${PGPORT} \
- --no-vacuum \
- --scale=${SCALE} \
- --foreign-keys \
- ${PGDATABASE}
+docker exec -it postgresql \
+ pgbench \
+    --initialize \
+    --host=${PGHOST} \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --no-vacuum \
+    --scale=10 \
+    --foreign-keys \
+    ${PGDATABASE}
 ```
 
 Run the default `tpcb-like` workload
 
 ```bash
-pgbench \
- --host=${PGHOST} \
- --no-vacuum \
- --file=tpcb-original.sql@1 \
- --client=8 \
- --jobs=8 \
- --username=${PGUSER} \
- --port=${PGPORT} \
- --scale=${SCALE} \
- --failures-detailed \
- --verbose-errors \
- --max-tries=3 \
- ${PGDATABASE} \
- -T 60 \
- -P 5
+docker exec -it postgresql \
+ pgbench \
+    --host=${PGHOST} \
+    --no-vacuum \
+    --file=tpcb-original.sql@1 \
+    --client=8 \
+    --jobs=8 \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --scale=10 \
+    --failures-detailed \
+    --verbose-errors \
+    --max-tries=3 \
+    ${PGDATABASE} \
+    -T 60 \
+    -P 5
 ```
 
 Run the optimized workload
 
 ```bash
-pgbench \
- --host=${PGHOST} \
- --no-vacuum \
- --file=tpcb-cockroach.sql@1 \
- --client=25 \
- --jobs=8 \
- --username=${PGUSER} \
- --port=${PGPORT} \
- --scale=${SCALE} \
- --failures-detailed \
- --verbose-errors \
- --max-tries=3 \
- ${PGDATABASE} \
- -T 60 \
- -P 5
+docker exec -it postgresql \
+ pgbench \
+    --host=${PGHOST} \
+    --no-vacuum \
+    --file=tpcb-cockroach.sql@1 \
+    --client=25 \
+    --jobs=8 \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --scale=10 \
+    --failures-detailed \
+    --verbose-errors \
+    --max-tries=3 \
+    ${PGDATABASE} \
+    -T 60 \
+    -P 5
 ```
