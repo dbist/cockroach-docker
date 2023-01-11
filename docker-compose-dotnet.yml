@@ -38,7 +38,7 @@ services:
     hostname: lb
     build: haproxy
     ports:
-      - "26257:26257"
+      - "26000:26000"
       - "8080:8080"
       - "8081:8081"
     depends_on:
@@ -54,11 +54,42 @@ services:
     depends_on:
       - lb
 
-  app:
-    container_name: app
-    build: app
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./dotnet/flyway/sql:/flyway/sql
+      - ./dotnet/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+
+  dotnet:
+    container_name: dotnet
+    build: dotnet
     ports:
       - "3000:3000"
-    depends_on:
-      - client
+    #restart: unless-stopped
+    healthcheck:
+      test: ["curl", "http://lb:8080/_admin/v1/databases/bank"]
+      #test: ["cockroach", "sql", "--insecure", "--host=lb", "--port=26000", "-e", "WITH X AS (SHOW DATABASES) SELECT database_name FROM X WHERE database_name = 'bank';"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
     entrypoint: ["dotnet", "run"]
+    #entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    depends_on:
+      - flyway
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 3s
+        max_attempts: 10
+        window: 60s
