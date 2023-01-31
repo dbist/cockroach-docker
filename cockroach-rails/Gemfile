@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
 gem "pg"
-gem 'activerecord', '~>6.1.6'
+gem 'activerecord', '~>6.1.7'
 # CockroachDB ActiveRecord adapter dependency
 gem 'activerecord-cockroachdb-adapter', '~> 6.1.0beta1'
