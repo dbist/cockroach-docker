@@ -1,4 +1,4 @@
-FROM postgres:15.1
+FROM postgres:13.0
 
 LABEL maintainer="artemervits at gmail dot com"
 LABEL version="1.0"
