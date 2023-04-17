@@ -71,13 +71,13 @@ services:
   flyway:
     container_name: flyway
     hostname: flyway
-    image: flyway/flyway
+    image: flyway/flyway:9.15.2
     entrypoint: ["flyway", "migrate"]
     volumes:
       - ./postgresql/flyway/sql:/flyway/sql
       - ./postgresql/flyway/conf:/flyway/conf
     healthcheck:
-      test: ["flyway", "info"]
+      test: ["CMD-SHELL", "flyway", "info"]
       interval: 10s
       timeout: 10s
       retries: 3
