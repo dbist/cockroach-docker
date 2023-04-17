@@ -38,7 +38,7 @@ services:
     hostname: lb
     build: haproxy
     ports:
-      - "26257:26257"
+      - "26000:26000"
       - "8080:8080"
       - "8081:8081"
     depends_on:
