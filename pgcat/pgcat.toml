@@ -33,7 +33,7 @@ shutdown_timeout = 60000
 ban_time = 60 # seconds
 
 # Reload config automatically if it changes.
-autoreload = true
+autoreload = 15000
 
 # TLS
 # tls_certificate = "server.cert"

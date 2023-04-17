@@ -1,8 +1,13 @@
 /// Implementation of the PostgreSQL server (database) protocol.
 /// Here we are pretending to the a Postgres client.
 use bytes::{Buf, BufMut, BytesMut};
+use fallible_iterator::FallibleIterator;
 use log::{debug, error, info, trace, warn};
+use parking_lot::{Mutex, RwLock};
+use postgres_protocol::message;
+use std::collections::HashMap;
 use std::io::Read;
+use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio::net::{
@@ -12,16 +17,15 @@ use tokio::net::{
 
 use crate::config::{Address, User};
 use crate::constants::*;
-use crate::errors::Error;
+use crate::errors::{Error, ServerIdentifier};
 use crate::messages::*;
+use crate::mirrors::MirroringManager;
 use crate::pool::ClientServerMap;
 use crate::scram::ScramSha256;
-use crate::stats::Reporter;
+use crate::stats::ServerStats;
 
 /// Server state.
 pub struct Server {
-    server_id: i32,
-
     /// Server host, e.g. localhost,
     /// port, e.g. 5432, and role, e.g. primary or replica.
     address: Address,
@@ -61,34 +65,40 @@ pub struct Server {
     connected_at: chrono::naive::NaiveDateTime,
 
     /// Reports various metrics, e.g. data sent & received.
-    stats: Reporter,
+    stats: Arc<ServerStats>,
 
     /// Application name using the server at the moment.
     application_name: String,
 
     // Last time that a successful server send or response happened
     last_activity: SystemTime,
+
+    mirror_manager: Option<MirroringManager>,
 }
 
 impl Server {
     /// Pretend to be the Postgres client and connect to the server given host, port and credentials.
     /// Perform the authentication and return the server in a ready for query state.
     pub async fn startup(
-        server_id: i32,
         address: &Address,
         user: &User,
         database: &str,
         client_server_map: ClientServerMap,
-        stats: Reporter,
+        stats: Arc<ServerStats>,
+        auth_hash: Arc<RwLock<Option<String>>>,
     ) -> Result<Server, Error> {
         let mut stream =
             match TcpStream::connect(&format!("{}:{}", &address.host, address.port)).await {
                 Ok(stream) => stream,
                 Err(err) => {
                     error!("Could not connect to server: {}", err);
-                    return Err(Error::SocketError);
+                    return Err(Error::SocketError(format!(
+                        "Could not connect to server: {}",
+                        err
+                    )));
                 }
             };
+        configure_socket(&stream);
 
         trace!("Sending StartupMessage");
 
@@ -98,20 +108,34 @@ impl Server {
         let mut server_info = BytesMut::new();
         let mut process_id: i32 = 0;
         let mut secret_key: i32 = 0;
+        let server_identifier = ServerIdentifier::new(&user.username, &database);
 
         // We'll be handling multiple packets, but they will all be structured the same.
         // We'll loop here until this exchange is complete.
-        let mut scram = ScramSha256::new(&user.password);
+        let mut scram: Option<ScramSha256> = None;
+        if let Some(password) = &user.password.clone() {
+            scram = Some(ScramSha256::new(password));
+        }
 
         loop {
             let code = match stream.read_u8().await {
                 Ok(code) => code as char,
-                Err(_) => return Err(Error::SocketError),
+                Err(_) => {
+                    return Err(Error::ServerStartupError(
+                        "message code".into(),
+                        server_identifier,
+                    ))
+                }
             };
 
             let len = match stream.read_i32().await {
                 Ok(len) => len,
-                Err(_) => return Err(Error::SocketError),
+                Err(_) => {
+                    return Err(Error::ServerStartupError(
+                        "message len".into(),
+                        server_identifier,
+                    ))
+                }
             };
 
             trace!("Message: {}", code);
@@ -122,7 +146,12 @@ impl Server {
                     // Determine which kind of authentication is required, if any.
                     let auth_code = match stream.read_i32().await {
                         Ok(auth_code) => auth_code,
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "auth code".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
 
                     trace!("Auth: {}", auth_code);
@@ -135,23 +164,71 @@ impl Server {
 
                             match stream.read_exact(&mut salt).await {
                                 Ok(_) => (),
-                                Err(_) => return Err(Error::SocketError),
+                                Err(_) => {
+                                    return Err(Error::ServerStartupError(
+                                        "salt".into(),
+                                        server_identifier,
+                                    ))
+                                }
                             };
 
-                            md5_password(&mut stream, &user.username, &user.password, &salt[..])
-                                .await?;
+                            match &user.password {
+                                // Using plaintext password
+                                Some(password) => {
+                                    md5_password(&mut stream, &user.username, password, &salt[..])
+                                        .await?
+                                }
+
+                                // Using auth passthrough, in this case we should already have a
+                                // hash obtained when the pool was validated. If we reach this point
+                                // and don't have a hash, we return an error.
+                                None => {
+                                    let option_hash = (*auth_hash.read()).clone();
+                                    match option_hash {
+                                        Some(hash) =>
+                                            md5_password_with_hash(
+                                                &mut stream,
+                                                &hash,
+                                                &salt[..],
+                                            )
+                                            .await?,
+                                        None => return Err(
+                                            Error::ServerAuthError(
+                                                "Auth passthrough (auth_query) failed and no user password is set in cleartext".into(),
+                                                server_identifier
+                                            )
+                                        ),
+                                    }
+                                }
+                            }
                         }
 
                         AUTHENTICATION_SUCCESSFUL => (),
 
                         SASL => {
+                            if scram.is_none() {
+                                return Err(Error::ServerAuthError(
+                                    "SASL auth required and no password specified. \
+                                    Auth passthrough (auth_query) method is currently \
+                                    unsupported for SASL auth"
+                                        .into(),
+                                    server_identifier,
+                                ));
+                            }
+
                             debug!("Starting SASL authentication");
+
                             let sasl_len = (len - 8) as usize;
                             let mut sasl_auth = vec![0u8; sasl_len];
 
                             match stream.read_exact(&mut sasl_auth).await {
                                 Ok(_) => (),
-                                Err(_) => return Err(Error::SocketError),
+                                Err(_) => {
+                                    return Err(Error::ServerStartupError(
+                                        "sasl message".into(),
+                                        server_identifier,
+                                    ))
+                                }
                             };
 
                             let sasl_type = String::from_utf8_lossy(&sasl_auth[..sasl_len - 2]);
@@ -160,7 +237,7 @@ impl Server {
                                 debug!("Using {}", SCRAM_SHA_256);
 
                                 // Generate client message.
-                                let sasl_response = scram.message();
+                                let sasl_response = scram.as_mut().unwrap().message();
 
                                 // SASLInitialResponse (F)
                                 let mut res = BytesMut::new();
@@ -193,11 +270,16 @@ impl Server {
 
                             match stream.read_exact(&mut sasl_data).await {
                                 Ok(_) => (),
-                                Err(_) => return Err(Error::SocketError),
+                                Err(_) => {
+                                    return Err(Error::ServerStartupError(
+                                        "sasl cont message".into(),
+                                        server_identifier,
+                                    ))
+                                }
                             };
 
                             let msg = BytesMut::from(&sasl_data[..]);
-                            let sasl_response = scram.update(&msg)?;
+                            let sasl_response = scram.as_mut().unwrap().update(&msg)?;
 
                             // SASLResponse
                             let mut res = BytesMut::new();
@@ -214,10 +296,19 @@ impl Server {
                             let mut sasl_final = vec![0u8; len as usize - 8];
                             match stream.read_exact(&mut sasl_final).await {
                                 Ok(_) => (),
-                                Err(_) => return Err(Error::SocketError),
+                                Err(_) => {
+                                    return Err(Error::ServerStartupError(
+                                        "sasl final message".into(),
+                                        server_identifier,
+                                    ))
+                                }
                             };
 
-                            match scram.finish(&BytesMut::from(&sasl_final[..])) {
+                            match scram
+                                .as_mut()
+                                .unwrap()
+                                .finish(&BytesMut::from(&sasl_final[..]))
+                            {
                                 Ok(_) => {
                                     debug!("SASL authentication successful");
                                 }
@@ -240,7 +331,12 @@ impl Server {
                 'E' => {
                     let error_code = match stream.read_u8().await {
                         Ok(error_code) => error_code,
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "error code message".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
 
                     trace!("Error: {}", error_code);
@@ -256,7 +352,12 @@ impl Server {
 
                             match stream.read_exact(&mut error).await {
                                 Ok(_) => (),
-                                Err(_) => return Err(Error::SocketError),
+                                Err(_) => {
+                                    return Err(Error::ServerStartupError(
+                                        "error message".into(),
+                                        server_identifier,
+                                    ))
+                                }
                             };
 
                             // TODO: the error message contains multiple fields; we can decode them and
@@ -275,7 +376,12 @@ impl Server {
 
                     match stream.read_exact(&mut param).await {
                         Ok(_) => (),
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "parameter status message".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
 
                     // Save the parameter so we can pass it to the client later.
@@ -292,12 +398,22 @@ impl Server {
                     // See: <https://www.postgresql.org/docs/12/protocol-message-formats.html>.
                     process_id = match stream.read_i32().await {
                         Ok(id) => id,
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "process id message".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
 
                     secret_key = match stream.read_i32().await {
                         Ok(id) => id,
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "secret key message".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
                 }
 
@@ -307,7 +423,12 @@ impl Server {
 
                     match stream.read_exact(&mut idle).await {
                         Ok(_) => (),
-                        Err(_) => return Err(Error::SocketError),
+                        Err(_) => {
+                            return Err(Error::ServerStartupError(
+                                "transaction status message".into(),
+                                server_identifier,
+                            ))
+                        }
                     };
 
                     let (read, write) = stream.into_split();
@@ -318,7 +439,6 @@ impl Server {
                         write,
                         buffer: BytesMut::with_capacity(8196),
                         server_info,
-                        server_id,
                         process_id,
                         secret_key,
                         in_transaction: false,
@@ -330,6 +450,14 @@ impl Server {
                         stats,
                         application_name: String::new(),
                         last_activity: SystemTime::now(),
+                        mirror_manager: match address.mirrors.len() {
+                            0 => None,
+                            _ => Some(MirroringManager::from_addresses(
+                                user.clone(),
+                                database.to_owned(),
+                                address.mirrors.clone(),
+                            )),
+                        },
                     };
 
                     server.set_name("pgcat").await?;
@@ -341,7 +469,10 @@ impl Server {
                 // Means we implemented the protocol wrong or we're not talking to a Postgres server.
                 _ => {
                     error!("Unknown code: {}", code);
-                    return Err(Error::ProtocolSyncError);
+                    return Err(Error::ProtocolSyncError(format!(
+                        "Unknown server code: {}",
+                        code
+                    )));
                 }
             };
         }
@@ -359,9 +490,10 @@ impl Server {
             Ok(stream) => stream,
             Err(err) => {
                 error!("Could not connect to server: {}", err);
-                return Err(Error::SocketError);
+                return Err(Error::SocketError("Error reading cancel message".into()));
             }
         };
+        configure_socket(&stream);
 
         debug!("Sending CancelRequest");
 
@@ -375,8 +507,9 @@ impl Server {
     }
 
     /// Send messages to the server from the client.
-    pub async fn send(&mut self, messages: BytesMut) -> Result<(), Error> {
-        self.stats.data_sent(messages.len(), self.server_id);
+    pub async fn send(&mut self, messages: &BytesMut) -> Result<(), Error> {
+        self.mirror_send(messages);
+        self.stats().data_sent(messages.len());
 
         match write_all_half(&mut self.write, messages).await {
             Ok(_) => {
@@ -438,7 +571,10 @@ impl Server {
                         // Something totally unexpected, this is not a Postgres server we know.
                         _ => {
                             self.bad = true;
-                            return Err(Error::ProtocolSyncError);
+                            return Err(Error::ProtocolSyncError(format!(
+                                "Unknown transaction state: {}",
+                                transaction_state
+                            )));
                         }
                     };
 
@@ -501,9 +637,13 @@ impl Server {
                     break;
                 }
 
-                // CopyData: we are not buffering this one because there will be many more
-                // and we don't know how big this packet could be, best not to take a risk.
-                'd' => break,
+                // CopyData
+                'd' => {
+                    // Don't flush yet, buffer until we reach limit
+                    if self.buffer.len() >= 8196 {
+                        break;
+                    }
+                }
 
                 // CopyDone
                 // Buffer until ReadyForQuery shows up, so don't exit the loop yet.
@@ -518,7 +658,7 @@ impl Server {
         let bytes = self.buffer.clone();
 
         // Keep track of how much data we got from the server for stats.
-        self.stats.data_received(bytes.len(), self.server_id);
+        self.stats().data_received(bytes.len());
 
         // Clear the buffer for next query.
         self.buffer.clear();
@@ -533,6 +673,7 @@ impl Server {
     /// If the server is still inside a transaction.
     /// If the client disconnects while the server is in a transaction, we will clean it up.
     pub fn in_transaction(&self) -> bool {
+        debug!("Server in transaction: {}", self.in_transaction);
         self.in_transaction
     }
 
@@ -580,7 +721,7 @@ impl Server {
     pub async fn query(&mut self, query: &str) -> Result<(), Error> {
         let query = simple_query(query);
 
-        self.send(query).await?;
+        self.send(&query).await?;
 
         loop {
             let _ = self.recv().await?;
@@ -637,16 +778,15 @@ impl Server {
         }
     }
 
+    /// get Server stats
+    pub fn stats(&self) -> Arc<ServerStats> {
+        self.stats.clone()
+    }
+
     /// Get the servers address.
     #[allow(dead_code)]
     pub fn address(&self) -> Address {
         self.address.clone()
-    }
-
-    /// Get the server connection identifier
-    /// Used to uniquely identify connection in statistics
-    pub fn server_id(&self) -> i32 {
-        self.server_id
     }
 
     // Get server's latest response timestamp
@@ -658,6 +798,119 @@ impl Server {
     pub fn mark_dirty(&mut self) {
         self.needs_cleanup = true;
     }
+
+    pub fn mirror_send(&mut self, bytes: &BytesMut) {
+        match self.mirror_manager.as_mut() {
+            Some(manager) => manager.send(bytes),
+            None => (),
+        }
+    }
+
+    pub fn mirror_disconnect(&mut self) {
+        match self.mirror_manager.as_mut() {
+            Some(manager) => manager.disconnect(),
+            None => (),
+        }
+    }
+
+    // This is so we can execute out of band queries to the server.
+    // The connection will be opened, the query executed and closed.
+    pub async fn exec_simple_query(
+        address: &Address,
+        user: &User,
+        query: &str,
+    ) -> Result<Vec<String>, Error> {
+        let client_server_map: ClientServerMap = Arc::new(Mutex::new(HashMap::new()));
+
+        debug!("Connecting to server to obtain auth hashes.");
+        let mut server = Server::startup(
+            address,
+            user,
+            &address.database,
+            client_server_map,
+            Arc::new(ServerStats::default()),
+            Arc::new(RwLock::new(None)),
+        )
+        .await?;
+        debug!("Connected!, sending query.");
+        server.send(&simple_query(query)).await?;
+        let mut message = server.recv().await?;
+
+        Ok(parse_query_message(&mut message).await?)
+    }
+}
+
+async fn parse_query_message(message: &mut BytesMut) -> Result<Vec<String>, Error> {
+    let mut pair = Vec::<String>::new();
+    match message::backend::Message::parse(message) {
+        Ok(Some(message::backend::Message::RowDescription(_description))) => {}
+        Ok(Some(message::backend::Message::ErrorResponse(err))) => {
+            return Err(Error::ProtocolSyncError(format!(
+                "Protocol error parsing response. Err: {:?}",
+                err.fields()
+                    .iterator()
+                    .fold(String::default(), |acc, element| acc
+                        + element.unwrap().value())
+            )))
+        }
+        Ok(_) => {
+            return Err(Error::ProtocolSyncError(
+                "Protocol error, expected Row Description.".to_string(),
+            ))
+        }
+        Err(err) => {
+            return Err(Error::ProtocolSyncError(format!(
+                "Protocol error parsing response. Err: {:?}",
+                err
+            )))
+        }
+    }
+
+    while !message.is_empty() {
+        match message::backend::Message::parse(message) {
+            Ok(postgres_message) => {
+                match postgres_message {
+                    Some(message::backend::Message::DataRow(data)) => {
+                        let buf = data.buffer();
+                        trace!("Data: {:?}", buf);
+
+                        for item in data.ranges().iterator() {
+                            match item.as_ref() {
+                                Ok(range) => match range {
+                                    Some(range) => {
+                                        pair.push(String::from_utf8_lossy(&buf[range.clone()]).to_string());
+                                    }
+                                    None => return Err(Error::ProtocolSyncError(String::from(
+                                        "Data expected while receiving query auth data, found nothing.",
+                                    ))),
+                                },
+                                Err(err) => {
+                                    return Err(Error::ProtocolSyncError(format!(
+                                        "Data error, err: {:?}",
+                                        err
+                                    )))
+                                }
+                            }
+                        }
+                    }
+                    Some(message::backend::Message::CommandComplete(_)) => {}
+                    Some(message::backend::Message::ReadyForQuery(_)) => {}
+                    _ => {
+                        return Err(Error::ProtocolSyncError(
+                            "Unexpected message while receiving auth query data.".to_string(),
+                        ))
+                    }
+                }
+            }
+            Err(err) => {
+                return Err(Error::ProtocolSyncError(format!(
+                    "Parse error, err: {:?}",
+                    err
+                )))
+            }
+        };
+    }
+    Ok(pair)
 }
 
 impl Drop for Server {
@@ -665,7 +918,10 @@ impl Drop for Server {
     /// the socket is in non-blocking mode, so it may not be ready
     /// for a write.
     fn drop(&mut self) {
-        self.stats.server_disconnecting(self.server_id);
+        self.mirror_disconnect();
+
+        // Update statistics
+        self.stats.disconnect();
 
         let mut bytes = BytesMut::with_capacity(4);
         bytes.put_u8(b'X');

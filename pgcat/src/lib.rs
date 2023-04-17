@@ -1,7 +1,10 @@
+pub mod auth_passthrough;
 pub mod config;
 pub mod constants;
 pub mod errors;
 pub mod messages;
+pub mod mirrors;
+pub mod multi_logger;
 pub mod pool;
 pub mod scram;
 pub mod server;
