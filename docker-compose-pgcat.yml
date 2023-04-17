@@ -38,13 +38,29 @@ services:
     hostname: lb
     build: haproxy
     ports:
-      - "26257:26257"
+      - "26000:26000"
       - "8080:8080"
       - "8081:8081"
     depends_on:
       - roach-0
       - roach-1
       - roach-2
+
+  pgcat:
+    container_name: pgcat
+    hostname: pgcat
+    build: ./pgcat
+    command:
+      - "pgcat"
+      - "/etc/pgcat/pgcat.toml"
+    environment:
+      - RUST_LOG=debug
+    ports:
+      - "6432:6432"
+      - "9930:9930"
+    depends_on:
+      - lb
+    restart: always
 
   client:
     container_name: client
@@ -53,34 +69,4 @@ services:
     hostname: client
     depends_on:
       - lb
-
-  postgresql:
-    container_name: postgresql
-    hostname: postgresql
-    build: postgresql/.
-    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
-    environment:
-      - PGHOST=lb
-      - PGUSER=root
-      - PGPORT=26000
-      - PGDATABASE=example
-      - SCALE=10
-    depends_on:
-      - lb
-
-  flyway:
-    container_name: flyway
-    hostname: flyway
-    image: flyway/flyway:9.15.2
-    entrypoint: ["flyway", "migrate"]
-    volumes:
-      - ./postgresql/flyway/sql:/flyway/sql
-      - ./postgresql/flyway/conf:/flyway/conf
-    healthcheck:
-      test: ["CMD-SHELL", "flyway", "info"]
-      interval: 10s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      - lb
+      - pgcat
