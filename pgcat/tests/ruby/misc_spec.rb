@@ -8,6 +8,100 @@ describe "Miscellaneous" do
     processes.pgcat.shutdown
   end
 
+  context "when adding then removing instance using RELOAD" do
+    it "works correctly" do
+      admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+
+      current_configs = processes.pgcat.current_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+
+      extra_replica = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].last.clone
+      extra_replica[0] = "127.0.0.1"
+      current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"] << extra_replica
+
+      processes.pgcat.update_config(current_configs) # with replica added
+      processes.pgcat.reload_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+
+      current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].pop
+
+      processes.pgcat.update_config(current_configs) # with replica removed again
+      processes.pgcat.reload_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+    end
+  end
+
+  context "when removing then adding instance back using RELOAD" do
+    it "works correctly" do
+      admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+
+      current_configs = processes.pgcat.current_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+
+      removed_replica = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].pop
+      processes.pgcat.update_config(current_configs) # with replica removed
+      processes.pgcat.reload_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+
+      current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"] << removed_replica
+
+      processes.pgcat.update_config(current_configs) # with replica added again
+      processes.pgcat.reload_config
+      correct_count = current_configs["pools"]["sharded_db"]["shards"]["0"]["servers"].count
+      expect(admin_conn.async_exec("SHOW DATABASES").count).to eq(correct_count)
+    end
+  end
+
+  describe "TCP Keepalives" do
+    # Ideally, we should block TCP traffic to the database using
+    # iptables to mimic passive (connection is dropped without a RST packet)
+    # but we cannot do this in CircleCI because iptables requires NET_ADMIN
+    # capability that we cannot enable in CircleCI
+    # Toxiproxy won't work either because it does not block keepalives
+    # so our best bet is to query the OS keepalive params set on the socket
+
+    context "default settings" do
+      it "applies default keepalive settings" do
+        # We query ss command to verify that we have correct keepalive values set
+        # we can only verify the keepalives_idle parameter but that's good enough
+        # example output
+        #Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+        #0      0          127.0.0.1:60526    127.0.0.1:18432 timer:(keepalive,1min59sec,0)
+        #0      0          127.0.0.1:60664    127.0.0.1:19432 timer:(keepalive,4.123ms,0)
+
+        port_search_criteria = processes.all_databases.map { |d| "dport = :#{d.port}"}.join(" or ")
+        results = `ss -t4 state established -o -at '( #{port_search_criteria}  )'`.lines
+        results.shift
+        results.each { |line| expect(line).to match(/timer:\(keepalive,.*ms,0\)/) }
+      end
+    end
+
+    context "changed settings" do
+      it "applies keepalive settings from config" do
+        new_configs = processes.pgcat.current_config
+
+        new_configs["general"]["tcp_keepalives_idle"] = 120
+        new_configs["general"]["tcp_keepalives_count"] = 1
+        new_configs["general"]["tcp_keepalives_interval"] = 1
+        processes.pgcat.update_config(new_configs)
+        # We need to kill the old process that was using the default configs
+        processes.pgcat.stop
+        processes.pgcat.start
+        processes.pgcat.wait_until_ready
+
+        port_search_criteria = processes.all_databases.map { |d| "dport = :#{d.port}"}.join(" or ")
+        results = `ss -t4 state established -o -at '( #{port_search_criteria}  )'`.lines
+        results.shift
+        results.each { |line| expect(line).to include("timer:(keepalive,1min") }
+      end
+    end
+  end
+
   describe "Extended Protocol handling" do
     it "does not send packets that client does not expect during extended protocol sequence" do
       new_configs = processes.pgcat.current_config
@@ -212,6 +306,60 @@ describe "Miscellaneous" do
           conn.close
         end
         expect(processes.primary.count_query("DISCARD ALL")).to eq(0)
+      end
+    end
+  end
+
+  describe "Idle client timeout" do
+    context "idle transaction timeout set to 0" do
+      before do
+        current_configs = processes.pgcat.current_config
+        correct_idle_client_transaction_timeout = current_configs["general"]["idle_client_in_transaction_timeout"]
+        puts(current_configs["general"]["idle_client_in_transaction_timeout"])
+  
+        current_configs["general"]["idle_client_in_transaction_timeout"] = 0
+  
+        processes.pgcat.update_config(current_configs) # with timeout 0
+        processes.pgcat.reload_config
+      end
+
+      it "Allow client to be idle in transaction" do
+        conn = PG::connect(processes.pgcat.connection_string("sharded_db", "sharding_user"))
+        conn.async_exec("BEGIN")
+        conn.async_exec("SELECT 1")
+        sleep(2)
+        conn.async_exec("COMMIT")
+        conn.close
+      end
+    end
+
+    context "idle transaction timeout set to 500ms" do
+      before do
+        current_configs = processes.pgcat.current_config
+        correct_idle_client_transaction_timeout = current_configs["general"]["idle_client_in_transaction_timeout"]  
+        current_configs["general"]["idle_client_in_transaction_timeout"] = 500
+  
+        processes.pgcat.update_config(current_configs) # with timeout 500
+        processes.pgcat.reload_config
+      end
+
+      it "Allow client to be idle in transaction below timeout" do
+        conn = PG::connect(processes.pgcat.connection_string("sharded_db", "sharding_user"))
+        conn.async_exec("BEGIN")
+        conn.async_exec("SELECT 1")
+        sleep(0.4) # below 500ms
+        conn.async_exec("COMMIT")
+        conn.close
+      end
+
+      it "Error when client idle in transaction time exceeds timeout" do
+        conn = PG::connect(processes.pgcat.connection_string("sharded_db", "sharding_user"))
+        conn.async_exec("BEGIN")
+        conn.async_exec("SELECT 1")
+        sleep(1) # above 500ms
+        expect{ conn.async_exec("COMMIT") }.to raise_error(PG::SystemError, /idle transaction timeout/) 
+        conn.async_exec("SELECT 1") # should be able to send another query
+        conn.close
       end
     end
   end

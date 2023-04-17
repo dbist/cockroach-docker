@@ -1,13 +1,18 @@
 /// Helper functions to send one-off protocol messages
 /// and handle TcpStream (TCP socket).
 use bytes::{Buf, BufMut, BytesMut};
+use log::error;
 use md5::{Digest, Md5};
+use socket2::{SockRef, TcpKeepalive};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
+use crate::config::get_config;
 use crate::errors::Error;
 use std::collections::HashMap;
+use std::io::{BufRead, Cursor};
 use std::mem;
+use std::time::Duration;
 
 /// Postgres data type mappings
 /// used in RowDescription ('T') message.
@@ -136,7 +141,12 @@ pub async fn startup(stream: &mut TcpStream, user: &str, database: &str) -> Resu
 
     match stream.write_all(&startup).await {
         Ok(_) => Ok(()),
-        Err(_) => Err(Error::SocketError),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error writing startup to server socket - Error: {:?}",
+                err
+            )))
+        }
     }
 }
 
@@ -203,7 +213,13 @@ pub fn md5_hash_password(user: &str, password: &str, salt: &[u8]) -> Vec<u8> {
     let output = md5.finalize_reset();
 
     // Second pass
-    md5.update(format!("{:x}", output));
+    md5_hash_second_pass(&(format!("{:x}", output)), salt)
+}
+
+pub fn md5_hash_second_pass(hash: &str, salt: &[u8]) -> Vec<u8> {
+    let mut md5 = Md5::new();
+    // Second pass
+    md5.update(hash);
     md5.update(salt);
 
     let mut password = format!("md5{:x}", md5.finalize())
@@ -237,6 +253,20 @@ where
     write_all(stream, message).await
 }
 
+pub async fn md5_password_with_hash<S>(stream: &mut S, hash: &str, salt: &[u8]) -> Result<(), Error>
+where
+    S: tokio::io::AsyncWrite + std::marker::Unpin,
+{
+    let password = md5_hash_second_pass(hash, salt);
+    let mut message = BytesMut::with_capacity(password.len() as usize + 5);
+
+    message.put_u8(b'p');
+    message.put_i32(password.len() as i32 + 4);
+    message.put_slice(&password[..]);
+
+    write_all(stream, message).await
+}
+
 /// Implements a response to our custom `SET SHARDING KEY`
 /// and `SET SERVER ROLE` commands.
 /// This tells the client we're ready for the next query.
@@ -254,7 +284,7 @@ where
     res.put_i32(len);
     res.put_slice(&set_complete[..]);
 
-    write_all_half(stream, res).await?;
+    write_all_half(stream, &res).await?;
     ready_for_query(stream).await
 }
 
@@ -304,7 +334,7 @@ where
     res.put_i32(error.len() as i32 + 4);
     res.put(error);
 
-    write_all_half(stream, res).await
+    write_all_half(stream, &res).await
 }
 
 pub async fn wrong_password<S>(stream: &mut S, user: &str) -> Result<(), Error>
@@ -366,7 +396,7 @@ where
     // CommandComplete
     res.put(command_complete("SELECT 1"));
 
-    write_all_half(stream, res).await?;
+    write_all_half(stream, &res).await?;
     ready_for_query(stream).await
 }
 
@@ -374,7 +404,7 @@ pub fn row_description(columns: &Vec<(&str, DataType)>) -> BytesMut {
     let mut res = BytesMut::new();
     let mut row_desc = BytesMut::new();
 
-    // how many colums we are storing
+    // how many columns we are storing
     row_desc.put_i16(columns.len() as i16);
 
     for (name, data_type) in columns {
@@ -450,18 +480,28 @@ where
 {
     match stream.write_all(&buf).await {
         Ok(_) => Ok(()),
-        Err(_) => Err(Error::SocketError),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error writing to socket - Error: {:?}",
+                err
+            )))
+        }
     }
 }
 
 /// Write all the data in the buffer to the TcpStream, write owned half (see mpsc).
-pub async fn write_all_half<S>(stream: &mut S, buf: BytesMut) -> Result<(), Error>
+pub async fn write_all_half<S>(stream: &mut S, buf: &BytesMut) -> Result<(), Error>
 where
     S: tokio::io::AsyncWrite + std::marker::Unpin,
 {
-    match stream.write_all(&buf).await {
+    match stream.write_all(buf).await {
         Ok(_) => Ok(()),
-        Err(_) => Err(Error::SocketError),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error writing to socket - Error: {:?}",
+                err
+            )))
+        }
     }
 }
 
@@ -472,26 +512,51 @@ where
 {
     let code = match stream.read_u8().await {
         Ok(code) => code,
-        Err(_) => return Err(Error::SocketError),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error reading message code from socket - Error {:?}",
+                err
+            )))
+        }
     };
 
     let len = match stream.read_i32().await {
         Ok(len) => len,
-        Err(_) => return Err(Error::SocketError),
-    };
-
-    let mut buf = vec![0u8; len as usize - 4];
-
-    match stream.read_exact(&mut buf).await {
-        Ok(_) => (),
-        Err(_) => return Err(Error::SocketError),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error reading message len from socket - Code: {:?}, Error: {:?}",
+                code, err
+            )))
+        }
     };
 
     let mut bytes = BytesMut::with_capacity(len as usize + 1);
 
     bytes.put_u8(code);
     bytes.put_i32(len);
-    bytes.put_slice(&buf);
+
+    bytes.resize(bytes.len() + len as usize - mem::size_of::<i32>(), b'0');
+
+    let slice_start = mem::size_of::<u8>() + mem::size_of::<i32>();
+    let slice_end = slice_start + len as usize - mem::size_of::<i32>();
+
+    // Avoids a panic
+    if slice_end < slice_start {
+        return Err(Error::SocketError(format!(
+            "Error reading message from socket - Code: {:?} - Length {:?}, Error: {:?}",
+            code, len, "Unexpected length value for message"
+        )));
+    }
+
+    match stream.read_exact(&mut bytes[slice_start..slice_end]).await {
+        Ok(_) => (),
+        Err(err) => {
+            return Err(Error::SocketError(format!(
+                "Error reading message from socket - Code: {:?}, Error: {:?}",
+                code, err
+            )))
+        }
+    };
 
     Ok(bytes)
 }
@@ -511,4 +576,40 @@ pub fn server_parameter_message(key: &str, value: &str) -> BytesMut {
     server_info.put_bytes(0, 1);
 
     server_info
+}
+
+pub fn configure_socket(stream: &TcpStream) {
+    let sock_ref = SockRef::from(stream);
+    let conf = get_config();
+
+    match sock_ref.set_keepalive(true) {
+        Ok(_) => {
+            match sock_ref.set_tcp_keepalive(
+                &TcpKeepalive::new()
+                    .with_interval(Duration::from_secs(conf.general.tcp_keepalives_interval))
+                    .with_retries(conf.general.tcp_keepalives_count)
+                    .with_time(Duration::from_secs(conf.general.tcp_keepalives_idle)),
+            ) {
+                Ok(_) => (),
+                Err(err) => error!("Could not configure socket: {}", err),
+            }
+        }
+        Err(err) => error!("Could not configure socket: {}", err),
+    }
+}
+
+pub trait BytesMutReader {
+    fn read_string(&mut self) -> Result<String, Error>;
+}
+
+impl BytesMutReader for Cursor<&BytesMut> {
+    /// Should only be used when reading strings from the message protocol.
+    /// Can be used to read multiple strings from the same message which are separated by the null byte
+    fn read_string(&mut self) -> Result<String, Error> {
+        let mut buf = vec![];
+        match self.read_until(b'\0', &mut buf) {
+            Ok(_) => Ok(String::from_utf8_lossy(&buf[..buf.len() - 1]).to_string()),
+            Err(err) => return Err(Error::ParseBytesError(err.to_string())),
+        }
+    }
 }

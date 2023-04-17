@@ -1,7 +1,10 @@
+use crate::errors::{ClientIdentifier, Error};
+use crate::pool::BanReason;
 /// Handle clients by pretending to be a PostgreSQL server.
 use bytes::{Buf, BufMut, BytesMut};
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::{split, AsyncReadExt, BufReader, ReadHalf, WriteHalf};
 use tokio::net::TcpStream;
@@ -9,14 +12,14 @@ use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
 
 use crate::admin::{generate_server_info_for_admin, handle_admin};
-use crate::config::{get_config, Address, PoolMode};
+use crate::auth_passthrough::refetch_auth_hash;
+use crate::config::{get_config, get_idle_client_in_transaction_timeout, Address, PoolMode};
 use crate::constants::*;
-use crate::errors::Error;
 use crate::messages::*;
 use crate::pool::{get_pool, ClientServerMap, ConnectionPool};
 use crate::query_router::{Command, QueryRouter};
 use crate::server::Server;
-use crate::stats::{get_reporter, Reporter};
+use crate::stats::{ClientStats, PoolStats, ServerStats};
 use crate::tls::Tls;
 
 use tokio_rustls::server::TlsStream;
@@ -63,8 +66,8 @@ pub struct Client<S, T> {
     #[allow(dead_code)]
     parameters: HashMap<String, String>,
 
-    /// Statistics
-    stats: Reporter,
+    /// Statistics related to this client
+    stats: Arc<ClientStats>,
 
     /// Clients want to talk to admin database.
     admin: bool,
@@ -72,8 +75,8 @@ pub struct Client<S, T> {
     /// Last address the client talked to.
     last_address_id: Option<usize>,
 
-    /// Last server process id we talked to.
-    last_server_id: Option<i32>,
+    /// Last server process stats we talked to.
+    last_server_stats: Option<Arc<ServerStats>>,
 
     /// Connected to server
     connected_to_server: bool,
@@ -98,6 +101,8 @@ pub async fn client_entrypoint(
     shutdown: Receiver<()>,
     drain: Sender<i32>,
     admin_only: bool,
+    tls_certificate: Option<String>,
+    log_client_connections: bool,
 ) -> Result<(), Error> {
     // Figure out if the client wants TLS or not.
     let addr = stream.peer_addr().unwrap();
@@ -105,10 +110,8 @@ pub async fn client_entrypoint(
     match get_startup::<TcpStream>(&mut stream).await {
         // Client requested a TLS connection.
         Ok((ClientConnectionType::Tls, _)) => {
-            let config = get_config();
-
             // TLS settings are configured, will setup TLS now.
-            if config.general.tls_certificate != None {
+            if tls_certificate != None {
                 debug!("Accepting TLS request");
 
                 let mut yes = BytesMut::new();
@@ -118,7 +121,11 @@ pub async fn client_entrypoint(
                 // Negotiate TLS.
                 match startup_tls(stream, client_server_map, shutdown, admin_only).await {
                     Ok(mut client) => {
-                        info!("Client {:?} connected (TLS)", addr);
+                        if log_client_connections {
+                            info!("Client {:?} connected (TLS)", addr);
+                        } else {
+                            debug!("Client {:?} connected (TLS)", addr);
+                        }
 
                         if !client.is_admin() {
                             let _ = drain.send(1).await;
@@ -128,6 +135,10 @@ pub async fn client_entrypoint(
 
                         if !client.is_admin() {
                             let _ = drain.send(-1).await;
+
+                            if result.is_err() {
+                                client.stats.disconnect();
+                            }
                         }
 
                         result
@@ -162,7 +173,11 @@ pub async fn client_entrypoint(
                         .await
                         {
                             Ok(mut client) => {
-                                info!("Client {:?} connected (plain)", addr);
+                                if log_client_connections {
+                                    info!("Client {:?} connected (plain)", addr);
+                                } else {
+                                    debug!("Client {:?} connected (plain)", addr);
+                                }
 
                                 if !client.is_admin() {
                                     let _ = drain.send(1).await;
@@ -172,6 +187,10 @@ pub async fn client_entrypoint(
 
                                 if !client.is_admin() {
                                     let _ = drain.send(-1).await;
+
+                                    if result.is_err() {
+                                        client.stats.disconnect();
+                                    }
                                 }
 
                                 result
@@ -181,7 +200,12 @@ pub async fn client_entrypoint(
                     }
 
                     // Client probably disconnected rejecting our plain text connection.
-                    _ => Err(Error::ProtocolSyncError),
+                    Ok((ClientConnectionType::Tls, _))
+                    | Ok((ClientConnectionType::CancelQuery, _)) => Err(Error::ProtocolSyncError(
+                        "Bad postgres client (plain)".into(),
+                    )),
+
+                    Err(err) => Err(err),
                 }
             }
         }
@@ -203,7 +227,11 @@ pub async fn client_entrypoint(
             .await
             {
                 Ok(mut client) => {
-                    info!("Client {:?} connected (plain)", addr);
+                    if log_client_connections {
+                        info!("Client {:?} connected (plain)", addr);
+                    } else {
+                        debug!("Client {:?} connected (plain)", addr);
+                    }
 
                     if !client.is_admin() {
                         let _ = drain.send(1).await;
@@ -213,6 +241,10 @@ pub async fn client_entrypoint(
 
                     if !client.is_admin() {
                         let _ = drain.send(-1).await;
+
+                        if result.is_err() {
+                            client.stats.disconnect();
+                        }
                     }
 
                     result
@@ -238,8 +270,11 @@ pub async fn client_entrypoint(
 
                     if !client.is_admin() {
                         let _ = drain.send(-1).await;
-                    }
 
+                        if result.is_err() {
+                            client.stats.disconnect();
+                        }
+                    }
                     result
                 }
 
@@ -285,7 +320,10 @@ where
 
         // Something else, probably something is wrong and it's not our fault,
         // e.g. badly implemented Postgres client.
-        _ => Err(Error::ProtocolSyncError),
+        _ => Err(Error::ProtocolSyncError(format!(
+            "Unexpected startup code: {}",
+            code
+        ))),
     }
 }
 
@@ -331,7 +369,11 @@ pub async fn startup_tls(
         }
 
         // Bad Postgres client.
-        _ => Err(Error::ProtocolSyncError),
+        Ok((ClientConnectionType::Tls, _)) | Ok((ClientConnectionType::CancelQuery, _)) => {
+            Err(Error::ProtocolSyncError("Bad postgres client (tls)".into()))
+        }
+
+        Err(err) => Err(err),
     }
 }
 
@@ -355,25 +397,29 @@ where
         shutdown: Receiver<()>,
         admin_only: bool,
     ) -> Result<Client<S, T>, Error> {
-        let config = get_config();
-        let stats = get_reporter();
         let parameters = parse_startup(bytes.clone())?;
 
-        // These two parameters are mandatory by the protocol.
-        let pool_name = match parameters.get("database") {
-            Some(db) => db,
-            None => return Err(Error::ClientError),
-        };
-
+        // This parameter is mandatory by the protocol.
         let username = match parameters.get("user") {
             Some(user) => user,
-            None => return Err(Error::ClientError),
+            None => {
+                return Err(Error::ClientError(
+                    "Missing user parameter on client startup".into(),
+                ))
+            }
+        };
+
+        let pool_name = match parameters.get("database") {
+            Some(db) => db,
+            None => username,
         };
 
         let application_name = match parameters.get("application_name") {
             Some(application_name) => application_name,
             None => "pgcat",
         };
+
+        let client_identifier = ClientIdentifier::new(&application_name, &username, &pool_name);
 
         let admin = ["pgcat", "pgbouncer"]
             .iter()
@@ -405,29 +451,48 @@ where
 
         let code = match read.read_u8().await {
             Ok(p) => p,
-            Err(_) => return Err(Error::SocketError),
+            Err(_) => {
+                return Err(Error::ClientSocketError(
+                    "password code".into(),
+                    client_identifier,
+                ))
+            }
         };
 
         // PasswordMessage
         if code as char != 'p' {
-            debug!("Expected p, got {}", code as char);
-            return Err(Error::ProtocolSyncError);
+            return Err(Error::ProtocolSyncError(format!(
+                "Expected p, got {}",
+                code as char
+            )));
         }
 
         let len = match read.read_i32().await {
             Ok(len) => len,
-            Err(_) => return Err(Error::SocketError),
+            Err(_) => {
+                return Err(Error::ClientSocketError(
+                    "password message length".into(),
+                    client_identifier,
+                ))
+            }
         };
 
         let mut password_response = vec![0u8; (len - 4) as usize];
 
         match read.read_exact(&mut password_response).await {
             Ok(_) => (),
-            Err(_) => return Err(Error::SocketError),
+            Err(_) => {
+                return Err(Error::ClientSocketError(
+                    "password message".into(),
+                    client_identifier,
+                ))
+            }
         };
 
         // Authenticate admin user.
         let (transaction_mode, server_info) = if admin {
+            let config = get_config();
+
             // Compare server and client hashes.
             let password_hash = md5_hash_password(
                 &config.general.admin_username,
@@ -436,17 +501,19 @@ where
             );
 
             if password_hash != password_response {
-                warn!("Invalid password {{ username: {:?}, pool_name: {:?}, application_name: {:?} }}", pool_name, username, application_name);
+                let error = Error::ClientGeneralError("Invalid password".into(), client_identifier);
+
+                warn!("{}", error);
                 wrong_password(&mut write, username).await?;
 
-                return Err(Error::ClientError);
+                return Err(error);
             }
 
             (false, generate_server_info_for_admin())
         }
         // Authenticate normal user.
         else {
-            let pool = match get_pool(pool_name, username) {
+            let mut pool = match get_pool(pool_name, username) {
                 Some(pool) => pool,
                 None => {
                     error_response(
@@ -458,22 +525,111 @@ where
                     )
                     .await?;
 
-                    warn!("Invalid pool name {{ username: {:?}, pool_name: {:?}, application_name: {:?} }}", pool_name, username, application_name);
-                    return Err(Error::ClientError);
+                    return Err(Error::ClientGeneralError(
+                        "Invalid pool name".into(),
+                        client_identifier,
+                    ));
                 }
             };
 
-            // Compare server and client hashes.
-            let password_hash = md5_hash_password(username, &pool.settings.user.password, &salt);
+            // Obtain the hash to compare, we give preference to that written in cleartext in config
+            // if there is nothing set in cleartext and auth passthrough (auth_query) is configured, we use the hash obtained
+            // when the pool was created. If there is no hash there, we try to fetch it one more time.
+            let password_hash = if let Some(password) = &pool.settings.user.password {
+                Some(md5_hash_password(username, password, &salt))
+            } else {
+                if !get_config().is_auth_query_configured() {
+                    return Err(Error::ClientAuthImpossible(username.into()));
+                }
 
-            if password_hash != password_response {
-                warn!("Invalid password {{ username: {:?}, pool_name: {:?}, application_name: {:?} }}", pool_name, username, application_name);
-                wrong_password(&mut write, username).await?;
+                let mut hash = (*pool.auth_hash.read()).clone();
 
-                return Err(Error::ClientError);
+                if hash.is_none() {
+                    warn!(
+                        "Query auth configured \
+                          but no hash password found \
+                          for pool {}. Will try to refetch it.",
+                        pool_name
+                    );
+
+                    match refetch_auth_hash(&pool).await {
+                        Ok(fetched_hash) => {
+                            warn!("Password for {}, obtained. Updating.", client_identifier);
+
+                            {
+                                let mut pool_auth_hash = pool.auth_hash.write();
+                                *pool_auth_hash = Some(fetched_hash.clone());
+                            }
+
+                            hash = Some(fetched_hash);
+                        }
+
+                        Err(err) => {
+                            return Err(Error::ClientAuthPassthroughError(
+                                err.to_string(),
+                                client_identifier,
+                            ));
+                        }
+                    }
+                };
+
+                Some(md5_hash_second_pass(&hash.unwrap(), &salt))
+            };
+
+            // Once we have the resulting hash, we compare with what the client gave us.
+            // If they do not match and auth query is set up, we try to refetch the hash one more time
+            // to see if the password has changed since the pool was created.
+            //
+            // @TODO: we could end up fetching again the same password twice (see above).
+            if password_hash.unwrap() != password_response {
+                warn!(
+                    "Invalid password {}, will try to refetch it.",
+                    client_identifier
+                );
+
+                let fetched_hash = refetch_auth_hash(&pool).await?;
+                let new_password_hash = md5_hash_second_pass(&fetched_hash, &salt);
+
+                // Ok password changed in server an auth is possible.
+                if new_password_hash == password_response {
+                    warn!(
+                        "Password for {}, changed in server. Updating.",
+                        client_identifier
+                    );
+
+                    {
+                        let mut pool_auth_hash = pool.auth_hash.write();
+                        *pool_auth_hash = Some(fetched_hash);
+                    }
+                } else {
+                    wrong_password(&mut write, username).await?;
+                    return Err(Error::ClientGeneralError(
+                        "Invalid password".into(),
+                        client_identifier,
+                    ));
+                }
             }
 
             let transaction_mode = pool.settings.pool_mode == PoolMode::Transaction;
+
+            // If the pool hasn't been validated yet,
+            // connect to the servers and figure out what's what.
+            if !pool.validated() {
+                match pool.validate().await {
+                    Ok(_) => (),
+                    Err(err) => {
+                        error_response(
+                            &mut write,
+                            &format!(
+                                "Pool down for database: {:?}, user: {:?}",
+                                pool_name, username
+                            ),
+                        )
+                        .await?;
+                        return Err(Error::ClientError(format!("Pool down: {:?}", err)));
+                    }
+                }
+            }
 
             (transaction_mode, pool.server_info())
         };
@@ -486,6 +642,25 @@ where
         ready_for_query(&mut write).await?;
 
         trace!("Startup OK");
+        let pool_stats = match get_pool(pool_name, username) {
+            Some(pool) => {
+                if !admin {
+                    pool.stats
+                } else {
+                    Arc::new(PoolStats::default())
+                }
+            }
+            None => Arc::new(PoolStats::default()),
+        };
+
+        let stats = Arc::new(ClientStats::new(
+            process_id,
+            application_name,
+            username,
+            pool_name,
+            tokio::time::Instant::now(),
+            pool_stats,
+        ));
 
         Ok(Client {
             read: BufReader::new(read),
@@ -501,7 +676,7 @@ where
             stats,
             admin,
             last_address_id: None,
-            last_server_id: None,
+            last_server_stats: None,
             pool_name: pool_name.clone(),
             username: username.clone(),
             application_name: application_name.to_string(),
@@ -532,10 +707,10 @@ where
             secret_key,
             client_server_map,
             parameters: HashMap::new(),
-            stats: get_reporter(),
+            stats: Arc::new(ClientStats::default()),
             admin: false,
             last_address_id: None,
-            last_server_id: None,
+            last_server_stats: None,
             pool_name: String::from("undefined"),
             username: String::from("undefined"),
             application_name: String::from("undefined"),
@@ -576,12 +751,8 @@ where
         // The query router determines where the query is going to go,
         // e.g. primary, replica, which shard.
         let mut query_router = QueryRouter::new();
-        self.stats.client_register(
-            self.process_id,
-            self.pool_name.clone(),
-            self.username.clone(),
-            self.application_name.clone(),
-        );
+
+        self.stats.register(self.stats.clone());
 
         // Our custom protocol loop.
         // We expect the client to either start a transaction with regular queries
@@ -605,7 +776,9 @@ where
                             &mut self.write,
                             "terminating connection due to administrator command"
                         ).await?;
-                        return Ok(())
+
+                        self.stats.disconnect();
+                        return Ok(());
                     }
 
                     // Admin clients ignore shutdown.
@@ -624,14 +797,45 @@ where
                 // allocate a connection, we wouldn't be able to send back an error message
                 // to the client so we buffer them and defer the decision to error out or not
                 // to when we get the S message
-                'P' | 'B' | 'D' | 'E' => {
+                'D' | 'E' => {
                     self.buffer.put(&message[..]);
                     continue;
                 }
+
+                'Q' => {
+                    if query_router.query_parser_enabled() {
+                        query_router.infer(&message);
+                    }
+                }
+
+                'P' => {
+                    self.buffer.put(&message[..]);
+
+                    if query_router.query_parser_enabled() {
+                        query_router.infer(&message);
+                    }
+
+                    continue;
+                }
+
+                'B' => {
+                    self.buffer.put(&message[..]);
+
+                    if query_router.query_parser_enabled() {
+                        query_router.infer_shard_from_bind(&message);
+                    }
+
+                    continue;
+                }
+
                 'X' => {
                     debug!("Client disconnecting");
+
+                    self.stats.disconnect();
+
                     return Ok(());
                 }
+
                 _ => (),
             }
 
@@ -645,33 +849,22 @@ where
             // Get a pool instance referenced by the most up-to-date
             // pointer. This ensures we always read the latest config
             // when starting a query.
-            let pool = match get_pool(&self.pool_name, &self.username) {
-                Some(pool) => pool,
-                None => {
-                    error_response(
-                        &mut self.write,
-                        &format!(
-                            "No pool configured for database: {:?}, user: {:?}",
-                            self.pool_name, self.username
-                        ),
-                    )
-                    .await?;
+            let mut pool = self.get_pool().await?;
 
-                    warn!("Invalid pool name {{ username: {:?}, pool_name: {:?}, application_name: {:?} }}", self.pool_name, self.username, self.application_name);
-                    return Err(Error::ClientError);
-                }
-            };
+            // Check if the pool is paused and wait until it's resumed.
+            if pool.wait_paused().await {
+                // Refresh pool information, something might have changed.
+                pool = self.get_pool().await?;
+            }
+
             query_router.update_pool_settings(pool.settings.clone());
+
             let current_shard = query_router.shard();
 
             // Handle all custom protocol commands, if any.
-            match query_router.try_execute_command(message.clone()) {
+            match query_router.try_execute_command(&message) {
                 // Normal query, not a custom command.
-                None => {
-                    if query_router.query_parser_enabled() {
-                        query_router.infer(message.clone());
-                    }
-                }
+                None => (),
 
                 // SET SHARD TO
                 Some((Command::SetShard, _)) => {
@@ -683,13 +876,13 @@ where
                         error_response(
                             &mut self.write,
                             &format!(
-                                "shard {} is more than configured {}, staying on shard {}",
+                                "shard {} is more than configured {}, staying on shard {} (shard numbers start at 0)",
                                 query_router.shard(),
                                 pool.shards(),
                                 current_shard,
                             ),
                         )
-                        .await?;
+                            .await?;
                     } else {
                         custom_protocol_response_ok(&mut self.write, "SET SHARD").await?;
                     }
@@ -734,10 +927,13 @@ where
             };
 
             debug!("Waiting for connection from pool");
+            if !self.admin {
+                self.stats.waiting();
+            }
 
             // Grab a server from the pool.
             let connection = match pool
-                .get(query_router.shard(), query_router.role(), self.process_id)
+                .get(query_router.shard(), query_router.role(), &self.stats)
                 .await
             {
                 Ok(conn) => {
@@ -749,15 +945,32 @@ where
                     // but we were unable to grab a connection from the pool
                     // We'll send back an error message and clean the extended
                     // protocol buffer
+                    self.stats.idle();
+
                     if message[0] as char == 'S' {
                         error!("Got Sync message but failed to get a connection from the pool");
                         self.buffer.clear();
                     }
+
                     error_response(&mut self.write, "could not get connection from the pool")
                         .await?;
 
-                    error!("Could not get connection from pool: {{ pool_name: {:?}, username: {:?}, shard: {:?}, role: \"{:?}\", error: \"{:?}\" }}",
-                    self.pool_name.clone(), self.username.clone(), query_router.shard(), query_router.role(), err);
+                    error!(
+                        "Could not get connection from pool: \
+                        {{ \
+                            pool_name: {:?}, \
+                            username: {:?}, \
+                            shard: {:?}, \
+                            role: \"{:?}\", \
+                            error: \"{:?}\" \
+                        }}",
+                        self.pool_name,
+                        self.username,
+                        query_router.shard(),
+                        query_router.role(),
+                        err
+                    );
+
                     continue;
                 }
             };
@@ -772,11 +985,10 @@ where
             self.connected_to_server = true;
 
             // Update statistics
-            self.stats
-                .client_active(self.process_id, server.server_id());
+            self.stats.active();
 
             self.last_address_id = Some(address.id);
-            self.last_server_id = Some(server.server_id());
+            self.last_server_stats = Some(server.stats());
 
             debug!(
                 "Client {:?} talking to server {:?}",
@@ -791,6 +1003,11 @@ where
 
             let mut initial_message = Some(message);
 
+            let idle_client_timeout_duration = match get_idle_client_in_transaction_timeout() {
+                0 => tokio::time::Duration::MAX,
+                timeout => tokio::time::Duration::from_millis(timeout),
+            };
+
             // Transaction loop. Multiple queries can be issued by the client here.
             // The connection belongs to the client until the transaction is over,
             // or until the client disconnects if we are in session mode.
@@ -802,17 +1019,43 @@ where
                     None => {
                         trace!("Waiting for message inside transaction or in session mode");
 
-                        match read_message(&mut self.read).await {
-                            Ok(message) => message,
-                            Err(err) => {
+                        match tokio::time::timeout(
+                            idle_client_timeout_duration,
+                            read_message(&mut self.read),
+                        )
+                        .await
+                        {
+                            Ok(Ok(message)) => message,
+                            Ok(Err(err)) => {
                                 // Client disconnected inside a transaction.
                                 // Clean up the server and re-use it.
+                                self.stats.disconnect();
                                 server.checkin_cleanup().await?;
 
                                 return Err(err);
                             }
+                            Err(_) => {
+                                // Client idle in transaction timeout
+                                error_response(&mut self.write, "idle transaction timeout").await?;
+                                error!(
+                                    "Client idle in transaction timeout: \
+                                    {{ \
+                                        pool_name: {}, \
+                                        username: {}, \
+                                        shard: {}, \
+                                        role: \"{:?}\" \
+                                    }}",
+                                    self.pool_name,
+                                    self.username,
+                                    query_router.shard(),
+                                    query_router.role()
+                                );
+
+                                break;
+                            }
                         }
                     }
+
                     Some(message) => {
                         initial_message = None;
                         message
@@ -833,16 +1076,26 @@ where
                     'Q' => {
                         debug!("Sending query to server");
 
-                        self.send_and_receive_loop(code, message, server, &address, &pool)
-                            .await?;
+                        self.send_and_receive_loop(
+                            code,
+                            Some(&message),
+                            server,
+                            &address,
+                            &pool,
+                            &self.stats.clone(),
+                        )
+                        .await?;
 
                         if !server.in_transaction() {
                             // Report transaction executed statistics.
-                            self.stats.transaction(self.process_id, server.server_id());
+                            self.stats.transaction();
+                            server.stats().transaction(&self.application_name);
 
                             // Release server back to the pool if we are in transaction mode.
                             // If we are in session mode, we keep the server until the client disconnects.
                             if self.transaction_mode {
+                                self.stats.idle();
+
                                 break;
                             }
                         }
@@ -851,6 +1104,7 @@ where
                     // Terminate
                     'X' => {
                         server.checkin_cleanup().await?;
+                        self.stats.disconnect();
                         self.release();
 
                         return Ok(());
@@ -905,17 +1159,19 @@ where
 
                         self.send_and_receive_loop(
                             code,
-                            self.buffer.clone(),
+                            None,
                             server,
                             &address,
                             &pool,
+                            &self.stats.clone(),
                         )
                         .await?;
 
                         self.buffer.clear();
 
                         if !server.in_transaction() {
-                            self.stats.transaction(self.process_id, server.server_id());
+                            self.stats.transaction();
+                            server.stats().transaction(&self.application_name);
 
                             // Release server back to the pool if we are in transaction mode.
                             // If we are in session mode, we keep the server until the client disconnects.
@@ -927,21 +1183,34 @@ where
 
                     // CopyData
                     'd' => {
-                        // Forward the data to the server,
-                        // don't buffer it since it can be rather large.
-                        self.send_server_message(server, message, &address, &pool)
-                            .await?;
+                        self.buffer.put(&message[..]);
+
+                        // Want to limit buffer size
+                        if self.buffer.len() > 8196 {
+                            // Forward the data to the server,
+                            self.send_server_message(server, &self.buffer, &address, &pool)
+                                .await?;
+                            self.buffer.clear();
+                        }
                     }
 
                     // CopyDone or CopyFail
                     // Copy is done, successfully or not.
                     'c' | 'f' => {
-                        self.send_server_message(server, message, &address, &pool)
+                        // We may already have some copy data in the buffer, add this message to buffer
+                        self.buffer.put(&message[..]);
+
+                        self.send_server_message(server, &self.buffer, &address, &pool)
                             .await?;
 
-                        let response = self.receive_server_message(server, &address, &pool).await?;
+                        // Clear the buffer
+                        self.buffer.clear();
 
-                        match write_all_half(&mut self.write, response).await {
+                        let response = self
+                            .receive_server_message(server, &address, &pool, &self.stats.clone())
+                            .await?;
+
+                        match write_all_half(&mut self.write, &response).await {
                             Ok(_) => (),
                             Err(err) => {
                                 server.mark_bad();
@@ -950,7 +1219,8 @@ where
                         };
 
                         if !server.in_transaction() {
-                            self.stats.transaction(self.process_id, server.server_id());
+                            self.stats.transaction();
+                            server.stats().transaction(&self.application_name);
 
                             // Release server back to the pool if we are in transaction mode.
                             // If we are in session mode, we keep the server until the client disconnects.
@@ -971,11 +1241,34 @@ where
             // The server is no longer bound to us, we can't cancel it's queries anymore.
             debug!("Releasing server back into the pool");
             server.checkin_cleanup().await?;
-            self.stats.server_idle(server.server_id());
+            server.stats().idle();
             self.connected_to_server = false;
 
             self.release();
-            self.stats.client_idle(self.process_id);
+            self.stats.idle();
+        }
+    }
+
+    /// Retrieve connection pool, if it exists.
+    /// Return an error to the client otherwise.
+    async fn get_pool(&mut self) -> Result<ConnectionPool, Error> {
+        match get_pool(&self.pool_name, &self.username) {
+            Some(pool) => Ok(pool),
+            None => {
+                error_response(
+                    &mut self.write,
+                    &format!(
+                        "No pool configured for database: {}, user: {}",
+                        self.pool_name, self.username
+                    ),
+                )
+                .await?;
+
+                Err(Error::ClientError(format!(
+                    "Invalid pool name {{ username: {}, pool_name: {}, application_name: {} }}",
+                    self.pool_name, self.username, self.application_name
+                )))
+            }
         }
     }
 
@@ -988,12 +1281,18 @@ where
     async fn send_and_receive_loop(
         &mut self,
         code: char,
-        message: BytesMut,
+        message: Option<&BytesMut>,
         server: &mut Server,
         address: &Address,
         pool: &ConnectionPool,
+        client_stats: &ClientStats,
     ) -> Result<(), Error> {
         debug!("Sending {} to server", code);
+
+        let message = match message {
+            Some(message) => message,
+            None => &self.buffer,
+        };
 
         self.send_server_message(server, message, address, pool)
             .await?;
@@ -1002,9 +1301,11 @@ where
         // Read all data the server has to offer, which can be multiple messages
         // buffered in 8196 bytes chunks.
         loop {
-            let response = self.receive_server_message(server, address, pool).await?;
+            let response = self
+                .receive_server_message(server, address, pool, client_stats)
+                .await?;
 
-            match write_all_half(&mut self.write, response).await {
+            match write_all_half(&mut self.write, &response).await {
                 Ok(_) => (),
                 Err(err) => {
                     server.mark_bad();
@@ -1018,10 +1319,10 @@ where
         }
 
         // Report query executed statistics.
-        self.stats.query(
-            self.process_id,
-            server.server_id(),
-            Instant::now().duration_since(query_start).as_millis(),
+        client_stats.query();
+        server.stats().query(
+            Instant::now().duration_since(query_start).as_millis() as u64,
+            &self.application_name,
         );
 
         Ok(())
@@ -1030,14 +1331,14 @@ where
     async fn send_server_message(
         &self,
         server: &mut Server,
-        message: BytesMut,
+        message: &BytesMut,
         address: &Address,
         pool: &ConnectionPool,
     ) -> Result<(), Error> {
         match server.send(message).await {
             Ok(_) => Ok(()),
             Err(err) => {
-                pool.ban(address, self.process_id);
+                pool.ban(address, BanReason::MessageSendFailed, Some(&self.stats));
                 Err(err)
             }
         }
@@ -1048,6 +1349,7 @@ where
         server: &mut Server,
         address: &Address,
         pool: &ConnectionPool,
+        client_stats: &ClientStats,
     ) -> Result<BytesMut, Error> {
         if pool.settings.user.statement_timeout > 0 {
             match tokio::time::timeout(
@@ -1059,7 +1361,7 @@ where
                 Ok(result) => match result {
                     Ok(message) => Ok(message),
                     Err(err) => {
-                        pool.ban(address, self.process_id);
+                        pool.ban(address, BanReason::MessageReceiveFailed, Some(client_stats));
                         error_response_terminal(
                             &mut self.write,
                             &format!("error receiving data from server: {:?}", err),
@@ -1074,7 +1376,7 @@ where
                         address, pool.settings.user.username
                     );
                     server.mark_bad();
-                    pool.ban(address, self.process_id);
+                    pool.ban(address, BanReason::StatementTimeout, Some(client_stats));
                     error_response_terminal(&mut self.write, "pool statement timeout").await?;
                     Err(Error::StatementTimeout)
                 }
@@ -1083,7 +1385,7 @@ where
             match server.recv().await {
                 Ok(message) => Ok(message),
                 Err(err) => {
-                    pool.ban(address, self.process_id);
+                    pool.ban(address, BanReason::MessageReceiveFailed, Some(client_stats));
                     error_response_terminal(
                         &mut self.write,
                         &format!("error receiving data from server: {:?}", err),
@@ -1103,9 +1405,9 @@ impl<S, T> Drop for Client<S, T> {
 
         // Dirty shutdown
         // TODO: refactor, this is not the best way to handle state management.
-        self.stats.client_disconnecting(self.process_id);
-        if self.connected_to_server && self.last_server_id.is_some() {
-            self.stats.server_idle(self.last_server_id.unwrap());
+
+        if self.connected_to_server && self.last_server_stats.is_some() {
+            self.last_server_stats.as_ref().unwrap().idle();
         }
     }
 }

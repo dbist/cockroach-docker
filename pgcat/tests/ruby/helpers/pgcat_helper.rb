@@ -2,10 +2,18 @@ require 'json'
 require 'ostruct'
 require_relative 'pgcat_process'
 require_relative 'pg_instance'
+require_relative 'pg_socket'
+
+class ::Hash
+    def deep_merge(second)
+        merger = proc { |key, v1, v2| Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2 }
+        self.merge(second, &merger)
+    end
+end
 
 module Helpers
   module Pgcat
-    def self.three_shard_setup(pool_name, pool_size, pool_mode="transaction")
+    def self.three_shard_setup(pool_name, pool_size, pool_mode="transaction", lb_mode="random", log_level="info")
       user = {
         "password" => "sharding_user",
         "pool_size" => pool_size,
@@ -13,7 +21,7 @@ module Helpers
         "username" => "sharding_user"
       }
 
-      pgcat    = PgcatProcess.new("info")
+      pgcat    = PgcatProcess.new(log_level)
       primary0 = PgInstance.new(5432, user["username"], user["password"], "shard0")
       primary1 = PgInstance.new(7432, user["username"], user["password"], "shard1")
       primary2 = PgInstance.new(8432, user["username"], user["password"], "shard2")
@@ -23,8 +31,10 @@ module Helpers
         "#{pool_name}" => {
           "default_role" => "any",
           "pool_mode" => pool_mode,
-          "primary_reads_enabled" => false,
-          "query_parser_enabled" => false,
+          "load_balancing_mode" => lb_mode,
+          "primary_reads_enabled" => true,
+          "query_parser_enabled" => true,
+          "automatic_sharding_key" => "data.id",
           "sharding_function" => "pg_bigint_hash",
           "shards" => {
             "0" => { "database" => "shard0", "servers" => [["localhost", primary0.port.to_s, "primary"]] },
@@ -46,7 +56,7 @@ module Helpers
       end
     end
 
-    def self.single_instance_setup(pool_name, pool_size, pool_mode="transaction")
+    def self.single_instance_setup(pool_name, pool_size, pool_mode="transaction", lb_mode="random", log_level="trace")
       user = {
         "password" => "sharding_user",
         "pool_size" => pool_size,
@@ -54,7 +64,7 @@ module Helpers
         "username" => "sharding_user"
       }
 
-      pgcat = PgcatProcess.new("trace")
+      pgcat = PgcatProcess.new(log_level)
       pgcat_cfg = pgcat.current_config
 
       primary  = PgInstance.new(5432, user["username"], user["password"], "shard0")
@@ -64,6 +74,7 @@ module Helpers
         "#{pool_name}" => {
           "default_role" => "primary",
           "pool_mode" => pool_mode,
+          "load_balancing_mode" => lb_mode,
           "primary_reads_enabled" => false,
           "query_parser_enabled" => false,
           "sharding_function" => "pg_bigint_hash",
@@ -90,7 +101,7 @@ module Helpers
       end
     end
 
-    def self.single_shard_setup(pool_name, pool_size, pool_mode="transaction")
+    def self.single_shard_setup(pool_name, pool_size, pool_mode="transaction", lb_mode="random", log_level="info")
       user = {
         "password" => "sharding_user",
         "pool_size" => pool_size,
@@ -98,7 +109,7 @@ module Helpers
         "username" => "sharding_user"
       }
 
-      pgcat = PgcatProcess.new("info")
+      pgcat = PgcatProcess.new(log_level)
       pgcat_cfg = pgcat.current_config
 
       primary  = PgInstance.new(5432, user["username"], user["password"], "shard0")
@@ -111,6 +122,7 @@ module Helpers
         "#{pool_name}" => {
           "default_role" => "any",
           "pool_mode" => pool_mode,
+          "load_balancing_mode" => lb_mode,
           "primary_reads_enabled" => false,
           "query_parser_enabled" => false,
           "sharding_function" => "pg_bigint_hash",

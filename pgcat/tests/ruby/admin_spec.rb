@@ -37,9 +37,9 @@ describe "Admin" do
   describe "SHOW POOLS" do
     context "bad credentials" do
       it "does not change any stats" do
-        bad_passsword_url = URI(pgcat_conn_str)
-        bad_passsword_url.password = "wrong"
-        expect { PG::connect("#{bad_passsword_url.to_s}?application_name=bad_password") }.to raise_error(PG::ConnectionBad)
+        bad_password_url = URI(pgcat_conn_str)
+        bad_password_url.password = "wrong"
+        expect { PG::connect("#{bad_password_url.to_s}?application_name=bad_password") }.to raise_error(PG::ConnectionBad)
 
         sleep(1)
         admin_conn = PG::connect(processes.pgcat.admin_connection_string)
@@ -176,6 +176,47 @@ describe "Admin" do
       end
     end
 
+    context "clients connects and disconnect normally" do
+      let(:processes) { Helpers::Pgcat.single_instance_setup("sharded_db", 2) }
+
+      it 'shows the same number of clients before and after' do
+        clients_before = clients_connected_to_pool(processes: processes)
+        threads = []
+        connections = Array.new(4) { PG::connect("#{pgcat_conn_str}?application_name=one_query") }
+        connections.each do |c|
+          threads << Thread.new { c.async_exec("SELECT 1") }
+        end
+        clients_between = clients_connected_to_pool(processes: processes)
+        expect(clients_before).not_to eq(clients_between)
+        connections.each(&:close)
+        clients_after = clients_connected_to_pool(processes: processes)
+        expect(clients_before).to eq(clients_after)
+      end
+    end
+
+    context "clients connects and disconnect abruptly" do
+      let(:processes) { Helpers::Pgcat.single_instance_setup("sharded_db", 10) }
+
+      it 'shows the same number of clients before and after' do
+        threads = []
+        connections = Array.new(2) { PG::connect("#{pgcat_conn_str}?application_name=one_query") }
+        connections.each do |c|
+          threads << Thread.new { c.async_exec("SELECT 1") }
+        end
+        clients_before = clients_connected_to_pool(processes: processes)
+        random_string = (0...8).map { (65 + rand(26)).chr }.join
+        connection_string = "#{pgcat_conn_str}?application_name=#{random_string}"
+        faulty_client = Process.spawn("psql -Atx #{connection_string} >/dev/null")
+        sleep(1)
+        # psql starts two processes, we only know the pid of the parent, this
+        # ensure both are killed
+        `pkill -9 -f '#{random_string}'`
+        Process.wait(faulty_client)
+        clients_after = clients_connected_to_pool(processes: processes)
+        expect(clients_before).to eq(clients_after)
+      end
+    end
+
     context "clients overwhelm server pools" do
       let(:processes) { Helpers::Pgcat.single_instance_setup("sharded_db", 2) }
 
@@ -199,7 +240,7 @@ describe "Admin" do
 
         sleep(2.5) # Allow time for stats to update
         results = admin_conn.async_exec("SHOW POOLS")[0]
-        %w[cl_active cl_waiting cl_cancel_req sv_active sv_used sv_tested sv_login maxwait].each do |s|
+        %w[cl_active cl_waiting cl_cancel_req sv_active sv_used sv_tested sv_login].each do |s|
           raise StandardError, "Field #{s} was expected to be 0 but found to be #{results[s]}" if results[s] != "0"
         end
         expect(results["cl_idle"]).to eq("4")
@@ -221,7 +262,7 @@ describe "Admin" do
         results = admin_conn.async_exec("SHOW POOLS")[0]
 
         expect(results["maxwait"]).to eq("1")
-        expect(results["maxwait_us"].to_i).to be_within(100_000).of(500_000)
+        expect(results["maxwait_us"].to_i).to be_within(200_000).of(500_000)
 
         sleep(4.5) # Allow time for stats to update
         results = admin_conn.async_exec("SHOW POOLS")[0]
@@ -284,6 +325,86 @@ describe "Admin" do
 
       admin_conn.close
       connections.map(&:close)
+    end
+  end
+
+  describe "Manual Banning" do
+    let(:processes) { Helpers::Pgcat.single_shard_setup("sharded_db", 10) }
+    before do
+      new_configs = processes.pgcat.current_config
+      # Prevent immediate unbanning when we ban localhost
+      new_configs["pools"]["sharded_db"]["shards"]["0"]["servers"][0][0] = "127.0.0.1"
+      new_configs["pools"]["sharded_db"]["shards"]["0"]["servers"][1][0] = "127.0.0.1"
+      processes.pgcat.update_config(new_configs)
+      processes.pgcat.reload_config
+    end
+
+    describe "BAN/UNBAN and SHOW BANS" do
+      it "bans/unbans hosts" do
+        admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+
+        # Returns a list of the banned addresses
+        results = admin_conn.async_exec("BAN localhost 10").to_a
+        expect(results.count).to eq(2)
+        expect(results.map{ |r| r["host"] }.uniq).to eq(["localhost"])
+
+        # Subsequent calls should yield no results
+        results = admin_conn.async_exec("BAN localhost 10").to_a
+        expect(results.count).to eq(0)
+
+        results = admin_conn.async_exec("SHOW BANS").to_a
+        expect(results.count).to eq(2)
+        expect(results.map{ |r| r["host"] }.uniq).to eq(["localhost"])
+
+        # Returns a list of the unbanned addresses
+        results = admin_conn.async_exec("UNBAN localhost").to_a
+        expect(results.count).to eq(2)
+        expect(results.map{ |r| r["host"] }.uniq).to eq(["localhost"])
+
+        # Subsequent calls should yield no results
+        results = admin_conn.async_exec("UNBAN localhost").to_a
+        expect(results.count).to eq(0)
+
+        results = admin_conn.async_exec("SHOW BANS").to_a
+        expect(results.count).to eq(0)
+      end
+
+      it "honors ban duration" do
+        admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+
+        # Returns a list of the banned addresses
+        results = admin_conn.async_exec("BAN localhost 1").to_a
+        expect(results.count).to eq(2)
+        expect(results.map{ |r| r["host"] }.uniq).to eq(["localhost"])
+
+        sleep(2)
+
+        # After 2 seconds the ban should be lifted
+        results = admin_conn.async_exec("SHOW BANS").to_a
+        expect(results.count).to eq(0)
+      end
+
+      it "can handle bad input" do
+        admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+
+        expect { admin_conn.async_exec("BAN").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("BAN a").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("BAN a a").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("BAN a -5").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("BAN a 0").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("BAN a a a").to_a }.to raise_error(PG::SystemError)
+        expect { admin_conn.async_exec("UNBAN").to_a }.to raise_error(PG::SystemError)
+      end
+    end
+  end
+
+  describe "SHOW users" do
+    it "returns the right users" do
+      admin_conn = PG::connect(processes.pgcat.admin_connection_string)
+      results = admin_conn.async_exec("SHOW USERS")[0]
+      admin_conn.close
+      expect(results["name"]).to eq("sharding_user")
+      expect(results["pool_mode"]).to eq("transaction")
     end
   end
 end

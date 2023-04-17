@@ -2,9 +2,11 @@
 use arc_swap::ArcSwap;
 use log::{error, info};
 use once_cell::sync::Lazy;
+use regex::Regex;
 use serde_derive::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 use std::sync::Arc;
 use tokio::fs::File;
@@ -13,6 +15,7 @@ use tokio::io::AsyncReadExt;
 use crate::errors::Error;
 use crate::pool::{ClientServerMap, ConnectionPool};
 use crate::sharding::ShardingFunction;
+use crate::stats::AddressStats;
 use crate::tls::{load_certs, load_keys};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -27,6 +30,8 @@ pub enum Role {
     Primary,
     #[serde(alias = "replica", alias = "Replica")]
     Replica,
+    #[serde(alias = "mirror", alias = "Mirror")]
+    Mirror,
 }
 
 impl ToString for Role {
@@ -34,6 +39,7 @@ impl ToString for Role {
         match *self {
             Role::Primary => "primary".to_string(),
             Role::Replica => "replica".to_string(),
+            Role::Mirror => "mirror".to_string(),
         }
     }
 }
@@ -57,7 +63,7 @@ impl PartialEq<Role> for Option<Role> {
 }
 
 /// Address identifying a PostgreSQL server uniquely.
-#[derive(Clone, PartialEq, Hash, std::cmp::Eq, Debug)]
+#[derive(Clone, Debug)]
 pub struct Address {
     /// Unique ID per addressable Postgres server.
     pub id: usize,
@@ -88,6 +94,12 @@ pub struct Address {
 
     /// The name of this pool (i.e. database name visible to the client).
     pub pool_name: String,
+
+    /// List of addresses to receive mirrored traffic.
+    pub mirrors: Vec<Address>,
+
+    /// Address stats
+    pub stats: Arc<AddressStats>,
 }
 
 impl Default for Address {
@@ -103,7 +115,44 @@ impl Default for Address {
             role: Role::Replica,
             username: String::from("username"),
             pool_name: String::from("pool_name"),
+            mirrors: Vec::new(),
+            stats: Arc::new(AddressStats::default()),
         }
+    }
+}
+
+// We need to implement PartialEq by ourselves so we skip stats in the comparison
+impl PartialEq for Address {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.host == other.host
+            && self.port == other.port
+            && self.shard == other.shard
+            && self.address_index == other.address_index
+            && self.replica_number == other.replica_number
+            && self.database == other.database
+            && self.role == other.role
+            && self.username == other.username
+            && self.pool_name == other.pool_name
+            && self.mirrors == other.mirrors
+    }
+}
+impl Eq for Address {}
+
+// We need to implement Hash by ourselves so we skip stats in the comparison
+impl Hash for Address {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.host.hash(state);
+        self.port.hash(state);
+        self.shard.hash(state);
+        self.address_index.hash(state);
+        self.replica_number.hash(state);
+        self.database.hash(state);
+        self.role.hash(state);
+        self.username.hash(state);
+        self.pool_name.hash(state);
+        self.mirrors.hash(state);
     }
 }
 
@@ -112,9 +161,12 @@ impl Address {
     pub fn name(&self) -> String {
         match self.role {
             Role::Primary => format!("{}_shard_{}_primary", self.pool_name, self.shard),
-
             Role::Replica => format!(
                 "{}_shard_{}_replica_{}",
+                self.pool_name, self.shard, self.replica_number
+            ),
+            Role::Mirror => format!(
+                "{}_shard_{}_mirror_{}",
                 self.pool_name, self.shard, self.replica_number
             ),
         }
@@ -125,8 +177,9 @@ impl Address {
 #[derive(Clone, PartialEq, Hash, Eq, Serialize, Deserialize, Debug)]
 pub struct User {
     pub username: String,
-    pub password: String,
+    pub password: Option<String>,
     pub pool_size: u32,
+    pub pool_mode: Option<PoolMode>,
     #[serde(default)] // 0
     pub statement_timeout: u64,
 }
@@ -135,9 +188,10 @@ impl Default for User {
     fn default() -> User {
         User {
             username: String::from("postgres"),
-            password: String::new(),
+            password: None,
             pool_size: 15,
             statement_timeout: 0,
+            pool_mode: None,
         }
     }
 }
@@ -149,13 +203,29 @@ pub struct General {
     pub host: String,
 
     #[serde(default = "General::default_port")]
-    pub port: i16,
+    pub port: u16,
 
     pub enable_prometheus_exporter: Option<bool>,
     pub prometheus_exporter_port: i16,
 
     #[serde(default = "General::default_connect_timeout")]
     pub connect_timeout: u64,
+
+    #[serde(default = "General::default_idle_timeout")]
+    pub idle_timeout: u64,
+
+    #[serde(default = "General::default_tcp_keepalives_idle")]
+    pub tcp_keepalives_idle: u64,
+    #[serde(default = "General::default_tcp_keepalives_count")]
+    pub tcp_keepalives_count: u32,
+    #[serde(default = "General::default_tcp_keepalives_interval")]
+    pub tcp_keepalives_interval: u64,
+
+    #[serde(default)] // False
+    pub log_client_connections: bool,
+
+    #[serde(default)] // False
+    pub log_client_disconnections: bool,
 
     #[serde(default = "General::default_shutdown_timeout")]
     pub shutdown_timeout: u64,
@@ -169,13 +239,23 @@ pub struct General {
     #[serde(default = "General::default_ban_time")]
     pub ban_time: i64,
 
-    #[serde(default)] // False
-    pub autoreload: bool,
+    #[serde(default = "General::default_idle_client_in_transaction_timeout")]
+    pub idle_client_in_transaction_timeout: u64,
+
+    #[serde(default = "General::default_worker_threads")]
+    pub worker_threads: usize,
+
+    #[serde(default)] // None
+    pub autoreload: Option<u64>,
 
     pub tls_certificate: Option<String>,
     pub tls_private_key: Option<String>,
     pub admin_username: String,
     pub admin_password: String,
+
+    pub auth_query: Option<String>,
+    pub auth_query_user: Option<String>,
+    pub auth_query_password: Option<String>,
 }
 
 impl General {
@@ -183,12 +263,31 @@ impl General {
         "0.0.0.0".into()
     }
 
-    pub fn default_port() -> i16 {
+    pub fn default_port() -> u16 {
         5432
     }
 
     pub fn default_connect_timeout() -> u64 {
         1000
+    }
+
+    // These keepalive defaults should detect a dead connection within 30 seconds.
+    // Tokio defaults to disabling keepalives which keeps dead connections around indefinitely.
+    // This can lead to permanent server pool exhaustion
+    pub fn default_tcp_keepalives_idle() -> u64 {
+        5 // 5 seconds
+    }
+
+    pub fn default_tcp_keepalives_count() -> u32 {
+        5 // 5 time
+    }
+
+    pub fn default_tcp_keepalives_interval() -> u64 {
+        5 // 5 seconds
+    }
+
+    pub fn default_idle_timeout() -> u64 {
+        60000 // 10 minutes
     }
 
     pub fn default_shutdown_timeout() -> u64 {
@@ -206,6 +305,14 @@ impl General {
     pub fn default_ban_time() -> i64 {
         60
     }
+
+    pub fn default_worker_threads() -> usize {
+        4
+    }
+
+    pub fn default_idle_client_in_transaction_timeout() -> u64 {
+        0
+    }
 }
 
 impl Default for General {
@@ -216,15 +323,26 @@ impl Default for General {
             enable_prometheus_exporter: Some(false),
             prometheus_exporter_port: 9930,
             connect_timeout: General::default_connect_timeout(),
+            idle_timeout: General::default_idle_timeout(),
             shutdown_timeout: Self::default_shutdown_timeout(),
             healthcheck_timeout: Self::default_healthcheck_timeout(),
             healthcheck_delay: Self::default_healthcheck_delay(),
             ban_time: Self::default_ban_time(),
-            autoreload: false,
+            worker_threads: Self::default_worker_threads(),
+            idle_client_in_transaction_timeout: Self::default_idle_client_in_transaction_timeout(),
+            tcp_keepalives_idle: Self::default_tcp_keepalives_idle(),
+            tcp_keepalives_count: Self::default_tcp_keepalives_count(),
+            tcp_keepalives_interval: Self::default_tcp_keepalives_interval(),
+            log_client_connections: false,
+            log_client_disconnections: false,
+            autoreload: None,
             tls_certificate: None,
             tls_private_key: None,
             admin_username: String::from("admin"),
             admin_password: String::from("admin"),
+            auth_query: None,
+            auth_query_user: None,
+            auth_query_password: None,
         }
     }
 }
@@ -250,10 +368,32 @@ impl ToString for PoolMode {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Copy, Hash)]
+pub enum LoadBalancingMode {
+    #[serde(alias = "random", alias = "Random")]
+    Random,
+
+    #[serde(alias = "loc", alias = "LOC", alias = "least_outstanding_connections")]
+    LeastOutstandingConnections,
+}
+impl ToString for LoadBalancingMode {
+    fn to_string(&self) -> String {
+        match *self {
+            LoadBalancingMode::Random => "random".to_string(),
+            LoadBalancingMode::LeastOutstandingConnections => {
+                "least_outstanding_connections".to_string()
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Pool {
     #[serde(default = "Pool::default_pool_mode")]
     pub pool_mode: PoolMode,
+
+    #[serde(default = "Pool::default_load_balancing_mode")]
+    pub load_balancing_mode: LoadBalancingMode,
 
     pub default_role: String,
 
@@ -265,25 +405,54 @@ pub struct Pool {
 
     pub connect_timeout: Option<u64>,
 
+    pub idle_timeout: Option<u64>,
+
     pub sharding_function: ShardingFunction,
 
     #[serde(default = "Pool::default_automatic_sharding_key")]
     pub automatic_sharding_key: Option<String>,
 
+    pub sharding_key_regex: Option<String>,
+    pub shard_id_regex: Option<String>,
+    pub regex_search_limit: Option<usize>,
+
+    pub auth_query: Option<String>,
+    pub auth_query_user: Option<String>,
+    pub auth_query_password: Option<String>,
+
     pub shards: BTreeMap<String, Shard>,
     pub users: BTreeMap<String, User>,
+    // Note, don't put simple fields below these configs. There's a compatibility issue with TOML that makes it
+    // incompatible to have simple fields in TOML after complex objects. See
+    // https://users.rust-lang.org/t/why-toml-to-string-get-error-valueaftertable/85903
 }
 
 impl Pool {
+    pub fn hash_value(&self) -> u64 {
+        let mut s = DefaultHasher::new();
+        self.hash(&mut s);
+        s.finish()
+    }
+
+    pub fn is_auth_query_configured(&self) -> bool {
+        self.auth_query_password.is_some()
+            && self.auth_query_user.is_some()
+            && self.auth_query_password.is_some()
+    }
+
     pub fn default_pool_mode() -> PoolMode {
         PoolMode::Transaction
+    }
+
+    pub fn default_load_balancing_mode() -> LoadBalancingMode {
+        LoadBalancingMode::Random
     }
 
     pub fn default_automatic_sharding_key() -> Option<String> {
         None
     }
 
-    pub fn validate(&self) -> Result<(), Error> {
+    pub fn validate(&mut self) -> Result<(), Error> {
         match self.default_role.as_ref() {
             "any" => (),
             "primary" => (),
@@ -311,6 +480,37 @@ impl Pool {
             shard.validate()?;
         }
 
+        for (option, name) in [
+            (&self.shard_id_regex, "shard_id_regex"),
+            (&self.sharding_key_regex, "sharding_key_regex"),
+        ] {
+            if let Some(regex) = option {
+                if let Err(parse_err) = Regex::new(regex.as_str()) {
+                    error!("{} is not a valid Regex: {}", name, parse_err);
+                    return Err(Error::BadConfig);
+                }
+            }
+        }
+
+        self.automatic_sharding_key = match &self.automatic_sharding_key {
+            Some(key) => {
+                // No quotes in the key so we don't have to compare quoted
+                // to unquoted idents.
+                let key = key.replace("\"", "");
+
+                if key.split(".").count() != 2 {
+                    error!(
+                        "automatic_sharding_key '{}' must be fully qualified, e.g. t.{}`",
+                        key, key
+                    );
+                    return Err(Error::BadConfig);
+                }
+
+                Some(key)
+            }
+            None => None,
+        };
+
         Ok(())
     }
 }
@@ -319,6 +519,7 @@ impl Default for Pool {
     fn default() -> Pool {
         Pool {
             pool_mode: Self::default_pool_mode(),
+            load_balancing_mode: Self::default_load_balancing_mode(),
             shards: BTreeMap::from([(String::from("1"), Shard::default())]),
             users: BTreeMap::default(),
             default_role: String::from("any"),
@@ -327,6 +528,13 @@ impl Default for Pool {
             sharding_function: ShardingFunction::PgBigintHash,
             automatic_sharding_key: None,
             connect_timeout: None,
+            idle_timeout: None,
+            sharding_key_regex: None,
+            shard_id_regex: None,
+            regex_search_limit: Some(1000),
+            auth_query: None,
+            auth_query_user: None,
+            auth_query_password: None,
         }
     }
 }
@@ -338,10 +546,18 @@ pub struct ServerConfig {
     pub role: Role,
 }
 
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug, Hash, Eq)]
+pub struct MirrorServerConfig {
+    pub host: String,
+    pub port: u16,
+    pub mirroring_target_index: usize,
+}
+
 /// Shard configuration.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Shard {
     pub database: String,
+    pub mirrors: Option<Vec<MirrorServerConfig>>,
     pub servers: Vec<ServerConfig>,
 }
 
@@ -391,6 +607,7 @@ impl Default for Shard {
                 port: 5432,
                 role: Role::Primary,
             }],
+            mirrors: None,
             database: String::from("postgres"),
         }
     }
@@ -418,8 +635,30 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn is_auth_query_configured(&self) -> bool {
+        self.pools
+            .iter()
+            .any(|(_name, pool)| pool.is_auth_query_configured())
+    }
+
     pub fn default_path() -> String {
         String::from("pgcat.toml")
+    }
+
+    pub fn fill_up_auth_query_config(&mut self) {
+        for (_name, pool) in self.pools.iter_mut() {
+            if pool.auth_query.is_none() {
+                pool.auth_query = self.general.auth_query.clone();
+            }
+
+            if pool.auth_query_user.is_none() {
+                pool.auth_query_user = self.general.auth_query_user.clone();
+            }
+
+            if pool.auth_query_password.is_none() {
+                pool.auth_query_password = self.general.auth_query_password.clone();
+            }
+        }
     }
 }
 
@@ -443,6 +682,10 @@ impl From<&Config> for std::collections::HashMap<String, String> {
                     (
                         format!("pools.{}.pool_mode", pool_name),
                         pool.pool_mode.to_string(),
+                    ),
+                    (
+                        format!("pools.{}.load_balancing_mode", pool_name),
+                        pool.load_balancing_mode.to_string(),
                     ),
                     (
                         format!("pools.{}.primary_reads_enabled", pool_name),
@@ -489,6 +732,10 @@ impl From<&Config> for std::collections::HashMap<String, String> {
                 config.general.connect_timeout.to_string(),
             ),
             (
+                "idle_timeout".to_string(),
+                config.general.idle_timeout.to_string(),
+            ),
+            (
                 "healthcheck_timeout".to_string(),
                 config.general.healthcheck_timeout.to_string(),
             ),
@@ -501,6 +748,13 @@ impl From<&Config> for std::collections::HashMap<String, String> {
                 config.general.healthcheck_delay.to_string(),
             ),
             ("ban_time".to_string(), config.general.ban_time.to_string()),
+            (
+                "idle_client_in_transaction_timeout".to_string(),
+                config
+                    .general
+                    .idle_client_in_transaction_timeout
+                    .to_string(),
+            ),
         ];
 
         r.append(&mut static_settings);
@@ -513,10 +767,24 @@ impl Config {
     pub fn show(&self) {
         info!("Ban time: {}s", self.general.ban_time);
         info!(
+            "Idle client in transaction timeout: {}ms",
+            self.general.idle_client_in_transaction_timeout
+        );
+        info!("Worker threads: {}", self.general.worker_threads);
+        info!(
             "Healthcheck timeout: {}ms",
             self.general.healthcheck_timeout
         );
         info!("Connection timeout: {}ms", self.general.connect_timeout);
+        info!("Idle timeout: {}ms", self.general.idle_timeout);
+        info!(
+            "Log client connections: {}",
+            self.general.log_client_connections
+        );
+        info!(
+            "Log client disconnections: {}",
+            self.general.log_client_disconnections
+        );
         info!("Shutdown timeout: {}ms", self.general.shutdown_timeout);
         info!("Healthcheck delay: {}ms", self.general.healthcheck_delay);
         match self.general.tls_certificate.clone() {
@@ -551,8 +819,13 @@ impl Config {
                     .to_string()
             );
             info!(
-                "[pool: {}] Pool mode: {:?}",
-                pool_name, pool_config.pool_mode
+                "[pool: {}] Default pool mode: {}",
+                pool_name,
+                pool_config.pool_mode.to_string()
+            );
+            info!(
+                "[pool: {}] Load Balancing mode: {:?}",
+                pool_name, pool_config.load_balancing_mode
             );
             let connect_timeout = match pool_config.connect_timeout {
                 Some(connect_timeout) => connect_timeout,
@@ -562,6 +835,11 @@ impl Config {
                 "[pool: {}] Connection timeout: {}ms",
                 pool_name, connect_timeout
             );
+            let idle_timeout = match pool_config.idle_timeout {
+                Some(idle_timeout) => idle_timeout,
+                None => self.general.idle_timeout,
+            };
+            info!("[pool: {}] Idle timeout: {}ms", pool_name, idle_timeout);
             info!(
                 "[pool: {}] Sharding function: {}",
                 pool_name,
@@ -594,12 +872,50 @@ impl Config {
                 info!(
                     "[pool: {}][user: {}] Statement timeout: {}",
                     pool_name, user.1.username, user.1.statement_timeout
-                )
+                );
+                info!(
+                    "[pool: {}][user: {}] Pool mode: {}",
+                    pool_name,
+                    user.1.username,
+                    match user.1.pool_mode {
+                        Some(pool_mode) => pool_mode.to_string(),
+                        None => pool_config.pool_mode.to_string(),
+                    }
+                );
             }
         }
     }
 
     pub fn validate(&mut self) -> Result<(), Error> {
+        // Validation for auth_query feature
+        if self.general.auth_query.is_some()
+            && (self.general.auth_query_user.is_none()
+                || self.general.auth_query_password.is_none())
+        {
+            error!("If auth_query is specified, you need to provide a value for `auth_query_user`, `auth_query_password`");
+            return Err(Error::BadConfig);
+        }
+
+        for (name, pool) in self.pools.iter() {
+            if pool.auth_query.is_some()
+                && (pool.auth_query_user.is_none() || pool.auth_query_password.is_none())
+            {
+                error!("Error in pool {{ {} }}. If auth_query is specified, you need to provide a value for `auth_query_user`, `auth_query_password`", name);
+                return Err(Error::BadConfig);
+            }
+
+            for (_name, user_data) in pool.users.iter() {
+                if (pool.auth_query.is_none()
+                    || pool.auth_query_password.is_none()
+                    || pool.auth_query_user.is_none())
+                    && user_data.password.is_none()
+                {
+                    error!("Error in pool {{ {} }}. You have to specify a user password for every pool if auth_query is not specified", name);
+                    return Err(Error::BadConfig);
+                }
+            }
+        }
+
         // Validate TLS!
         match self.general.tls_certificate.clone() {
             Some(tls_certificate) => {
@@ -646,6 +962,12 @@ pub fn get_config() -> Config {
     (*(*CONFIG.load())).clone()
 }
 
+pub fn get_idle_client_in_transaction_timeout() -> u64 {
+    (*(*CONFIG.load()))
+        .general
+        .idle_client_in_transaction_timeout
+}
+
 /// Parse the configuration file located at the path.
 pub async fn parse(path: &str) -> Result<(), Error> {
     let mut contents = String::new();
@@ -673,6 +995,7 @@ pub async fn parse(path: &str) -> Result<(), Error> {
         }
     };
 
+    config.fill_up_auth_query_config();
     config.validate()?;
 
     config.path = path.to_string();
@@ -716,8 +1039,11 @@ mod test {
         assert_eq!(get_config().path, "pgcat.toml".to_string());
 
         assert_eq!(get_config().general.ban_time, 60);
+        assert_eq!(get_config().general.idle_client_in_transaction_timeout, 0);
+        assert_eq!(get_config().general.idle_timeout, 30000);
         assert_eq!(get_config().pools.len(), 2);
         assert_eq!(get_config().pools["sharded_db"].shards.len(), 3);
+        assert_eq!(get_config().pools["sharded_db"].idle_timeout, Some(40000));
         assert_eq!(get_config().pools["simple_db"].shards.len(), 1);
         assert_eq!(get_config().pools["sharded_db"].users.len(), 2);
         assert_eq!(get_config().pools["simple_db"].users.len(), 1);
@@ -739,7 +1065,10 @@ mod test {
             "sharding_user"
         );
         assert_eq!(
-            get_config().pools["sharded_db"].users["1"].password,
+            get_config().pools["sharded_db"].users["1"]
+                .password
+                .as_ref()
+                .unwrap(),
             "other_user"
         );
         assert_eq!(get_config().pools["sharded_db"].users["1"].pool_size, 21);
@@ -764,10 +1093,16 @@ mod test {
             "simple_user"
         );
         assert_eq!(
-            get_config().pools["simple_db"].users["0"].password,
+            get_config().pools["simple_db"].users["0"]
+                .password
+                .as_ref()
+                .unwrap(),
             "simple_user"
         );
         assert_eq!(get_config().pools["simple_db"].users["0"].pool_size, 5);
+        assert_eq!(get_config().general.auth_query, None);
+        assert_eq!(get_config().general.auth_query_user, None);
+        assert_eq!(get_config().general.auth_query_password, None);
     }
 
     #[tokio::test]
