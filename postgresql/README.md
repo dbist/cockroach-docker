@@ -115,7 +115,7 @@ docker exec -it postgresql \
     --host=${PGHOST} \
     --no-vacuum \
     --file=tpcb-cockroach.sql@1 \
-    --client=25 \
+    --client=8 \
     --jobs=8 \
     --username=${PGUSER} \
     --port=${PGPORT} \

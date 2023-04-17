@@ -70,3 +70,35 @@ services:
     depends_on:
       - lb
       - pgcat
+
+  postgresql:
+    container_name: postgresql
+    hostname: postgresql
+    build: postgresql/.
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    environment:
+      - PGHOST=pgcat
+      - PGUSER=root
+      - PGPASSWORD=root
+      - PGPORT=6432
+      - PGDATABASE=example
+      - SCALE=10
+    depends_on:
+      - pgcat
+
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway:9.15.2
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./postgresql/flyway/sql:/flyway/sql
+      - ./postgresql/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - pgcat

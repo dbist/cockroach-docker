@@ -64,3 +64,67 @@ docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 '
 ```bash
 docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@pgcat:6432/tpcc?sslmode=disable'
 ```
+
+
+## Testing with pgbench
+
+password is hardcoded, it's a dummy, to make pgbench work
+
+pgbench \
+    --initialize \
+    --host=${PGHOST} \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --no-vacuum \
+    --scale=10 \
+    --foreign-keys \
+    ${PGDATABASE}
+
+pgbench \
+    --host=${PGHOST} \
+    --no-vacuum \
+    --file=tpcb-cockroach.sql@1 \
+    --client=8 \
+    --jobs=8 \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --scale=10 \
+    --failures-detailed \
+    --verbose-errors \
+    --max-tries=3 \
+    --protocol simple \
+    ${PGDATABASE} \
+    -T 60 \
+    -P 5
+
+pgbench \
+    --host=${PGHOST} \
+    --no-vacuum \
+    --file=tpcb-cockroach.sql@1 \
+    --client=8 \
+    --jobs=8 \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --scale=10 \
+    --failures-detailed \
+    --verbose-errors \
+    --max-tries=3 \
+    --protocol extended \
+    ${PGDATABASE} \
+    -T 60 \
+    -P 5
+
+
+
+pgbench \
+    --initialize \
+    --host=${PGHOST} \
+    --username=${PGUSER} \
+    --port=${PGPORT} \
+    --no-vacuum \
+    --scale=10 \
+    --foreign-keys \
+    ${PGDATABASE}
+
+pgbench -t 1000 -p 6432 -h pgcat --no-vacuum --protocol simple
+pgbench -t 1000 -p 6432 -h pgcat --no-vacuum --protocol extended
