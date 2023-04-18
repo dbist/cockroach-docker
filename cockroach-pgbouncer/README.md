@@ -143,6 +143,12 @@ Starting pgbouncer.
 docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 'postgresql://root@lb:26257/tpcc?sslmode=disable'
 ```
 
+#### pgbouncer: init tpcc benchmark
+
+```bash
+docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
+```
+
 ## LB: execute the tpcc workload
 
 ```bash
