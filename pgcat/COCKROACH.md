@@ -70,6 +70,9 @@ docker exec -it client cockroach workload run tpcc --duration=120m --concurrency
 
 password is hardcoded, it's a dummy, to make pgbench work
 
+#### initialize
+
+docker exec -it postgresql \
 pgbench \
     --initialize \
     --host=${PGHOST} \
@@ -80,6 +83,9 @@ pgbench \
     --foreign-keys \
     ${PGDATABASE}
 
+#### simple protocol
+
+docker exec -it postgresql \
 pgbench \
     --host=${PGHOST} \
     --no-vacuum \
@@ -96,6 +102,8 @@ pgbench \
     ${PGDATABASE} \
     -T 60 \
     -P 5
+
+#### extended protocol
 
 pgbench \
     --host=${PGHOST} \
@@ -126,5 +134,8 @@ pgbench \
     --foreign-keys \
     ${PGDATABASE}
 
+docker exec -it postgresql \
 pgbench -t 1000 -p 6432 -h pgcat --no-vacuum --protocol simple
+
+docker exec -it postgresql \
 pgbench -t 1000 -p 6432 -h pgcat --no-vacuum --protocol extended
