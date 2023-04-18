@@ -53,8 +53,8 @@ services:
     command:
       - "pgcat"
       - "/etc/pgcat/pgcat.toml"
-    environment:
-      - RUST_LOG=debug
+    #environment:
+      #- RUST_LOG=debug
     ports:
       - "6432:6432"
       - "9930:9930"
