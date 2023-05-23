@@ -6,7 +6,9 @@ services:
     container_name: roach-0
     hostname: roach-0
     image: cockroachdb/cockroach:latest-v23.1
-    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-0:26257 --advertise-addr=roach-0:26257 --max-sql-memory=.25 --cache=.25 --store=${PWD}/roach-0-data:/cockroach/cockroach-data
+    volumes:
+      - ${PWD}/roach-0-data:/cockroach/cockroach-data
     environment:
       - 'ALLOW_EMPTY_PASSWORD=yes'
 
@@ -14,7 +16,9 @@ services:
     container_name: roach-1
     hostname: roach-1
     image: cockroachdb/cockroach:latest-v23.1
-    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-1:26257 --advertise-addr=roach-1:26257 --max-sql-memory=.25 --cache=.25 --store=${PWD}/roach-1-data:/cockroach/cockroach-data
+    volumes:
+      - ${PWD}/roach-1-data:/cockroach/cockroach-data
     environment:
       - 'ALLOW_EMPTY_PASSWORD=yes'
 
@@ -22,7 +26,9 @@ services:
     container_name: roach-2
     hostname: roach-2
     image: cockroachdb/cockroach:latest-v23.1
-    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25
+    command: start  --insecure --join=roach-0,roach-1,roach-2 --listen-addr=roach-2:26257 --advertise-addr=roach-2:26257 --max-sql-memory=.25 --cache=.25 --store=${PWD}/roach-2-data:/cockroach/cockroach-data
+    volumes:
+      - ${PWD}/roach-2-data:/cockroach/cockroach-data
     environment:
       - 'ALLOW_EMPTY_PASSWORD=yes'
 
@@ -38,7 +44,7 @@ services:
     hostname: lb
     build: haproxy
     ports:
-      - "26257:26257"
+      - "26000:26000"
       - "8080:8080"
       - "8081:8081"
     depends_on:
@@ -46,23 +52,13 @@ services:
       - roach-1
       - roach-2
 
-  pgbouncer:
-    container_name: pgbouncer
-    hostname: pgbouncer
-    image: docker.io/bitnami/pgbouncer:1
-    ports:
-      - "27000:27000"
-    env_file:
-      - pgbouncer/cockroachdb.env
-    depends_on:
-      - lb
-    restart: always
-
   client:
     container_name: client
+    hostname: client
     image: cockroachdb/cockroach:latest-v23.1
     entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
-    hostname: client
-    depends_on:
-      - lb
-      - pgbouncer
+
+volumes:
+  roach-0-data:
+  roach-1-data:
+  roach-2-data:
