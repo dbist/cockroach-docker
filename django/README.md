@@ -1,10 +1,3 @@
-* UPDATED: 05/31/23
-
-####################################################################################################
-       this compose environment has moved to the parent directory `docker-compose-secure.yml`
-###################################################################################################
-
-
 # Secure CockroachDB Cluster with Django, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
 Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
@@ -24,7 +17,7 @@ Prerequisites:
 
 ## The following step is no longer necessary, including composeexample as part of the repo. It can also be generated locally `django-admin startproject composeexample .`
 
-1) `docker-compose run web django-admin startproject composeexample .`
+`docker-compose run web django-admin startproject composeexample .`
 
 ```bash
 14:32 $ docker-compose run web django-admin startproject composeexample .
@@ -32,7 +25,7 @@ Starting roach-cert ... done
 Starting roach-0    ... done
 ```
 
-2) populate composeexample/settings.py with database-specific properties
+populate composeexample/settings.py with database-specific properties
 
 ```python
 DATABASES = {
@@ -41,7 +34,7 @@ DATABASES = {
         'NAME': 'myproject',
         'USER': 'roach',
         'HOST': 'lb',
-        'PORT': '26257',
+        'PORT': '26000',
         'OPTIONS': {
             'sslmode': 'verify-full',
             'sslrootcert': '/certs/ca.crt',
@@ -52,12 +45,36 @@ DATABASES = {
 }
 ```
 
-3) because operation order is important, execute `./up.sh` instead of `docker-compose up`
-   - monitor the status of services via `docker-compose logs`
-   - in case you need to adjust something in composexample/settings.py, you can
-          use `docker-compose logs web`, `docker-compose kill web`, `docker-compose up -d web`
-          to debug and proceed.
-4) visit the [CockroachDB UI](https://localhost:8080) and login with username `test` and password `password`
+1) the steps are:
+
+`docker compose -f docker-compose-secure.yml -f docker-compose-django.yml up -d --build`
+
+`docker logs flyway`
+
+`docker logs web`
+
+# if the error is
+
+```python
+File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: connection to server at "lb" (192.168.112.7), port 26000 failed: ERROR:  password authentication failed for user roach
+```
+
+restar the container
+
+`docker compose -f docker-compose-django.yml restart`
+
+# run migration
+
+docker exec -it web python manage.py migrate
+
+# to shut down the environment
+
+docker compose -f docker-compose-secure.yml -f docker-compose-django.yml down
+
+4) visit the [CockroachDB UI](https://localhost:8080) and login with username `roach` and password `roach`
 5) visit the [HAProxy UI](http://localhost:8081)
 6) visit the [Django](http://localhost:8000) webpage
 

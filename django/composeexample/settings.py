@@ -25,7 +25,7 @@ SECRET_KEY = 'l390c1sc^%=gt^v9_hb-=oi=(y@rmvruxqn@$9rb+-^wthsbdc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 
 # Application definition
@@ -79,7 +79,7 @@ DATABASES = {
         'NAME': 'myproject',
         'USER': 'roach',
         'HOST': 'lb',
-        'PORT': '26257',
+        'PORT': '26000',
         'OPTIONS': {
             'sslmode': 'verify-full',
             'sslrootcert': '/certs/ca.crt',
