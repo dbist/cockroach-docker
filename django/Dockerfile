@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     python3-dev \
 && rm -rf /var/lib/apt/lists/*
+COPY composeexample /code/composeexample
 COPY requirements.txt /code/
+COPY manage.py /code/
 RUN pip3 install --upgrade pip; pip3 install -r requirements.txt
-
-ENTRYPOINT ["./django/docker-entrypoint.sh"]

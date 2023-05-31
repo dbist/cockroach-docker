@@ -1,11 +1,11 @@
-# Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
-Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
-
 * UPDATED: 05/31/23
 
 ####################################################################################################
        this compose environment has moved to the parent directory `docker-compose-secure.yml`
 ####################################################################################################
+
+# Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
+Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
 Prerequisites:
 

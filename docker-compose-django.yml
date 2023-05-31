@@ -1,0 +1,35 @@
+version: '3.9'
+
+volumes:
+  certs-client:
+
+services:
+
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./django/flyway/sql:/flyway/sql
+      - ./django/flyway/conf:/flyway/conf
+      - certs-client:/certs
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: always
+
+  web:
+    container_name: web
+    build: django/.
+    entrypoint: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - certs-client:/certs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - flyway
+    restart: always

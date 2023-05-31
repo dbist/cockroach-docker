@@ -1,0 +1,2 @@
+CREATE USER roach WITH PASSWORD 'roach';
+GRANT ALL ON DATABASE myproject TO roach;
