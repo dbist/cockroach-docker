@@ -1,7 +1,11 @@
 # Secure CockroachDB Cluster, inspired by [Docker tutorial](https://docs.docker.com/compose/django/)
 Simple 3 node *secure* CockroachDB cluster with HAProxy acting as load balancer
 
-* UPDATED: 11/11/20
+* UPDATED: 05/31/23
+
+####################################################################################################
+       this compose environment has moved to the parent directory `docker-compose-secure.yml`
+####################################################################################################
 
 Prerequisites:
 
@@ -32,10 +36,18 @@ docker exec -ti lb /bin/sh
 docker exec -ti roach-cert /bin/sh
 
 # cli inside the container
-cockroach sql --certs-dir=/certs --host=lb
+cockroach sql --certs-dir=/certs --host=lb --port=26000
 
 # directly
-docker exec -ti roach-0 cockroach sql --certs-dir=/certs --host=lb
-```
+docker exec -it client ./cockroach sql --certs-dir=/certs --host=lb --port=26000
+
+# to access the cluster using `roach` user, run the script `create_roach_user.sh` and then
+docker exec -it client ./cockroach sql --certs-dir=/certs --host=lb --port=26000 --user=roach
 
 access [HAProxy](http://localhost:8081)
+
+# start the environment
+./up.sh docker-compose-secure.yml 
+
+# shut down the environment
+./down.sh docker-compose-secure.yml
