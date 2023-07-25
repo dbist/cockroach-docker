@@ -1,41 +1,39 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (6.1.7.1)
-      activesupport (= 6.1.7.1)
-    activerecord (6.1.7.1)
-      activemodel (= 6.1.7.1)
-      activesupport (= 6.1.7.1)
-    activerecord-cockroachdb-adapter (6.1.0beta1)
-      activerecord (~> 6.1)
+    activemodel (7.0.6)
+      activesupport (= 7.0.6)
+    activerecord (7.0.6)
+      activemodel (= 7.0.6)
+      activesupport (= 7.0.6)
+    activerecord-cockroachdb-adapter (7.0.2)
+      activerecord (~> 7.0.3)
       pg (~> 1.2)
       rgeo-activerecord (~> 7.0.0)
-    activesupport (6.1.7.1)
+    activesupport (7.0.6)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
-      zeitwerk (~> 2.3)
-    concurrent-ruby (1.1.10)
-    i18n (1.12.0)
+    concurrent-ruby (1.2.2)
+    i18n (1.14.1)
       concurrent-ruby (~> 1.0)
-    minitest (5.17.0)
+    minitest (5.18.1)
     pg (1.2.3)
-    rgeo (2.2.0)
+    rgeo (3.0.0)
     rgeo-activerecord (7.0.1)
       activerecord (>= 5.0)
       rgeo (>= 1.0.0)
-    tzinfo (2.0.5)
+    tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    zeitwerk (2.6.6)
 
 PLATFORMS
   x86_64-darwin-19
   x86_64-linux
 
 DEPENDENCIES
-  activerecord (~> 6.1.7)
-  activerecord-cockroachdb-adapter (~> 6.1.0beta1)
+  activerecord (~> 7.0.2)
+  activerecord-cockroachdb-adapter (~> 7.0.2)
   pg
 
 BUNDLED WITH
