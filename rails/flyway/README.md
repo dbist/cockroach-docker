@@ -91,9 +91,11 @@ Schema version: 1
 
 ## Using SSL
 
+~~~
 flyway.url=jdbc:postgresql://lb:26000/defaultdb?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key.pk8&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt
 flyway.user=root
 flyway.password=""
 flyway.connectRetries=3
+~~~
 
 make sure the docker container has certs directory mounted. If you run the `info` command into a container, it won't have the certs volume mounted and will complain about a missing ca.crt. The only way to make it work is if the flyway container has the context of the existing certs directory.
