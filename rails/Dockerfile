@@ -23,9 +23,9 @@ RUN apk add --update --no-cache \
    tzdata
 
 WORKDIR .
-COPY rails/Gemfile ./
+COPY Gemfile ./
 RUN gem install bundler pg
 RUN bundle config --local build.pg --with-opt-dir="/usr/local/opt/libpq"
 RUN bundle install
 COPY . ./
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

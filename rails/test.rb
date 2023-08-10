@@ -13,7 +13,7 @@ ActiveRecord::Base.establish_connection(
   password:    'roach',
   database:    'bank',
   host:        'lb',
-  port:        26257,
+  port:        26000,
   sslmode:     'verify-full',
   sslrootcert: '/certs/ca.crt',
   sslcert: '/certs/client.roach.crt',

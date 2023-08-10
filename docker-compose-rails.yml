@@ -28,8 +28,8 @@ services:
     container_name: rails
     hostname: rails
     build:
-      context: .
-      dockerfile: rails/Dockerfile
+      context: rails
+      dockerfile: Dockerfile
     command: tail -f /dev/null
     x-develop:
       watch:
@@ -38,6 +38,7 @@ services:
     depends_on:
       - lb
       - roach-cert
+      - flyway
     ports:
       - "3000:3000"
     volumes:
