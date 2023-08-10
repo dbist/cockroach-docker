@@ -1,4 +1,4 @@
-FROM ruby:2-alpine
+FROM ruby:3-alpine
 
 RUN apk add --update --no-cache \
    libpq \
@@ -23,7 +23,7 @@ RUN apk add --update --no-cache \
    tzdata
 
 WORKDIR /rails
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile ./
 RUN gem install bundler pg
 RUN bundle config --local build.pg --with-opt-dir="/usr/local/opt/libpq"
 RUN bundle install

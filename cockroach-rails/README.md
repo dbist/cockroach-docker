@@ -5,8 +5,8 @@ This repo has a "Hello World" Ruby application that uses the [Active Record Cock
 
 Prerequisites:
 
-cockroachdb-activerecord` 6.1
-CockroachDB 20.2
+cockroachdb-activerecord` 7
+CockroachDB 23.1
 
 ## Services
 * `roach-0` - CockroachDB node
