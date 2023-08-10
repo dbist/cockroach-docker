@@ -22,10 +22,10 @@ RUN apk add --update --no-cache \
    postgresql-dev \
    tzdata
 
-WORKDIR /rails
+WORKDIR .
 COPY Gemfile ./
 RUN gem install bundler pg
 RUN bundle config --local build.pg --with-opt-dir="/usr/local/opt/libpq"
 RUN bundle install
 COPY . ./
-ENTRYPOINT ["./rails/docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

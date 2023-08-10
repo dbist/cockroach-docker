@@ -1,0 +1,49 @@
+version: '3.9'
+
+volumes:
+  certs-client:
+
+services:
+
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./rails/flyway/sql:/flyway/sql
+      - ./rails/flyway/conf:/flyway/conf
+      - certs-client:/certs
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+      - roach-cert
+
+  rails:
+    container_name: rails
+    hostname: rails
+    build:
+      context: rails
+      dockerfile: Dockerfile
+    command: tail -f /dev/null
+    x-develop:
+      watch:
+        - action: sync
+          path: ./rails
+    depends_on:
+      - lb
+      - roach-cert
+      - flyway
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+      - certs-client:/certs
+    env_file: .env
+    environment:
+      RAILS_ENV: development

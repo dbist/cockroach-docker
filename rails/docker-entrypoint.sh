@@ -8,5 +8,5 @@ fi
 
 echo "starting up"
 sleep 10
-ruby ./rails/main.rb
+ruby ./main.rb
 tail -f /dev/null
