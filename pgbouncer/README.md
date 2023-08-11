@@ -1,5 +1,3 @@
-# This example has been refactored and has been moved to the parent directory. See the README in the `pgbouncer` directory.
-
 # Sample 3 node *insecure* CockroachDB cluster with HAProxy acting as load balancer and PGBouncer
 
 Prerequisites:
@@ -15,7 +13,11 @@ Prerequisites:
 ## Getting started
 >If you are using Google Chrome as your browser, you may want to navigate here `chrome://flags/#allow-insecure-localhost` and set this flag to `Enabled`.
 
-1. Start the tutorial using `./up.sh` script
+1. Start the tutorial using:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-pgbouncer.yml up -d --build
+```
 
 ```bash
 Creating network "cockroach-pgbouncer_default" with the default driver
@@ -35,9 +37,15 @@ GRANT
 Time: 87ms
 ```
 
-2. Connect to cockroach using PGBouncer
+To stop the tutorial
 
-PGBouncer is being load balanced via `haproxy`, it can be verified by inspecting `pgbouncer/cockroachdb.env` file.
+```bash
+docker compose -f docker-compose.yml -f docker-compose-pgbouncer.yml down
+```
+
+2. Connect to cockroach using PgBouncer
+
+PgBouncer is being load balanced via `haproxy`, it can be verified by inspecting `pgbouncer/cockroachdb.env` file.
 
 ```bash
 DATABASES_HOST=lb
@@ -51,7 +59,7 @@ DATABASES_DBNAME=defaultdb
 docker exec -it client cockroach sql --insecure --url 'postgres://root@pgbouncer:27000'
 ```
 
-The port for connection string is the PGBouncer port, again inspecting the PGBouncer config file
+The port for connection string is the PgBouncer port, again inspecting the PgBouncer config file
 
 ```bash
 PGBOUNCER_LISTEN_PORT=27000
@@ -163,7 +171,7 @@ docker exec -it client cockroach workload fixtures import tpcc --warehouses=10 '
 docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@lb:26257/tpcc?sslmode=disable'
 ```
 
-## PGBouncer: execute the tpcc workload
+## PgBouncer: execute the tpcc workload
 
 ```bash
 docker exec -it client cockroach workload run tpcc --duration=120m --concurrency=3 --max-rate=1000 --tolerate-errors --warehouses=10 --conns 60 --ramp=1m --workers=100 'postgresql://root@pgbouncer:27000/tpcc?sslmode=disable'
