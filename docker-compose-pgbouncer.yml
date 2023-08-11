@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./pgbouncer/flyway/sql:/flyway/sql
+      - ./pgbouncer/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+  
+  pgbouncer:
+    container_name: pgbouncer
+    hostname: pgbouncer
+    image: docker.io/bitnami/pgbouncer:1
+    ports:
+      - "27000:27000"
+    env_file:
+      - pgbouncer/cockroachdb.env
+    depends_on:
+      - lb
+      - flyway
+    restart: always
