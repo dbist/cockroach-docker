@@ -1,0 +1,63 @@
+version: "3"
+services:
+  
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./ferretdb/flyway/sql:/flyway/sql
+      - ./ferretdb/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+  
+  todo_client:
+    build: ./ferretdb/app/client
+    hostname: 'todo_client'
+    container_name: 'todo_client'
+    stdin_open: true
+    depends_on:
+      - api
+  api:
+    build: ./ferretdb/app/api
+    hostname: 'todo_api'
+    container_name: 'todo_api'
+    depends_on:
+      - lb
+      - ferretdb
+  nginx:
+    image: nginx
+    hostname: 'nginx'
+    container_name: 'nginx'
+    ports:
+      - 8888:8888
+    volumes:
+      - ./ferretdb/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:latest
+    hostname: 'ferretdb'
+    container_name: 'ferretdb'
+    restart: 'on-failure'
+    environment:
+      - FERRETDB_POSTGRESQL_URL=postgres://root@lb:26000/ferretdb?sslmode=disable
+    ports:
+      - 27017:27017
+    depends_on:
+      - lb
+
+  mongosh:
+    container_name: mongosh
+    image: mongo
+    entrypoint: ["/usr/bin/tail", "-f", "/dev/null"]
+    hostname: mongosh
+    depends_on:
+      - ferretdb
