@@ -1,0 +1,37 @@
+version: '3.9'
+
+volumes:
+  certs-client:
+
+services:
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./flask/flyway/sql:/flyway/sql
+      - ./flask/flyway/conf:/flyway/conf
+      - certs-client:/certs
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+      - roach-cert
+
+  flask:
+    container_name: flask
+    hostname: flask
+    build: flask/.
+    entrypoint: ["./docker-entrypoint.sh"]
+    volumes:
+      - .:/code
+      - certs-client:/certs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - flyway

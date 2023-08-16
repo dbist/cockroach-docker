@@ -7,8 +7,7 @@ from flask import Flask, render_template, request, url_for, redirect
 app = Flask(__name__)
 
 def get_db_connection():
-    conn = psycopg2.connect(
-        os.environ['DATABASE_URL'])
+    conn = psycopg2.connect("postgresql://root@lb:26000/flask_db?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt")
     return conn
 
 @app.route('/')

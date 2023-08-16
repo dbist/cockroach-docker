@@ -1,8 +1,7 @@
 import os
 import psycopg2
 
-conn = psycopg2.connect(
-        os.environ['DATABASE_URL'])
+conn = psycopg2.connect("postgresql://root@lb:26000/flask_db?sslcert=%2Fcerts%2Fclient.root.crt&sslkey=%2Fcerts%2Fclient.root.key&sslmode=verify-full&sslrootcert=%2Fcerts%2Fca.crt")
 
 # Open a cursor to perform database operations
 cur = conn.cursor()
