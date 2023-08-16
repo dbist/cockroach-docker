@@ -90,7 +90,7 @@ button {
   background: #96DDCF;
   border-color: #E5E1E5;
   color: #ffffff;
-
+  
 }
 
 button:hover {
@@ -161,7 +161,7 @@ button:hover {
   font-size: 14px;
 }
 
-.form-entry input {
+.form-entry input { 
   width: 90%;
   height: 25px;
   font-size: large;

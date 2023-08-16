@@ -34,7 +34,7 @@ export default class Task extends Component {
                 </div>
                 <div className={this.getDescriptionCss(task)}>
                     {task.description}
-                </div>
+                </div> 
                 <div className="float-left width-15">
                     <img className="float-left clickable" src={trash} alt="delete" onClick={this.deleteTask} />
                 </div>
@@ -42,7 +42,7 @@ export default class Task extends Component {
             </div>
         );
     }
-}
+} 
 
 Task.propTypes = {
     task: PropTypes.object.isRequired,

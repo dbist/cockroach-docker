@@ -3,7 +3,7 @@ let express = require("express"),
     db = require('../db'),
     ObjectId = require('mongodb').ObjectId;
 
-// GET
+// GET 
 router.get("/", async (req, res, next) => {
     const database = await db('todo');
     const tasks = await database.collection("tasks").find().toArray();
@@ -24,7 +24,7 @@ router.post("/", async (req, res, next) => {
     res.send(result);
 });
 
-// PUT
+// PUT 
 router.put("/", async (req, res, next) => {
     let task = req.body;
     const database = await db('todo');

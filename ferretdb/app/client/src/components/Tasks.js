@@ -14,12 +14,12 @@ export default class Tasks extends Component {
 
     render() {
         return (
-            <div className="width-70 display-inline-block center">
+            <div className="width-70 display-inline-block center"> 
                 {this.renderTasks()}
             </div>
         );
     }
-}
+} 
 
 Tasks.propTypes = {
     tasks: PropTypes.array.isRequired,
