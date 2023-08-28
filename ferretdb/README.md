@@ -1,3 +1,11 @@
+## Note: This example does not work with CockroachDB 23.1. You need 23.2 at minimum due to [3252]
+
+You can test the integration using the latest 23.2 build or this image:
+
+`image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v23.2.0-alpha.00000000-3468-g7cef593cfe1` in docker-compose.yml file.
+
+---
+
 This is a fork of [MariaDB's NoSQL Listener example](https://github.com/mariadb-corporation/dev-example-nosql-listener)
 that replaces MariaDB MaxScale and MariaDB Community Server with
 [FerretDB](https://github.com/FerretDB/FerretDB) and PostgreSQL.
