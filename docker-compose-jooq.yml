@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  flyway:
+    container_name: flyway
+    hostname: flyway
+    image: flyway/flyway
+    entrypoint: ["flyway", "migrate"]
+    volumes:
+      - ./jooq/flyway/sql:/flyway/sql
+      - ./jooq/flyway/conf:/flyway/conf
+    healthcheck:
+      test: ["CMD-SHELL", "flyway", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - lb
+
+  jooq:
+    container_name: jooq
+    hostname: jooq
+    build: jooq/.
+#    entrypoint: ["./docker-entrypoint.sh"]
+    entrypoint: ["tail", "-f", "/dev/null"]
+#    volumes:
+#      - .:/code
+#    ports:
+#      - "8000:8000"
+    depends_on:
+      - flyway
+      - lb

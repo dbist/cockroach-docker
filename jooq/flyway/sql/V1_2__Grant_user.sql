@@ -1,0 +1,1 @@
+GRANT ALL ON DATABASE bank TO maxroach;
