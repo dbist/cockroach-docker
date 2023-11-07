@@ -8,4 +8,5 @@ ENV REFRESHED_AT 2023_11_01
 COPY ./jooq-basic-sample /jooq-basic-sample
 WORKDIR /jooq-basic-sample
 RUN mvn compile
+#RUN sleep 30
 #RUN mvn exec:java -Dexec.mainClass=com.cockroachlabs.Sample

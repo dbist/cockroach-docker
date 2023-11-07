@@ -22,8 +22,7 @@ services:
     container_name: jooq
     hostname: jooq
     build: jooq/.
-#    entrypoint: ["./docker-entrypoint.sh"]
     entrypoint: ["tail", "-f", "/dev/null"]
+#    entrypoint: ["mvn", "exec:java", "-Dexec.mainClass=com.cockroachlabs.Sample"]
     depends_on:
       - flyway
-      - lb
