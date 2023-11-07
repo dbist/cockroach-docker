@@ -32,11 +32,6 @@
             <artifactId>jooq-codegen</artifactId>
             <version>3.18.7</version>
         </dependency>
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq-codegen</artifactId>
-            <version>3.18.7</version>
-        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -53,6 +48,13 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j18-impl</artifactId>
             <version>2.11.2</version>
+        </dependency>
+
+        <!-- queryable encryption -->
+        <dependency>
+            <groupId>app.cash.jooq</groupId>
+            <artifactId>jooq-encryption</artifactId>
+            <version>1.0.1</version>
         </dependency>
     </dependencies>
 

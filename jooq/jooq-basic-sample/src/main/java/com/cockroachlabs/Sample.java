@@ -39,7 +39,7 @@ public class Sample {
             ).execute();
 
             rv = 1;
-            System.out.printf("APP: addAccounts() --> %d\n", rv);
+            System.out.printf("APP: addAccounts() --> %d%n", rv);
             return rv;
         };
     }
@@ -57,7 +57,7 @@ public class Sample {
 
                 ctx.batchUpdate(fromAccount, toAccount).execute();
                 rv = amount;
-                System.out.printf("APP: transferFunds(%d, %d, %d) --> %d\n", fromId, toId, amount, rv);
+                System.out.printf("APP: transferFunds(%d, %d, %d) --> %d%n", fromId, toId, amount, rv);
             }
 
             return rv;
@@ -71,10 +71,10 @@ public class Sample {
         return ctx -> {
             long rv = -1;
             try {
-                System.out.printf("APP: testRetryLogic: BEFORE EXCEPTION\n");
+                System.out.printf("APP: testRetryLogic: BEFORE EXCEPTION%n");
                 ctx.execute("SELECT crdb_internal.force_retry('1s')");
             } catch (DataAccessException e) {
-                System.out.printf("APP: testRetryLogic: AFTER EXCEPTION\n");
+                System.out.printf("APP: testRetryLogic: AFTER EXCEPTION%n");
                 throw e;
             }
             return rv;
@@ -85,7 +85,7 @@ public class Sample {
         return ctx -> {
             AccountsRecord account = ctx.fetchSingle(ACCOUNTS, ACCOUNTS.ID.eq(id));
             long balance = account.getBalance();
-            System.out.printf("APP: getAccountBalance(%d) --> %d\n", id, balance);
+            System.out.printf("APP: getAccountBalance(%d) --> %d%n", id, balance);
             return balance;
         };
     }
@@ -101,12 +101,12 @@ public class Sample {
             attemptCount.incrementAndGet();
 
             if (attemptCount.get() > 1) {
-                System.out.printf("APP: Entering retry loop again, iteration %d\n", attemptCount.get());
+                System.out.printf("APP: Entering retry loop again, iteration %d%n", attemptCount.get());
             }
 
-            if (session.connectionResult(connection -> {
+            if (Boolean.TRUE.equals(session.connectionResult(connection -> {
                 connection.setAutoCommit(false);
-                System.out.printf("APP: BEGIN;\n");
+                System.out.printf("APP: BEGIN;%n");
 
                 if (attemptCount.get() == MAX_ATTEMPT_COUNT) {
                     String err = String.format("hit max of %s attempts, aborting", MAX_ATTEMPT_COUNT);
@@ -124,7 +124,7 @@ public class Sample {
                     rv.set(fn.apply(session));
                     if (rv.get() != -1) {
                         connection.commit();
-                        System.out.printf("APP: COMMIT;\n");
+                        System.out.printf("APP: COMMIT;%n");
                         return true;
                     }
                 } catch (DataAccessException | SQLException e) {
@@ -136,11 +136,11 @@ public class Sample {
                         // before trying again.  Each time through the
                         // loop we sleep for a little longer than the last
                         // time (A.K.A. exponential backoff).
-                        System.out.printf("APP: retryable exception occurred:\n    sql state = [%s]\n    message = [%s]\n    retry counter = %s\n", sqlState, e.getMessage(), attemptCount.get());
-                        System.out.printf("APP: ROLLBACK;\n");
+                        System.out.printf("APP: retryable exception occurred:%n    sql state = [%s]%n    message = [%s]%n    retry counter = %s%n", sqlState, e.getMessage(), attemptCount.get());
+                        System.out.printf("APP: ROLLBACK;%n");
                         connection.rollback();
                         int sleepMillis = (int)(Math.pow(2, attemptCount.get()) * 100) + RAND.nextInt(100);
-                        System.out.printf("APP: Hit 40001 transaction retry error, sleeping %s milliseconds\n", sleepMillis);
+                        System.out.printf("APP: Hit 40001 transaction retry error, sleeping %s milliseconds%n", sleepMillis);
                         try {
                             Thread.sleep(sleepMillis);
                         } catch (InterruptedException ignored) {
@@ -153,7 +153,7 @@ public class Sample {
                 }
 
                 return false;
-            })) {
+            }))) {
                 break;
             }
         }
@@ -182,7 +182,7 @@ public class Sample {
             long transferAmount = 100;
 
             if (FORCE_RETRY) {
-                System.out.printf("APP: About to test retry logic in 'runTransaction'\n");
+                System.out.printf("APP: About to test retry logic in 'runTransaction'%n");
                 runTransaction(ctx, forceRetryLogic());
             } else {
 
@@ -191,22 +191,22 @@ public class Sample {
                 long toBalance = runTransaction(ctx, getAccountBalance(toAccountId));
                 if (fromBalance != -1 && toBalance != -1) {
                     // Success!
-                    System.out.printf("APP: getAccountBalance(%d) --> %d\n", fromAccountId, fromBalance);
-                    System.out.printf("APP: getAccountBalance(%d) --> %d\n", toAccountId, toBalance);
+                    System.out.printf("APP: getAccountBalance(%d) --> %d%n", fromAccountId, fromBalance);
+                    System.out.printf("APP: getAccountBalance(%d) --> %d%n", toAccountId, toBalance);
                 }
 
                 // Transfer $100 from account 1 to account 2
                 long transferResult = runTransaction(ctx, transferFunds(fromAccountId, toAccountId, transferAmount));
                 if (transferResult != -1) {
                     // Success!
-                    System.out.printf("APP: transferFunds(%d, %d, %d) --> %d \n", fromAccountId, toAccountId, transferAmount, transferResult);
+                    System.out.printf("APP: transferFunds(%d, %d, %d) --> %d %n", fromAccountId, toAccountId, transferAmount, transferResult);
 
                     long fromBalanceAfter = runTransaction(ctx, getAccountBalance(fromAccountId));
                     long toBalanceAfter = runTransaction(ctx, getAccountBalance(toAccountId));
                     if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
                         // Success!
-                        System.out.printf("APP: getAccountBalance(%d) --> %d\n", fromAccountId, fromBalanceAfter);
-                        System.out.printf("APP: getAccountBalance(%d) --> %d\n", toAccountId, toBalanceAfter);
+                        System.out.printf("APP: getAccountBalance(%d) --> %d%n", fromAccountId, fromBalanceAfter);
+                        System.out.printf("APP: getAccountBalance(%d) --> %d%n", toAccountId, toBalanceAfter);
                     }
                 }
             }
