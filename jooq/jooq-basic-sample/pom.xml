@@ -15,24 +15,25 @@
 
     <dependencies>
 
+        <!-- Note: These aren't hosted on Maven Central. Import them manually from your distribution -->
         <dependency>
-            <groupId>org.jooq</groupId>
+            <groupId>org.jooq.trial</groupId>
             <artifactId>jooq</artifactId>
             <version>3.18.7</version>
         </dependency>
 
         <!-- These may not be required, unless you use the GenerationTool manually for code generation -->
         <dependency>
-            <groupId>org.jooq</groupId>
+            <groupId>org.jooq.trial</groupId>
             <artifactId>jooq-meta</artifactId>
             <version>3.18.7</version>
         </dependency>
         <dependency>
-            <groupId>org.jooq</groupId>
+            <groupId>org.jooq.trial</groupId>
             <artifactId>jooq-codegen</artifactId>
             <version>3.18.7</version>
         </dependency>
-
+        
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -47,7 +48,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j18-impl</artifactId>
-            <version>2.11.2</version>
+            <version>2.18.0</version>
         </dependency>
     </dependencies>
 
@@ -56,7 +57,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.11.0</version>
                 <configuration>
                     <release>11</release>
                 </configuration>

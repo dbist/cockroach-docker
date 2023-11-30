@@ -17,7 +17,7 @@ Prerequisites:
 
 ```bash
 cd cockroach-docker
-./up.sh docker-compose-postgresql.yml
+docker compose -f docker-compose.yml -f docker-compose-postgresql.yml up -d --build
 
 Creating network "cockroach-docker_default" with the default driver
 Creating roach-0 ... done
@@ -74,8 +74,7 @@ docker exec -it postgresql bash
 Initialize
 
 ```bash
-docker exec -it postgresql \
- pgbench \
+docker exec -it postgresql pgbench \
     --initialize \
     --host=${PGHOST} \
     --username=${PGUSER} \
@@ -89,8 +88,7 @@ docker exec -it postgresql \
 Run the default `tpcb-like` workload
 
 ```bash
-docker exec -it postgresql \
- pgbench \
+docker exec -it postgresql pgbench \
     --host=${PGHOST} \
     --no-vacuum \
     --file=tpcb-original.sql@1 \
@@ -110,8 +108,7 @@ docker exec -it postgresql \
 Run the optimized workload
 
 ```bash
-docker exec -it postgresql \
- pgbench \
+docker exec -it postgresql pgbench \
     --host=${PGHOST} \
     --no-vacuum \
     --file=tpcb-cockroach.sql@1 \
