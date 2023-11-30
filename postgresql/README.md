@@ -124,3 +124,9 @@ docker exec -it postgresql pgbench \
     -T 60 \
     -P 5
 ```
+
+To shut down the docker compose
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-postgresql.yml down
+```
