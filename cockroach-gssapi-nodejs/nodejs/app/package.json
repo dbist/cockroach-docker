@@ -10,7 +10,7 @@
   "author": "Artem Ervits",
   "license": "ISC",
   "dependencies": {
-    "pg": "^8.3.0",
+    "pg": "^8.13.1",
     "standard": "^17.1.2"
   },
   "repository": {
